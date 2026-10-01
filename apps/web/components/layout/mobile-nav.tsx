@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, Settings, User } from "lucide-react";
+import { Home, FileText, Settings, User, GraduationCap } from "lucide-react";
 import { CampusGramLogo } from "./logo";
 import { Avatar } from "../ui/avatar";
 import { useCampusAuth } from "../auth/auth-guard";
@@ -37,13 +37,25 @@ export function MobileHeader() {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { user } = useCampusAuth();
+
+  const isFacultyOrAdmin = user?.role === "faculty" || user?.role === "admin";
+
+  const items = isFacultyOrAdmin
+    ? [
+        { name: "Home", href: "/home", icon: Home },
+        { name: "Faculty", href: "/faculty", icon: GraduationCap },
+        { name: "Docs", href: "/documents", icon: FileText },
+        { name: "Profile", href: "/profile", icon: User },
+      ]
+    : NAV_ITEMS;
 
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950 border-t border-zinc-800 px-3 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       aria-label="Mobile Navigation Bar"
     >
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href;
         return (
