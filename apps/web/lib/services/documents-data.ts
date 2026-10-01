@@ -1,32 +1,5 @@
-export interface CampusDocument {
-  id: string;
-  title: string;
-  category: "academic" | "non-academic";
-  description: string;
-  status: "Available" | "Active" | "Verified" | "Approved" | "Ready";
-  statusVariant: "success" | "default" | "secondary" | "warning";
-  issuedDate: string;
-  documentNumber: string;
-  validThrough?: string;
-  iconName:
-    | "id-card"
-    | "award"
-    | "file-text"
-    | "calendar-check"
-    | "book-open"
-    | "shield-check"
-    | "bus"
-    | "home"
-    | "users"
-    | "activity"
-    | "key";
-  details: {
-    issuer: string;
-    verifiedBy: string;
-    referenceCode: string;
-    remarks?: string;
-  };
-}
+import { CampusDocument } from "@smart-campus/contracts";
+export type { CampusDocument };
 
 export const MOCK_ACADEMIC_DOCUMENTS: CampusDocument[] = [
   {

@@ -1,35 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { DocumentCard } from "@/components/documents/document-card";
 import { DocumentModal } from "@/components/documents/document-modal";
-import {
-  CampusDocument,
-  MOCK_ACADEMIC_DOCUMENTS,
-  MOCK_NON_ACADEMIC_DOCUMENTS,
-} from "@/lib/services/documents-data";
-import { Search, FileText } from "lucide-react";
+import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { CampusDocument } from "@smart-campus/contracts";
+import { documentsClientService } from "@/lib/services/documents-client-service";
+import { Search, FileText, Upload, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@smart-campus/utils";
-
-const ALL_DOCUMENTS: CampusDocument[] = [
-  ...MOCK_ACADEMIC_DOCUMENTS,
-  ...MOCK_NON_ACADEMIC_DOCUMENTS,
-];
 
 export default function DocumentsPage() {
   const [filter, setFilter] = useState<"all" | "academic" | "non-academic">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoc, setSelectedDoc] = useState<CampusDocument | null>(null);
+  const [documents, setDocuments] = useState<CampusDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-  const filteredDocs = ALL_DOCUMENTS.filter((doc) => {
-    const matchesFilter = filter === "all" || doc.category === filter;
-    const matchesSearch =
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.documentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const fetchDocuments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await documentsClientService.getDocuments({
+        category: filter,
+        query: searchQuery,
+      });
+      setDocuments(data);
+    } catch (_err) {
+      // Handled gracefully in client service
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, searchQuery]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  const handleUploadSuccess = (newDoc: CampusDocument) => {
+    setDocuments((prev) => [newDoc, ...prev]);
+    setSelectedDoc(newDoc);
+  };
+
+  const academicCount = documents.filter((d) => d.category === "academic").length;
+  const nonAcademicCount = documents.filter((d) => d.category === "non-academic").length;
 
   return (
     <AppShell>
@@ -46,8 +60,25 @@ export default function DocumentsPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto text-xs text-zinc-400 font-mono">
-              <span>{filteredDocs.length} of {ALL_DOCUMENTS.length} records</span>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => fetchDocuments()}
+                title="Refresh Documents"
+                className="p-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                aria-label="Refresh documents list"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin text-zinc-300")} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsUploadOpen(true)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload Document</span>
+              </button>
             </div>
           </div>
         </header>
@@ -81,7 +112,7 @@ export default function DocumentsPage() {
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
-              All ({ALL_DOCUMENTS.length})
+              All ({documents.length})
             </button>
             <button
               type="button"
@@ -93,7 +124,7 @@ export default function DocumentsPage() {
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
-              Academic ({MOCK_ACADEMIC_DOCUMENTS.length})
+              Academic ({academicCount})
             </button>
             <button
               type="button"
@@ -105,31 +136,42 @@ export default function DocumentsPage() {
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
-              Non-Academic ({MOCK_NON_ACADEMIC_DOCUMENTS.length})
+              Non-Academic ({nonAcademicCount})
             </button>
           </div>
         </div>
 
-        {/* Documents Grid */}
-        {filteredDocs.length > 0 ? (
+        {/* Documents Grid / States */}
+        {loading && documents.length === 0 ? (
+          <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
+            <Loader2 className="w-6 h-6 animate-spin text-zinc-500 mx-auto" />
+            <p className="text-xs text-zinc-400">Loading documents from institutional directory...</p>
+          </div>
+        ) : documents.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {filteredDocs.map((doc) => (
+            {documents.map((doc) => (
               <DocumentCard key={doc.id} document={doc} onView={setSelectedDoc} />
             ))}
           </div>
         ) : (
-          /* Simple, restrained empty state per Section 36 */
           <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
             <FileText className="w-8 h-8 text-zinc-600 mx-auto" />
             <h4 className="text-sm font-medium text-zinc-200">No documents found</h4>
             <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-              No official documents matched your query. Try clearing your filter or search terms.
+              No official documents matched your query. Try clearing your filter or uploading a new document.
             </p>
           </div>
         )}
 
         {/* Modal */}
         <DocumentModal document={selectedDoc} onClose={() => setSelectedDoc(null)} />
+
+        {/* Upload Dialog */}
+        <DocumentUploadDialog
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+          onSuccess={handleUploadSuccess}
+        />
       </div>
     </AppShell>
   );

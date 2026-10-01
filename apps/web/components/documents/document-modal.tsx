@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { CampusDocument } from "../../lib/services/documents-data";
-import { X, ShieldCheck, Download, FileText } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { CampusDocument } from "@smart-campus/contracts";
+import { X, ShieldCheck, Download, FileText, Loader2 } from "lucide-react";
+import { documentsClientService } from "../../lib/services/documents-client-service";
 
 interface DocumentModalProps {
   document?: CampusDocument | null;
@@ -12,6 +13,7 @@ interface DocumentModalProps {
 
 export function DocumentModal({ document: docProp, documentItem, onClose }: DocumentModalProps) {
   const activeDoc = docProp || documentItem || null;
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,6 +32,29 @@ export function DocumentModal({ document: docProp, documentItem, onClose }: Docu
   }, [activeDoc, onClose]);
 
   if (!activeDoc) return null;
+
+  const handleDownload = async () => {
+    if (!activeDoc) return;
+    setDownloading(true);
+    try {
+      const response = await documentsClientService.getDownloadUrl(activeDoc.id);
+      const downloadUrl =
+        response?.downloadUrl ||
+        `/api/documents/mock-preview?ref=${encodeURIComponent(activeDoc.documentNumber)}`;
+
+      const a = window.document.createElement("a");
+      a.href = downloadUrl;
+      a.download = response?.fileName || `${activeDoc.documentNumber}.pdf`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+    } catch (_err) {
+      // Fallback direct link
+      window.open(`/api/documents/mock-preview?ref=${encodeURIComponent(activeDoc.documentNumber)}`, "_blank");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div
@@ -137,13 +162,21 @@ export function DocumentModal({ document: docProp, documentItem, onClose }: Docu
           </button>
           <button
             type="button"
-            onClick={() => {
-              alert(`Simulated Download: ${activeDoc.title} (${activeDoc.documentNumber}.pdf)`);
-            }}
-            className="px-3.5 py-1.5 text-xs font-medium rounded-md text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm"
+            disabled={downloading}
+            onClick={handleDownload}
+            className="px-3.5 py-1.5 text-xs font-medium rounded-md text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download Certified PDF</span>
+            {downloading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Preparing Download...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Certified PDF</span>
+              </>
+            )}
           </button>
         </div>
       </div>
