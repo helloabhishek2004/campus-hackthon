@@ -7,6 +7,9 @@ from app.inference.yolo import YOLODetector
 from app.inference.clip import CLIPEmbedder
 from app.inference.text import TextEmbedder
 from app.inference.category import guess_category
+import requests
+from io import BytesIO
+from PIL import Image
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,16 +52,41 @@ def analyze_item(request: AnalyzeItemRequest):
         text_embedder: TextEmbedder = models.get("text") or TextEmbedder()
         text_emb = text_embedder.embed_text(combined_text)
 
-        # 2. Image Embedding (512-dim) & Object Detection
+        # 2. Image Embedding & Object Detection with Cropping
         image_emb = None
         detections = []
         if request.imageUrls and len(request.imageUrls) > 0:
             first_image = request.imageUrls[0]
-            clip_embedder: CLIPEmbedder = models.get("clip") or CLIPEmbedder()
-            image_emb = clip_embedder.embed_image(first_image)
-
+            
             yolo_detector: YOLODetector = models.get("yolo") or YOLODetector()
             detections = yolo_detector.detect(first_image)
+
+            clip_embedder: CLIPEmbedder = models.get("clip") or CLIPEmbedder()
+            
+            # Phase 4: Crop with YOLO before CLIP embedding if we have detections and not in mock mode
+            # If in mock mode, PIL image open might fail on fake URLs, so check if real YOLO
+            if yolo_detector.is_loaded and len(detections) > 0:
+                try:
+                    response = requests.get(first_image, stream=True)
+                    response.raise_for_status()
+                    img = Image.open(BytesIO(response.content))
+                    
+                    # Get the most confident detection box [xmin, ymin, xmax, ymax]
+                    best_det = max(detections, key=lambda d: d.confidence)
+                    if best_det.box and len(best_det.box) == 4:
+                        logger.info(f"Cropping image using YOLO detection: {best_det.label} ({best_det.confidence:.2f})")
+                        cropped_img = img.crop((best_det.box[0], best_det.box[1], best_det.box[2], best_det.box[3]))
+                        
+                        # Assuming clip_embedder can handle PIL Image if we pass it via a modified method or save to temp
+                        import tempfile
+                        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+                            cropped_img.convert('RGB').save(tmp.name)
+                            image_emb = clip_embedder.embed_image(tmp.name)
+                except Exception as e:
+                    logger.warning(f"Failed to crop image before CLIP: {e}")
+                    image_emb = clip_embedder.embed_image(first_image)
+            else:
+                image_emb = clip_embedder.embed_image(first_image)
 
         # 3. Category Inference
         suggested_category = guess_category(combined_text)

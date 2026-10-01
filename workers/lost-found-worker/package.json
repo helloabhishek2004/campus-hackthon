@@ -12,7 +12,9 @@
   "dependencies": {
     "@smart-campus/contracts": "workspace:*",
     "@smart-campus/lost-and-found": "workspace:*",
-    "@smart-campus/utils": "workspace:*"
+    "@smart-campus/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
+    "pg-boss": "^12.35.0"
   },
   "devDependencies": {
     "@smart-campus/config": "workspace:*",

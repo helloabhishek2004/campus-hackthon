@@ -7,3 +7,4 @@ export * from "./validation/index";
 export * from "./storage/index";
 export * from "./ai/client";
 export * from "./notifications/index";
+export * from "./db/localDb";
