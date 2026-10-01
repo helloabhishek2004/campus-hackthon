@@ -8,6 +8,9 @@ import { generateMockAnalysis, runGeminiAnalysis } from "./ai/gemini";
 import { IntelligenceOptions } from "./types/index";
 
 export * from "./types/index";
+export { findSimilarCandidates, type CandidateIssue } from "./clustering/match";
+export { computeJaccardSimilarity, tokenize } from "./clustering/similarity";
+export { searchCandidates } from "./clustering/candidate-search";
 
 /**
  * Public entry point for Module 2: Complaint Intelligence Processing.
