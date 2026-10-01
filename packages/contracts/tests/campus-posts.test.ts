@@ -4,6 +4,8 @@ import {
   CreateCampusPostRequestSchema,
   CreateCampusPostCommentRequestSchema,
   ReactCampusPostRequestSchema,
+  CampusPostFeedQuerySchema,
+  CampusPostFeedResponseSchema,
 } from "../src/campus-posts";
 
 describe("Campus Post Contracts Validation", () => {
@@ -104,4 +106,31 @@ describe("Campus Post Contracts Validation", () => {
     expect(ReactCampusPostRequestSchema.safeParse({ reaction: "dislike" }).success).toBe(true);
     expect(ReactCampusPostRequestSchema.safeParse({ reaction: "love" }).success).toBe(false);
   });
+
+  it("validates feed query and feed response schemas", () => {
+    const defaultQuery = CampusPostFeedQuerySchema.parse({});
+    expect(defaultQuery.limit).toBe(20);
+    expect(defaultQuery.category).toBe("all");
+    expect(defaultQuery.cursor).toBeUndefined();
+
+    const customQuery = CampusPostFeedQuerySchema.parse({
+      limit: "15",
+      category: "academic",
+      search: "midterm",
+      cursor: "eyJwdWJsaXNoZWRBdCI6IjIwMjYtMTAtMDEifQ==",
+    });
+    expect(customQuery.limit).toBe(15);
+    expect(customQuery.category).toBe("academic");
+    expect(customQuery.search).toBe("midterm");
+    expect(customQuery.cursor).toBeDefined();
+
+    const response = {
+      items: [],
+      nextCursor: "next-page-token",
+      hasMore: true,
+      count: 0,
+    };
+    expect(CampusPostFeedResponseSchema.safeParse(response).success).toBe(true);
+  });
 });
+

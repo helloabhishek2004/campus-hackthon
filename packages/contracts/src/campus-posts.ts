@@ -201,3 +201,20 @@ export const CreateCampusPostCommentRequestSchema = z.object({
 export type CreateCampusPostCommentRequest = z.infer<
   typeof CreateCampusPostCommentRequestSchema
 >;
+
+export const CampusPostFeedQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z.string().optional(),
+  category: z.enum(["all", "academic", "non-academic"]).optional().default("all"),
+  search: z.string().optional(),
+});
+export type CampusPostFeedQuery = z.infer<typeof CampusPostFeedQuerySchema>;
+
+export const CampusPostFeedResponseSchema = z.object({
+  items: z.array(CampusPostSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+  count: z.number().int().nonnegative(),
+});
+export type CampusPostFeedResponse = z.infer<typeof CampusPostFeedResponseSchema>;
+

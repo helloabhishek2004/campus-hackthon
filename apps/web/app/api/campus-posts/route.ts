@@ -19,14 +19,29 @@ export async function GET(req: NextRequest) {
     const user = await resolveUserContextFromRequest(req);
     const searchParams = req.nextUrl.searchParams;
     const category = searchParams.get("category") || undefined;
-    const query = searchParams.get("q") || searchParams.get("query") || undefined;
+    const query =
+      searchParams.get("q") ||
+      searchParams.get("query") ||
+      searchParams.get("search") ||
+      undefined;
+    const cursor = searchParams.get("cursor") || undefined;
+    const limitRaw = searchParams.get("limit");
+    const limit = limitRaw ? parseInt(limitRaw, 10) : undefined;
 
-    const posts = await getFeedPosts(user, { category, query });
+    const feedResult = await getFeedPosts(user, {
+      category,
+      query,
+      cursor,
+      limit,
+    });
 
     return NextResponse.json({
       success: true,
-      count: posts.length,
-      posts,
+      items: feedResult.items,
+      posts: feedResult.items, // Backwards-compatible
+      nextCursor: feedResult.nextCursor,
+      hasMore: feedResult.hasMore,
+      count: feedResult.count,
     });
   } catch (error: any) {
     return NextResponse.json(

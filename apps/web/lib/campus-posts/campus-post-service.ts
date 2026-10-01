@@ -19,139 +19,11 @@ import {
 // In-Memory Seed / Mock State (for offline development and zero-config test mode)
 // ==============================================================================
 
-const INITIAL_MOCK_POSTS: CampusPost[] = [
-  {
-    id: "88888888-8888-8888-8888-888888880001",
-    authorProfileId: "33333333-3333-3333-3333-333333330001",
-    authorName: "Aarav Sharma",
-    authorRole: "Student Coordinator",
-    authorRoleCategory: "student_coordinator",
-    authorDepartment: "CSE",
-    title: "Campus Hackathon 2026 - Registrations Live",
-    content:
-      "Join 500+ student developers, designers, and innovators for the annual 36-hour Smart Campus Hackathon. Tracks include Generative AI, Campus IoT, and Open Source. Mentors and compute credits provided.",
-    category: "non-academic",
-    status: "published",
-    verificationStatus: "verified",
-    verificationInfo: {
-      verifiedByProfileId: "44444444-4444-4444-4444-444444440002",
-      verifierName: "Dr. Priya Nair",
-      verifierRole: "Department Coordinator",
-      verifierRoleCategory: "department_coordinator",
-      verifierDepartment: "CSE",
-      verifiedAt: "2026-10-01T08:00:00Z",
-      scope: "Campus Wide Event Verification",
-    },
-    audience: {
-      scope: "campus",
-      displayName: "Entire Campus",
-    },
-    attachments: [],
-    likesCount: 24,
-    dislikesCount: 1,
-    commentsCount: 2,
-    publishedAt: "2026-10-01T07:30:00Z",
-    createdAt: "2026-10-01T07:30:00Z",
-    updatedAt: "2026-10-01T08:00:00Z",
-  },
-  {
-    id: "88888888-8888-8888-8888-888888880002",
-    authorProfileId: "44444444-4444-4444-4444-444444440002",
-    authorName: "Dr. Priya Nair",
-    authorRole: "Department Coordinator",
-    authorRoleCategory: "department_coordinator",
-    authorDepartment: "CSE",
-    title: "CSE Mid-Term Internal Assessment Schedule & Rubrics",
-    content:
-      "Official notice regarding the upcoming Semester 6 Internal Assessments. Practical lab evaluations will precede theory tests. Attendance below 75% requires special condonation approval before exam hall entry.",
-    category: "academic",
-    status: "published",
-    verificationStatus: "verified",
-    verificationInfo: {
-      verifiedByProfileId: "44444444-4444-4444-4444-444444440011",
-      verifierName: "Dr. K. Ramanathan",
-      verifierRole: "HOD",
-      verifierRoleCategory: "department_coordinator",
-      verifierDepartment: "CSE",
-      verifiedAt: "2026-09-30T14:00:00Z",
-      scope: "Department of Computer Science",
-    },
-    audience: {
-      scope: "department",
-      departmentCode: "CSE",
-      departmentName: "Computer Science & Engineering",
-      displayName: "CSE Department",
-    },
-    attachments: [],
-    likesCount: 42,
-    dislikesCount: 0,
-    commentsCount: 0,
-    publishedAt: "2026-09-30T13:30:00Z",
-    createdAt: "2026-09-30T13:30:00Z",
-    updatedAt: "2026-09-30T14:00:00Z",
-  },
-  {
-    id: "88888888-8888-8888-8888-888888880003",
-    authorProfileId: "33333333-3333-3333-3333-333333330002",
-    authorName: "Diya Patel",
-    authorRole: "Student",
-    authorRoleCategory: "regular_student",
-    authorDepartment: "CSE",
-    title: "Campus Photography Club - Spring Golden Hour Photowalk",
-    content:
-      "We are hosting an informal photo walk this Thursday around North Quad and Heritage Grove. Bring any camera or smartphone. Beginners welcome! Refreshments sponsored by Student Council.",
-    category: "non-academic",
-    status: "published",
-    verificationStatus: "unverified",
-    audience: {
-      scope: "students",
-      displayName: "All Students",
-    },
-    attachments: [],
-    likesCount: 18,
-    dislikesCount: 0,
-    commentsCount: 0,
-    publishedAt: "2026-10-01T06:00:00Z",
-    createdAt: "2026-10-01T06:00:00Z",
-    updatedAt: "2026-10-01T06:00:00Z",
-  },
-  {
-    id: "88888888-8888-8888-8888-888888880004",
-    authorProfileId: "33333333-3333-3333-3333-333333330012",
-    authorName: "Tanvi Reddy",
-    authorRole: "Student Coordinator",
-    authorRoleCategory: "student_coordinator",
-    authorDepartment: "ECE",
-    title: "ECE Signals & DSP Remedial Lab Sessions",
-    content:
-      "Special remedial practical lab hours have been arranged in Room EC-204 every Tuesday and Thursday 4 PM - 6 PM for students wishing to brush up on FFT and filter simulations.",
-    category: "academic",
-    status: "published",
-    verificationStatus: "verified",
-    verificationInfo: {
-      verifiedByProfileId: "44444444-4444-4444-4444-444444440005",
-      verifierName: "Dr. Anita Roy",
-      verifierRole: "Department Coordinator",
-      verifierRoleCategory: "department_coordinator",
-      verifierDepartment: "ECE",
-      verifiedAt: "2026-10-01T05:00:00Z",
-      scope: "ECE Department Remedial Labs",
-    },
-    audience: {
-      scope: "department",
-      departmentCode: "ECE",
-      departmentName: "Electronics & Communication Engineering",
-      displayName: "ECE Department",
-    },
-    attachments: [],
-    likesCount: 15,
-    dislikesCount: 1,
-    commentsCount: 0,
-    publishedAt: "2026-10-01T04:30:00Z",
-    createdAt: "2026-10-01T04:30:00Z",
-    updatedAt: "2026-10-01T05:00:00Z",
-  },
-];
+import { INITIAL_MOCK_POSTS, INITIAL_MOCK_COMMENTS } from "./campus-posts-seed-data";
+
+// ==============================================================================
+// In-Memory Seed / Mock State (for offline development and zero-config test mode)
+// ==============================================================================
 
 let IN_MEMORY_POSTS: CampusPost[] = [...INITIAL_MOCK_POSTS];
 let IN_MEMORY_REACTIONS: Array<{
@@ -166,59 +38,101 @@ let IN_MEMORY_REACTIONS: Array<{
   },
 ];
 
-let IN_MEMORY_COMMENTS: CampusPostComment[] = [
-  {
-    id: "99999999-9999-9999-9999-999999990001",
-    postId: "88888888-8888-8888-8888-888888880001",
-    authorProfileId: "33333333-3333-3333-3333-333333330003",
-    authorName: "Rohan Verma",
-    authorRole: "Student",
-    authorRoleCategory: "regular_student",
-    authorDepartment: "CSE",
-    content: "Are inter-departmental teams allowed for the GenAI track?",
-    status: "active",
-    createdAt: "2026-10-01T08:15:00Z",
-    updatedAt: "2026-10-01T08:15:00Z",
-  },
-  {
-    id: "99999999-9999-9999-9999-999999990002",
-    postId: "88888888-8888-8888-8888-888888880001",
-    authorProfileId: "33333333-3333-3333-3333-333333330001",
-    authorName: "Aarav Sharma",
-    authorRole: "Student Coordinator",
-    authorRoleCategory: "student_coordinator",
-    authorDepartment: "CSE",
-    content: "Yes, cross-department teams of up to 4 members are encouraged.",
-    status: "active",
-    createdAt: "2026-10-01T08:30:00Z",
-    updatedAt: "2026-10-01T08:30:00Z",
-  },
-];
+let IN_MEMORY_COMMENTS: CampusPostComment[] = [...INITIAL_MOCK_COMMENTS];
+
+// ==============================================================================
+// Cursor & Pagination Helpers
+// ==============================================================================
+
+export function encodeCursor(publishedAt: string, id: string): string {
+  return Buffer.from(JSON.stringify({ publishedAt, id })).toString("base64");
+}
+
+export function decodeCursor(
+  cursor?: string
+): { publishedAt: string; id: string } | null {
+  if (!cursor) return null;
+  try {
+    const raw = Buffer.from(cursor, "base64").toString("utf-8");
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed.publishedAt === "string" &&
+      typeof parsed.id === "string"
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export interface FeedQueryOptions {
+  category?: string;
+  query?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface FeedPageResult {
+  items: CampusPost[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  count: number;
+}
 
 // ==============================================================================
 // Service Operations
 // ==============================================================================
 
 /**
- * Retrieves the campus information feed for an authenticated user, enforcing visibility.
+ * Retrieves the campus information feed for an authenticated user, enforcing visibility,
+ * indexed category/search filtering, cursor-based pagination, and batch user reaction resolution.
  */
 export async function getFeedPosts(
   userContext: UserAuthContext,
-  options?: { category?: string; query?: string }
-): Promise<CampusPost[]> {
+  options?: FeedQueryOptions
+): Promise<FeedPageResult> {
+  const limit = Math.min(Math.max(1, options?.limit ?? 20), 100);
+  const cursorInfo = decodeCursor(options?.cursor);
+
   let posts: CampusPost[] = [];
+  let isDbSuccess = false;
 
   try {
     const supabase = await createClient();
-    const query = supabase
+    let query = supabase
       .from("campus_posts")
       .select("*, campus_post_attachments(*)")
       .eq("status", "published")
-      .order("published_at", { ascending: false });
+      .order("published_at", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (options?.category && options.category !== "all") {
+      query = query.eq("category", options.category);
+    }
+
+    if (options?.query && options.query.trim()) {
+      const q = options.query.trim();
+      query = query.or(
+        `title.ilike.%${q}%,content.ilike.%${q}%,author_name.ilike.%${q}%`
+      );
+    }
+
+    if (cursorInfo) {
+      query = query.or(
+        `published_at.lt.${cursorInfo.publishedAt},and(published_at.eq.${cursorInfo.publishedAt},id.lt.${cursorInfo.id})`
+      );
+    }
+
+    // Limit + 1 to detect next page availability
+    query = query.limit(limit + 1);
 
     const { data, error } = await query;
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
+      isDbSuccess = true;
       posts = data.map((d: any) => ({
         id: d.id,
         authorProfileId: d.author_profile_id,
@@ -268,25 +182,79 @@ export async function getFeedPosts(
       }));
     }
   } catch (_err) {
-    // Offline / Supabase connection error
+    // Supabase unavailable / offline mode
   }
 
-  if (posts.length === 0) {
-    posts = [...IN_MEMORY_POSTS];
+  // If DB returned rows, process DB results
+  if (isDbSuccess && posts.length > 0) {
+    // Enforce server-side audience visibility
+    const visiblePosts = posts.filter((p) => isPostVisibleToUser(p, userContext));
+    const hasMore = visiblePosts.length > limit;
+    const pageItems = hasMore ? visiblePosts.slice(0, limit) : visiblePosts;
+
+    const nextCursor =
+      hasMore && pageItems.length > 0
+        ? encodeCursor(
+            pageItems[pageItems.length - 1].publishedAt,
+            pageItems[pageItems.length - 1].id
+          )
+        : null;
+
+    // Batch resolve user reactions without N+1 queries
+    const postIds = pageItems.map((p) => p.id);
+    if (postIds.length > 0 && userContext.id) {
+      try {
+        const supabase = await createClient();
+        const { data: userRxns } = await supabase
+          .from("campus_post_reactions")
+          .select("post_id, reaction_type")
+          .in("post_id", postIds)
+          .eq("user_profile_id", userContext.id);
+
+        if (userRxns) {
+          const rxnMap = new Map(
+            userRxns.map((r: any) => [r.post_id, r.reaction_type as CampusPostReactionType])
+          );
+          pageItems.forEach((p) => {
+            p.userReaction = rxnMap.get(p.id) || null;
+          });
+        }
+      } catch {
+        // Fallback to in-memory reactions if Supabase lookup fails
+        const rxnMap = new Map(
+          IN_MEMORY_REACTIONS
+            .filter((r) => r.userId === userContext.id && postIds.includes(r.postId))
+            .map((r) => [r.postId, r.reaction])
+        );
+        pageItems.forEach((p) => {
+          p.userReaction = rxnMap.get(p.id) || null;
+        });
+      }
+    }
+
+    return {
+      items: pageItems,
+      nextCursor,
+      hasMore,
+      count: visiblePosts.length,
+    };
   }
 
-  // Enforce server-side audience visibility
-  posts = posts.filter((p) => isPostVisibleToUser(p, userContext));
+  // In-Memory deterministic engine (offline mode / test mode)
+  let memoryPosts = [...IN_MEMORY_POSTS];
 
-  // Category filter
+  // 1. Enforce audience visibility
+  memoryPosts = memoryPosts.filter((p) => isPostVisibleToUser(p, userContext));
+
+  // 2. Category filter
   if (options?.category && options.category !== "all") {
-    posts = posts.filter((p) => p.category === options.category);
+    memoryPosts = memoryPosts.filter((p) => p.category === options.category);
   }
 
-  // Query filter
+  // 3. Search query filter
   if (options?.query && options.query.trim().length > 0) {
     const q = options.query.toLowerCase().trim();
-    posts = posts.filter(
+    memoryPosts = memoryPosts.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.content.toLowerCase().includes(q) ||
@@ -294,18 +262,58 @@ export async function getFeedPosts(
     );
   }
 
-  // Attach active user's reactions
-  posts = posts.map((p) => {
-    const userRxn = IN_MEMORY_REACTIONS.find(
-      (r) => r.postId === p.id && r.userId === userContext.id
-    );
-    return {
-      ...p,
-      userReaction: userRxn ? userRxn.reaction : null,
-    };
+  // 4. Deterministic sort: publishedAt DESC, then id DESC
+  memoryPosts.sort((a, b) => {
+    const timeDiff =
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return b.id.localeCompare(a.id);
   });
 
-  return posts;
+  const totalMatchingCount = memoryPosts.length;
+
+  // 5. Cursor filter
+  if (cursorInfo) {
+    const cursorTime = new Date(cursorInfo.publishedAt).getTime();
+    memoryPosts = memoryPosts.filter((p) => {
+      const pTime = new Date(p.publishedAt).getTime();
+      if (pTime < cursorTime) return true;
+      if (pTime === cursorTime) return p.id < cursorInfo.id;
+      return false;
+    });
+  }
+
+  // 6. Slice limit + 1
+  const hasMore = memoryPosts.length > limit;
+  const pageItems = hasMore ? memoryPosts.slice(0, limit) : memoryPosts;
+
+  const nextCursor =
+    hasMore && pageItems.length > 0
+      ? encodeCursor(
+          pageItems[pageItems.length - 1].publishedAt,
+          pageItems[pageItems.length - 1].id
+        )
+      : null;
+
+  // 7. Batch reaction lookup via Map (O(1) resolution, no N+1)
+  const postIds = pageItems.map((p) => p.id);
+  const rxnMap = new Map(
+    IN_MEMORY_REACTIONS
+      .filter((r) => r.userId === userContext.id && postIds.includes(r.postId))
+      .map((r) => [r.postId, r.reaction])
+  );
+
+  const items = pageItems.map((p) => ({
+    ...p,
+    userReaction: rxnMap.get(p.id) || null,
+  }));
+
+  return {
+    items,
+    nextCursor,
+    hasMore,
+    count: totalMatchingCount,
+  };
 }
 
 /**

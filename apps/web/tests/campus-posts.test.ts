@@ -375,4 +375,114 @@ describe("Campus Information Publishing & Security", () => {
       ).rejects.toThrow("Forbidden");
     });
   });
+
+  describe("7. Feed Performance, Cursor Pagination & Audience Visibility", () => {
+    it("returns paginated feed result with items, nextCursor, hasMore, and count", async () => {
+      const result = await getFeedPosts(REGULAR_CSE_STUDENT, { limit: 10 });
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(10);
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).toBeTruthy();
+      expect(result.count).toBeGreaterThan(10);
+    });
+
+    it("paginates sequentially without duplicate posts across cursors", async () => {
+      const page1 = await getFeedPosts(REGULAR_CSE_STUDENT, { limit: 10 });
+      expect(page1.items.length).toBe(10);
+      expect(page1.nextCursor).not.toBeNull();
+
+      const page2 = await getFeedPosts(REGULAR_CSE_STUDENT, {
+        limit: 10,
+        cursor: page1.nextCursor!,
+      });
+      expect(page2.items.length).toBe(10);
+
+      // Verify no overlap between page 1 and page 2
+      const page1Ids = new Set(page1.items.map((p) => p.id));
+      for (const post of page2.items) {
+        expect(page1Ids.has(post.id)).toBe(false);
+      }
+
+      // Verify strict descending order
+      const lastPage1Post = page1.items[page1.items.length - 1];
+      const firstPage2Post = page2.items[0];
+      const time1 = new Date(lastPage1Post.publishedAt).getTime();
+      const time2 = new Date(firstPage2Post.publishedAt).getTime();
+      expect(time1 >= time2).toBe(true);
+    });
+
+    it("filters feed by academic and non-academic categories", async () => {
+      const academicFeed = await getFeedPosts(REGULAR_CSE_STUDENT, {
+        category: "academic",
+        limit: 50,
+      });
+      expect(academicFeed.items.length).toBeGreaterThan(0);
+      academicFeed.items.forEach((p) => {
+        expect(p.category).toBe("academic");
+      });
+
+      const nonAcademicFeed = await getFeedPosts(REGULAR_CSE_STUDENT, {
+        category: "non-academic",
+        limit: 50,
+      });
+      expect(nonAcademicFeed.items.length).toBeGreaterThan(0);
+      nonAcademicFeed.items.forEach((p) => {
+        expect(p.category).toBe("non-academic");
+      });
+    });
+
+    it("performs server-side search across title, content, and author", async () => {
+      const searchResult = await getFeedPosts(REGULAR_CSE_STUDENT, {
+        query: "hackathon",
+      });
+      expect(searchResult.items.length).toBeGreaterThan(0);
+      searchResult.items.forEach((p) => {
+        const matches =
+          p.title.toLowerCase().includes("hackathon") ||
+          p.content.toLowerCase().includes("hackathon") ||
+          p.authorName.toLowerCase().includes("hackathon");
+        expect(matches).toBe(true);
+      });
+
+      const noMatches = await getFeedPosts(REGULAR_CSE_STUDENT, {
+        query: "randomnonexistentkeyword999xyz",
+      });
+      expect(noMatches.items.length).toBe(0);
+      expect(noMatches.count).toBe(0);
+      expect(noMatches.hasMore).toBe(false);
+    });
+
+    it("enforces cross-department isolation: CSE cannot see private ECE posts", async () => {
+      const cseFeed = await getFeedPosts(REGULAR_CSE_STUDENT, { limit: 100 });
+      const visibleEcePrivatePosts = cseFeed.items.filter(
+        (p) =>
+          p.audience.scope === "department" &&
+          p.audience.departmentCode === "ECE"
+      );
+      expect(visibleEcePrivatePosts.length).toBe(0);
+    });
+
+    it("enforces cross-department isolation: ECE cannot see private CSE posts", async () => {
+      const eceFeed = await getFeedPosts(REGULAR_ECE_STUDENT, { limit: 100 });
+      const visibleCsePrivatePosts = eceFeed.items.filter(
+        (p) =>
+          p.audience.scope === "department" &&
+          p.audience.departmentCode === "CSE"
+      );
+      expect(visibleCsePrivatePosts.length).toBe(0);
+    });
+
+    it("batch resolves user reactions without error", async () => {
+      // First react with like
+      const testPostId = "88888888-8888-8888-8888-888888880003";
+      await reactToCampusPost(testPostId, REGULAR_CSE_STUDENT, "like");
+
+      const feed = await getFeedPosts(REGULAR_CSE_STUDENT, { limit: 20 });
+      const reactedPost = feed.items.find((p) => p.id === testPostId);
+      if (reactedPost) {
+        expect(reactedPost.userReaction).toBe("like");
+      }
+    });
+  });
 });

@@ -8,12 +8,19 @@ import { getMockSession } from "../auth/client-session";
 
 export const campusPostsClientService = {
   /**
-   * Fetches posts visible to the authenticated session user.
+   * Fetches posts visible to the authenticated session user with cursor pagination.
    */
   async getFeed(options?: {
     category?: "all" | "academic" | "non-academic";
     query?: string;
-  }): Promise<CampusPost[]> {
+    cursor?: string;
+    limit?: number;
+  }): Promise<{
+    items: CampusPost[];
+    nextCursor: string | null;
+    hasMore: boolean;
+    count: number;
+  }> {
     const session = getMockSession();
     const headers: Record<string, string> = {};
     if (session?.id) {
@@ -27,6 +34,12 @@ export const campusPostsClientService = {
     if (options?.query && options.query.trim()) {
       params.set("q", options.query.trim());
     }
+    if (options?.cursor) {
+      params.set("cursor", options.cursor);
+    }
+    if (options?.limit) {
+      params.set("limit", String(options.limit));
+    }
 
     const url = `/api/campus-posts${params.toString() ? `?${params.toString()}` : ""}`;
 
@@ -34,15 +47,19 @@ export const campusPostsClientService = {
       const res = await fetch(url, { headers, cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        if (data.posts && Array.isArray(data.posts)) {
-          return data.posts;
-        }
+        const items = data.items || data.posts || [];
+        return {
+          items: Array.isArray(items) ? items : [],
+          nextCursor: data.nextCursor ?? null,
+          hasMore: Boolean(data.hasMore),
+          count: typeof data.count === "number" ? data.count : items.length,
+        };
       }
     } catch (_err) {
       // Offline fallback
     }
 
-    return [];
+    return { items: [], nextCursor: null, hasMore: false, count: 0 };
   },
 
   /**
