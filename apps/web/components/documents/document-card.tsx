@@ -1,6 +1,5 @@
 import React from "react";
 import { CampusDocument } from "../../lib/services/documents-data";
-import { Badge } from "@smart-campus/ui";
 import {
   IdCard,
   Award,
@@ -55,54 +54,65 @@ export function DocumentCard({ document, onView, className }: DocumentCardProps)
 
   const Icon = getIcon();
 
+  const getStatusBadge = () => {
+    if (document.status === "Active" || document.status === "Verified" || document.status === "Approved") {
+      return "bg-emerald-950/50 text-emerald-400 border-emerald-900/60";
+    }
+    return "bg-zinc-800 text-zinc-300 border-zinc-700/80";
+  };
+
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 hover:border-zinc-700 hover:bg-zinc-900 transition-all duration-200 shadow-lg hover:shadow-xl",
+        "group relative flex flex-col justify-between rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 hover:border-zinc-700 hover:bg-zinc-900 transition-all select-none shadow-sm",
         className
       )}
     >
       <div>
-        {/* Top Icon & Status Row */}
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-blue-400 group-hover:text-blue-300 group-hover:border-blue-500/40 transition-colors shadow-inner">
-            <Icon className="w-5 h-5" />
+        {/* Top Header Row */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-300 group-hover:text-zinc-100 transition-colors shrink-0">
+            <Icon className="w-4 h-4" />
           </div>
 
-          <Badge
-            variant={document.statusVariant === "success" ? "success" : "secondary"}
-            className="text-[11px] capitalize tracking-wide font-medium"
+          <span
+            className={cn(
+              "text-[10px] font-mono px-2 py-0.5 rounded border tracking-wide uppercase font-medium",
+              getStatusBadge()
+            )}
           >
             {document.status}
-          </Badge>
+          </span>
         </div>
 
         {/* Title & Category */}
-        <h4 className="text-base font-bold text-zinc-100 group-hover:text-white transition-colors leading-snug">
+        <h4 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors leading-snug">
           {document.title}
         </h4>
-        <p className="text-xs text-zinc-500 capitalize mt-0.5 tracking-wide">
-          {document.category} Document
+        <p className="text-[11px] text-zinc-500 capitalize mt-0.5 tracking-wide">
+          {document.category}
         </p>
 
-        {/* Short Description */}
-        <p className="text-xs text-zinc-400 mt-2.5 line-clamp-2 leading-relaxed">
+        {/* Description */}
+        <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
           {document.description}
         </p>
       </div>
 
       {/* Footer Info & Action */}
-      <div className="pt-4 mt-4 border-t border-zinc-800/60 flex items-center justify-between">
-        <span className="text-[11px] font-mono text-zinc-500">
-          {document.issuedDate}
+      <div className="pt-3 mt-3 border-t border-zinc-800/80 flex items-center justify-between">
+        <span className="text-[11px] font-mono text-zinc-500 truncate max-w-[140px]">
+          {document.documentNumber}
         </span>
 
         <button
+          type="button"
           onClick={() => onView && onView(document)}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 group-hover:text-blue-300 transition-colors hover:underline underline-offset-4 focus:outline-none"
+          className="inline-flex items-center gap-1 text-xs font-medium text-zinc-300 hover:text-white transition-colors group-hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 rounded px-1 py-0.5"
+          aria-label={`View details for ${document.title}`}
         >
           <span>View</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>
     </div>

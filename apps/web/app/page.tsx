@@ -30,8 +30,8 @@ export default function RootPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
       <CampusGramLogo size="lg" />
-      <div className="flex items-center gap-2 mt-6 text-sm text-zinc-500">
-        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+      <div className="flex items-center gap-2 mt-4 text-xs font-mono text-zinc-500">
+        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
         <span>Initializing CampusGram...</span>
       </div>
     </div>

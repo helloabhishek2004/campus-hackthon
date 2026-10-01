@@ -20,10 +20,14 @@ export function MobileHeader() {
   const { user } = useCampusAuth();
 
   return (
-    <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40">
+    <header className="md:hidden flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-40">
       <CampusGramLogo size="sm" withLink />
       {user && (
-        <Link href="/profile" className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
+        <Link
+          href="/profile"
+          className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 rounded-lg"
+          aria-label="View Profile"
+        >
           <Avatar name={user.fullName} role={user.role} size="sm" />
         </Link>
       )}
@@ -36,8 +40,8 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 border-t border-zinc-800 backdrop-blur-lg px-2 py-2 flex items-center justify-around"
-      aria-label="Mobile Bottom Navigation"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950 border-t border-zinc-800 px-3 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+      aria-label="Mobile Navigation Bar"
     >
       {NAV_ITEMS.map((item) => {
         const Icon = item.icon;
@@ -47,23 +51,18 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center justify-center py-1 px-3 rounded-xl text-[11px] font-medium transition-all duration-200",
+              "flex flex-col items-center justify-center min-w-[56px] py-1 px-2 rounded-lg text-[10px] font-medium transition-colors select-none",
               isActive
-                ? "text-blue-400 font-semibold"
+                ? "text-zinc-100 font-semibold"
                 : "text-zinc-500 hover:text-zinc-300"
             )}
           >
-            <div className="relative">
-              <Icon
-                className={cn(
-                  "w-5 h-5 mb-0.5 transition-transform",
-                  isActive && "scale-110 text-blue-400"
-                )}
-              />
-              {isActive && (
-                <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <Icon
+              className={cn(
+                "w-4 h-4 mb-1 transition-colors",
+                isActive ? "text-zinc-100" : "text-zinc-500"
               )}
-            </div>
+            />
             <span>{item.name}</span>
           </Link>
         );

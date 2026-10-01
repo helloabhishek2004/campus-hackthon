@@ -9,40 +9,26 @@ interface AvatarProps {
 }
 
 export function Avatar({ name, role, size = "md", className }: AvatarProps) {
-  // Extract initials
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "CG";
-
-  // Deterministic color palette based on name hash
-  const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const palettes = [
-    { bg: "from-blue-600 to-indigo-700", ring: "ring-blue-500/30", text: "text-white" },
-    { bg: "from-emerald-600 to-teal-700", ring: "ring-emerald-500/30", text: "text-white" },
-    { bg: "from-purple-600 to-indigo-800", ring: "ring-purple-500/30", text: "text-white" },
-    { bg: "from-amber-600 to-orange-700", ring: "ring-amber-500/30", text: "text-white" },
-    { bg: "from-rose-600 to-pink-700", ring: "ring-rose-500/30", text: "text-white" },
-    { bg: "from-cyan-600 to-blue-700", ring: "ring-cyan-500/30", text: "text-white" },
-  ];
-  const palette = palettes[hash % palettes.length];
+  // Extract clean initials
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "CG";
 
   const sizeClasses = {
-    sm: "w-8 h-8 text-xs ring-1",
-    md: "w-10 h-10 text-sm ring-2",
-    lg: "w-16 h-16 text-xl ring-2",
-    xl: "w-24 h-24 text-3xl ring-4 font-bold",
+    sm: "w-7 h-7 text-[11px] rounded-md",
+    md: "w-8 h-8 text-xs rounded-lg",
+    lg: "w-12 h-12 text-base rounded-xl",
+    xl: "w-16 h-16 text-xl rounded-2xl",
   }[size];
 
   return (
     <div
       className={cn(
-        "relative rounded-full inline-flex items-center justify-center font-semibold bg-gradient-to-br shadow-inner select-none transition-transform",
-        palette.bg,
-        palette.ring,
-        palette.text,
+        "relative inline-flex items-center justify-center font-mono font-medium bg-zinc-900 border border-zinc-800 text-zinc-200 select-none shrink-0 transition-colors",
         sizeClasses,
         className
       )}
@@ -51,14 +37,14 @@ export function Avatar({ name, role, size = "md", className }: AvatarProps) {
       <span>{initials}</span>
       {role === "faculty" && (
         <span
-          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-indigo-500 border-2 border-zinc-950 rounded-full"
-          title="Faculty"
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-zinc-400 border border-zinc-950"
+          title="Faculty member"
         />
       )}
       {role === "student" && (
         <span
-          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-zinc-950 rounded-full"
-          title="Student"
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500/80 border border-zinc-950"
+          title="Enrolled student"
         />
       )}
     </div>

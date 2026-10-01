@@ -9,7 +9,7 @@ import {
   MOCK_ACADEMIC_DOCUMENTS,
   MOCK_NON_ACADEMIC_DOCUMENTS,
 } from "@/lib/services/documents-data";
-import { Search, Filter, FileText, CheckCircle2, DownloadCloud } from "lucide-react";
+import { Search, FileText } from "lucide-react";
 import { cn } from "@smart-campus/utils";
 
 const ALL_DOCUMENTS: CampusDocument[] = [
@@ -33,71 +33,75 @@ export default function DocumentsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-8 animate-in fade-in duration-300">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-blue-400 bg-blue-950/60 border border-blue-900/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Registry
-              </span>
-              <span className="text-xs text-zinc-500 font-mono">
-                {filteredDocs.length} Documents Available
-              </span>
+      <div className="space-y-6">
+        {/* Header */}
+        <header className="border-b border-zinc-800 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+                Documents & Credentials
+              </h1>
+              <p className="text-xs text-zinc-400 mt-1">
+                Access official university credentials, student certificates, and activity passes.
+              </p>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-2">
-              Documents & Credentials
-            </h1>
-            <p className="text-sm text-zinc-400 mt-1">
-              Access and download official university credentials, student certificates, and activity passes.
-            </p>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto text-xs text-zinc-400 font-mono">
+              <span>{filteredDocs.length} of {ALL_DOCUMENTS.length} records</span>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title, document ID, or keyword..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+              placeholder="Filter by title, reference, or description..."
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 transition-colors"
             />
           </div>
 
-          {/* Filter Pills */}
-          <div className="inline-flex p-1 rounded-xl bg-zinc-900 border border-zinc-800 self-start sm:self-auto select-none">
+          {/* Segmented Filter Control */}
+          <div
+            role="tablist"
+            className="inline-flex p-1 rounded-lg bg-zinc-900 border border-zinc-800 self-start sm:self-auto select-none"
+          >
             <button
+              type="button"
               onClick={() => setFilter("all")}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                 filter === "all"
-                  ? "bg-zinc-800 text-white shadow"
+                  ? "bg-zinc-800 text-zinc-100 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
               All ({ALL_DOCUMENTS.length})
             </button>
             <button
+              type="button"
               onClick={() => setFilter("academic")}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                 filter === "academic"
-                  ? "bg-blue-600 text-white shadow"
+                  ? "bg-zinc-800 text-zinc-100 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
               Academic ({MOCK_ACADEMIC_DOCUMENTS.length})
             </button>
             <button
+              type="button"
               onClick={() => setFilter("non-academic")}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                 filter === "non-academic"
-                  ? "bg-emerald-600 text-white shadow"
+                  ? "bg-zinc-800 text-zinc-100 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-200"
               )}
             >
@@ -108,17 +112,18 @@ export default function DocumentsPage() {
 
         {/* Documents Grid */}
         {filteredDocs.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {filteredDocs.map((doc) => (
               <DocumentCard key={doc.id} document={doc} onView={setSelectedDoc} />
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3">
+          /* Simple, restrained empty state per Section 36 */
+          <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
             <FileText className="w-8 h-8 text-zinc-600 mx-auto" />
-            <h4 className="text-base font-semibold text-zinc-300">No documents match your query</h4>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-              Try adjusting your filter or search terms to locate your certificate or record.
+            <h4 className="text-sm font-medium text-zinc-200">No documents found</h4>
+            <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+              No official documents matched your query. Try clearing your filter or search terms.
             </p>
           </div>
         )}

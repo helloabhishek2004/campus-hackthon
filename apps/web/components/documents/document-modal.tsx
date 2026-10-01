@@ -1,129 +1,149 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { CampusDocument } from "../../lib/services/documents-data";
-import { X, ShieldCheck, Download, CheckCircle, FileCheck, Building, Hash } from "lucide-react";
-import { Badge } from "@smart-campus/ui";
+import { X, ShieldCheck, Download, FileText } from "lucide-react";
 
 interface DocumentModalProps {
-  document: CampusDocument | null;
+  document?: CampusDocument | null;
+  documentItem?: CampusDocument | null;
   onClose: () => void;
 }
 
-export function DocumentModal({ document, onClose }: DocumentModalProps) {
-  if (!document) return null;
+export function DocumentModal({ document: docProp, documentItem, onClose }: DocumentModalProps) {
+  const activeDoc = docProp || documentItem || null;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (activeDoc && typeof window !== "undefined") {
+      window.addEventListener("keydown", handleKeyDown);
+      window.document.body.style.overflow = "hidden";
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("keydown", handleKeyDown);
+        window.document.body.style.overflow = "auto";
+      }
+    };
+  }, [activeDoc, onClose]);
+
+  if (!activeDoc) return null;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="document-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+      onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-          aria-label="Close document modal"
+          className="absolute top-4 right-4 p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
+          aria-label="Close dialog"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        {/* Modal Header */}
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-            <FileCheck className="w-6 h-6" />
+        {/* Header */}
+        <div className="flex items-start gap-3.5 pr-6">
+          <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+            <FileText className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                {document.category}
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider">
+                {activeDoc.category}
               </span>
-              <Badge variant={document.statusVariant === "success" ? "success" : "secondary"}>
-                {document.status}
-              </Badge>
+              <span className="text-[10px] font-mono px-2 py-0.2 rounded border bg-zinc-900 text-zinc-300 border-zinc-700">
+                {activeDoc.status}
+              </span>
             </div>
-            <h3 id="document-title" className="text-xl font-bold text-zinc-100 mt-1">
-              {document.title}
+            <h3 id="document-title" className="text-lg font-semibold text-zinc-100 mt-1">
+              {activeDoc.title}
             </h3>
-            <p className="text-xs text-zinc-400 font-mono mt-0.5">
-              Doc ID: {document.documentNumber}
+            <p className="text-xs text-zinc-500 font-mono mt-0.5">
+              Ref: {activeDoc.documentNumber}
             </p>
           </div>
         </div>
 
-        {/* Verified Banner */}
-        <div className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 p-3 flex items-center gap-3 text-xs text-emerald-300">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+        {/* Verification Banner */}
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 flex items-center gap-2.5 text-xs text-zinc-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           <div>
-            <p className="font-semibold">Institutional Digital Signature Verified</p>
-            <p className="text-[11px] text-emerald-400/80">
+            <p className="font-medium text-zinc-200">Institutional Signature Verified</p>
+            <p className="text-[11px] text-zinc-500">
               Authenticated via Smart Campus Registrar Authority
             </p>
           </div>
         </div>
 
-        {/* Metadata Details */}
-        <div className="space-y-3 text-xs border-y border-zinc-800 py-4">
-          <div className="flex justify-between py-1 border-b border-zinc-800/40">
+        {/* Key-Value Details */}
+        <div className="space-y-2.5 text-xs border-y border-zinc-800 py-3.5">
+          <div className="flex justify-between py-1 border-b border-zinc-850">
             <span className="text-zinc-500">Issuing Body</span>
-            <span className="text-zinc-200 font-medium">{document.details.issuer}</span>
+            <span className="text-zinc-200 font-medium">{activeDoc.details.issuer}</span>
           </div>
 
-          <div className="flex justify-between py-1 border-b border-zinc-800/40">
+          <div className="flex justify-between py-1 border-b border-zinc-850">
             <span className="text-zinc-500">Verified By</span>
-            <span className="text-zinc-200 font-medium">{document.details.verifiedBy}</span>
+            <span className="text-zinc-200 font-medium">{activeDoc.details.verifiedBy}</span>
           </div>
 
-          <div className="flex justify-between py-1 border-b border-zinc-800/40">
+          <div className="flex justify-between py-1 border-b border-zinc-850">
             <span className="text-zinc-500">Reference Hash</span>
-            <span className="font-mono text-zinc-300">{document.details.referenceCode}</span>
+            <span className="font-mono text-zinc-300">{activeDoc.details.referenceCode}</span>
           </div>
 
-          <div className="flex justify-between py-1 border-b border-zinc-800/40">
+          <div className="flex justify-between py-1 border-b border-zinc-850">
             <span className="text-zinc-500">Issue Period</span>
-            <span className="text-zinc-200">{document.issuedDate}</span>
+            <span className="text-zinc-200">{activeDoc.issuedDate}</span>
           </div>
 
-          {document.validThrough && (
-            <div className="flex justify-between py-1 border-b border-zinc-800/40">
+          {activeDoc.validThrough && (
+            <div className="flex justify-between py-1 border-b border-zinc-850">
               <span className="text-zinc-500">Valid Through</span>
-              <span className="text-zinc-200 font-medium text-emerald-400">
-                {document.validThrough}
-              </span>
+              <span className="text-zinc-200 font-medium">{activeDoc.validThrough}</span>
             </div>
           )}
 
-          {document.details.remarks && (
-            <div className="pt-2">
-              <span className="text-zinc-500 block mb-1">Administrative Remarks:</span>
-              <p className="text-zinc-300 bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-800/60 leading-relaxed">
-                {document.details.remarks}
+          {activeDoc.details.remarks && (
+            <div className="pt-1.5">
+              <span className="text-zinc-500 block mb-1">Administrative Remarks</span>
+              <p className="text-zinc-300 bg-zinc-900/80 p-2 rounded-md border border-zinc-800 leading-relaxed text-[11px]">
+                {activeDoc.details.remarks}
               </p>
             </div>
           )}
         </div>
 
-        {/* Modal Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-2.5 pt-1">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold rounded-xl text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium rounded-md text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition-colors"
           >
             Close
           </button>
           <button
+            type="button"
             onClick={() => {
-              alert(`Simulated Download: ${document.title} (${document.documentNumber}.pdf)`);
+              alert(`Simulated Download: ${activeDoc.title} (${activeDoc.documentNumber}.pdf)`);
             }}
-            className="px-4 py-2 text-xs font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-500 transition-colors flex items-center gap-1.5 shadow-md shadow-blue-600/30"
+            className="px-3.5 py-1.5 text-xs font-medium rounded-md text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download Certified Copy</span>
+            <span>Download Certified PDF</span>
           </button>
         </div>
       </div>

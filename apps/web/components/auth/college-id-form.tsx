@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { mockIdentityService } from "../../lib/services/identity-service";
 import { InstitutionalLookupRequestSchema, InstitutionalLookupResponse } from "@smart-campus/contracts";
 import { cn } from "@smart-campus/utils";
@@ -24,7 +24,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
 
     const trimmed = institutionalId.trim().toUpperCase();
 
-    // 1. Client schema validation
+    // Client schema validation
     const validation = InstitutionalLookupRequestSchema.safeParse({ institutionalId: trimmed });
     if (!validation.success) {
       setError(validation.error.issues[0]?.message || "Please enter a valid College ID.");
@@ -34,7 +34,6 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
     setLoading(true);
 
     try {
-      // 2. Call identity service
       const profile = await mockIdentityService.lookupByInstitutionalId(trimmed);
 
       if (!profile) {
@@ -65,11 +64,11 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
   };
 
   return (
-    <div className={cn("w-full max-w-md mx-auto space-y-6", className)}>
+    <div className={cn("w-full max-w-sm mx-auto space-y-5", className)}>
       <form onSubmit={handleLookup} className="space-y-4">
         <div>
-          <label htmlFor="college-id-input" className="block text-sm font-semibold text-zinc-200 mb-2">
-            Institutional College ID
+          <label htmlFor="college-id-input" className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+            College ID
           </label>
           <div className="relative">
             <input
@@ -83,7 +82,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
               placeholder="e.g. STU2026001"
               disabled={loading}
               autoFocus
-              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono tracking-wider focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-base disabled:opacity-50"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono tracking-wide focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 transition-colors text-sm disabled:opacity-50"
             />
           </div>
         </div>
@@ -92,16 +91,11 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
         {error && (
           <div
             role="alert"
-            className="p-3.5 bg-red-950/40 border border-red-900/60 rounded-xl flex items-start gap-2.5 text-xs text-red-300 animate-in fade-in"
+            className="p-3 bg-red-950/40 border border-red-900/60 rounded-lg flex items-start gap-2 text-xs text-red-300"
           >
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-semibold">{error}</p>
-              {error.includes("not found") && (
-                <p className="text-red-400/80">
-                  Tip: Use the demo ID below to test the verified student flow.
-                </p>
-              )}
+            <div className="space-y-0.5">
+              <p className="font-medium">{error}</p>
             </div>
           </div>
         )}
@@ -110,63 +104,54 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
         <button
           type="submit"
           disabled={loading || !institutionalId.trim()}
-          className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 disabled:shadow-none transition-all duration-200 disabled:text-zinc-500 disabled:cursor-not-allowed group active:scale-[0.99]"
+          className="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white disabled:bg-zinc-800 text-zinc-950 disabled:text-zinc-500 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors disabled:cursor-not-allowed shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin text-white" />
-              <span>Verifying Institutional ID...</span>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-950" />
+              <span>Verifying ID...</span>
             </>
           ) : (
             <>
               <span>Continue</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </>
           )}
         </button>
       </form>
 
       {/* Demo helper box for hackathon judges */}
-      <div className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Demo Quick Fill
+      <div className="p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40 space-y-2">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="font-mono text-zinc-400 uppercase tracking-wider">
+            Demo Credentials
           </span>
-          <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-mono">
-            Mock Seed
-          </span>
+          <span className="font-mono text-zinc-500 text-[10px]">Tap to fill</span>
         </div>
 
-        <p className="text-xs text-zinc-400">
-          Click any institutional role below to instantly load demo credentials:
-        </p>
-
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
             onClick={() => setDemoId("STU2026001")}
-            className="text-xs font-mono bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-900/40 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
           >
-            <span>STU2026001</span>
-            <span className="text-[10px] text-zinc-400 font-sans">(Student)</span>
+            STU2026001 <span className="text-[10px] text-zinc-500">(Student)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setDemoId("FAC1001")}
-            className="text-xs font-mono bg-zinc-800 hover:bg-zinc-700 text-blue-300 border border-blue-900/40 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
           >
-            <span>FAC1001</span>
-            <span className="text-[10px] text-zinc-400 font-sans">(Faculty)</span>
+            FAC1001 <span className="text-[10px] text-zinc-500">(Faculty)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setDemoId("FAC1011")}
-            className="text-xs font-mono bg-zinc-800 hover:bg-zinc-700 text-purple-300 border border-purple-900/40 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
           >
-            <span>FAC1011</span>
-            <span className="text-[10px] text-zinc-400 font-sans">(HOD)</span>
+            FAC1011 <span className="text-[10px] text-zinc-500">(HOD)</span>
           </button>
         </div>
       </div>

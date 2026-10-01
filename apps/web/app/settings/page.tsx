@@ -10,12 +10,10 @@ import {
   Bell,
   ShieldCheck,
   RotateCcw,
-  Sparkles,
-  Info,
   Check,
   LogOut,
-  Laptop,
-  CheckCircle2,
+  Sliders,
+  FileCheck,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -32,63 +30,71 @@ export default function SettingsPage() {
     setResetSuccess(true);
     setTimeout(() => {
       router.push("/onboarding");
-    }, 800);
+    }, 700);
   };
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-300">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="border-b border-zinc-800 pb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Settings & Preferences</h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Configure application appearance, notifications, and demo parameters.
+        <header className="border-b border-zinc-800 pb-5">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+            Settings & Preferences
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1">
+            Manage application appearance, alerts, and institutional data preferences.
           </p>
-        </div>
+        </header>
 
         {/* Section 1: Appearance */}
-        <section className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 space-y-4">
-          <div className="flex items-center gap-2.5">
-            <Moon className="w-5 h-5 text-blue-400" />
-            <h2 className="text-base font-bold text-white">Appearance & Theme</h2>
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
+          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
+            <Moon className="w-4 h-4 text-zinc-400" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+              Appearance
+            </h2>
           </div>
 
-          <div className="flex items-center justify-between py-2 border-t border-zinc-800/80">
+          <div className="flex items-center justify-between py-1 text-xs">
             <div>
-              <p className="text-sm font-medium text-zinc-200">Interface Theme</p>
-              <p className="text-xs text-zinc-500">Dark-first campus interface for maximum contrast and eye comfort</p>
+              <p className="font-medium text-zinc-200">Interface Theme</p>
+              <p className="text-zinc-500">Dark monochrome palette optimized for focus and low eye strain.</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700">
-              <Check className="w-3.5 h-3.5 text-blue-400" />
-              Dark Active
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono bg-zinc-950 text-zinc-300 px-2.5 py-1 rounded border border-zinc-800">
+              <Check className="w-3.5 h-3.5 text-zinc-400" />
+              Dark
             </span>
           </div>
         </section>
 
         {/* Section 2: Notifications */}
-        <section className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 space-y-4">
-          <div className="flex items-center gap-2.5">
-            <Bell className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white">Campus Notifications</h2>
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
+          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
+            <Bell className="w-4 h-4 text-zinc-400" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+              Notifications
+            </h2>
           </div>
 
-          <div className="space-y-3 border-t border-zinc-800/80 pt-3 text-sm">
+          <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Academic & Department Announcements</p>
-                <p className="text-xs text-zinc-500">Official circulars, exam notifications, and semester schedules</p>
+                <p className="font-medium text-zinc-200">Campus Circulars & Notices</p>
+                <p className="text-zinc-500">Official circulars, exam schedules, and department notices</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={announcements}
                 onClick={() => setAnnouncements(!announcements)}
-                className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none ${
-                  announcements ? "bg-blue-600" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
+                  announcements ? "bg-zinc-200" : "bg-zinc-800"
                 }`}
-                aria-label="Toggle announcements"
+                aria-label="Toggle circular notifications"
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white transition-transform block mx-1 ${
-                    announcements ? "translate-x-5" : "translate-x-0"
+                  className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
+                    announcements ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
                   }`}
                 />
               </button>
@@ -97,19 +103,21 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between py-1">
               <div>
                 <p className="font-medium text-zinc-200">Complaint Intelligence Status Updates</p>
-                <p className="text-xs text-zinc-500">Alerts when reported grievances are analyzed, routed, or resolved</p>
+                <p className="text-zinc-500">Alerts when reported issues are analyzed or routed</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={complaintAlerts}
                 onClick={() => setComplaintAlerts(!complaintAlerts)}
-                className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none ${
-                  complaintAlerts ? "bg-blue-600" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
+                  complaintAlerts ? "bg-zinc-200" : "bg-zinc-800"
                 }`}
-                aria-label="Toggle complaint alerts"
+                aria-label="Toggle complaint alert notifications"
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white transition-transform block mx-1 ${
-                    complaintAlerts ? "translate-x-5" : "translate-x-0"
+                  className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
+                    complaintAlerts ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
                   }`}
                 />
               </button>
@@ -117,20 +125,22 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Lost & Found Proximity & Match Signals</p>
-                <p className="text-xs text-zinc-500">Automatic notifications when high-confidence matches are found</p>
+                <p className="font-medium text-zinc-200">Lost & Found Proximity Alerts</p>
+                <p className="text-zinc-500">Alerts when verified item matches are reported in custody</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={lostFoundAlerts}
                 onClick={() => setLostFoundAlerts(!lostFoundAlerts)}
-                className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none ${
-                  lostFoundAlerts ? "bg-blue-600" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
+                  lostFoundAlerts ? "bg-zinc-200" : "bg-zinc-800"
                 }`}
                 aria-label="Toggle lost and found alerts"
               >
                 <span
-                  className={`w-4 h-4 rounded-full bg-white transition-transform block mx-1 ${
-                    lostFoundAlerts ? "translate-x-5" : "translate-x-0"
+                  className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
+                    lostFoundAlerts ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
                   }`}
                 />
               </button>
@@ -139,96 +149,83 @@ export default function SettingsPage() {
         </section>
 
         {/* Section 3: Privacy & Security */}
-        <section className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 space-y-4">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-blue-400" />
-            <h2 className="text-base font-bold text-white">Institutional Privacy Standards</h2>
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
+          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
+            <ShieldCheck className="w-4 h-4 text-zinc-400" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+              Privacy Standards
+            </h2>
           </div>
 
-          <div className="border-t border-zinc-800/80 pt-3 text-xs text-zinc-400 space-y-2 leading-relaxed">
+          <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
             <p>
-              • <strong>Zero Unauthenticated Phone Disclosure:</strong> All institutional identity lookups strictly mask registered contact numbers.
+              • <strong>Phone Number Masking:</strong> Contact numbers remain masked across all unauthenticated endpoints.
             </p>
             <p>
-              • <strong>Pre-existing Biodata Source of Truth:</strong> Profiles are drawn directly from official university catalog seeds.
+              • <strong>Canonical Biodata Authority:</strong> Identity records are populated from official institutional catalogs.
             </p>
           </div>
         </section>
 
-        {/* Section 4: Demo & Testing Controls (Judge Friendly) */}
-        <section className="p-6 rounded-2xl border border-amber-900/40 bg-zinc-900/90 space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              <h2 className="text-base font-bold text-white">Judge & Developer Controls</h2>
+        {/* Section 4: Demo & Testing Controls */}
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-zinc-400" />
+              <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+                Testing Controls
+              </h2>
             </div>
-            <span className="text-[10px] font-mono uppercase bg-amber-950/80 border border-amber-800/60 text-amber-300 px-2 py-0.5 rounded-full font-semibold">
-              Hackathon Mode
-            </span>
+            <span className="text-[10px] font-mono text-zinc-500 uppercase">Local Mode</span>
           </div>
 
-          <p className="text-xs text-zinc-400">
-            Easily reset user onboarding state or switch active personas during demonstrations:
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            {/* Reset Onboarding Button */}
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 space-y-2 flex flex-col justify-between">
+          <div className="space-y-3 text-xs">
+            <div className="flex items-center justify-between py-1">
               <div>
-                <p className="text-sm font-semibold text-zinc-200">Reset Onboarding Tour</p>
-                <p className="text-xs text-zinc-500">
-                  Clears local storage flag so the 3-step intro slides can be viewed again.
-                </p>
+                <p className="font-medium text-zinc-200">Reset Onboarding Tour</p>
+                <p className="text-zinc-500">Clears client flag so the three intro screens can be reviewed again.</p>
               </div>
-
               <button
                 type="button"
                 onClick={handleResetOnboarding}
                 disabled={resetSuccess}
-                className="w-full mt-2 py-2 px-3 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 {resetSuccess ? (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Reset! Redirecting to tour...</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Resetting...</span>
                   </>
                 ) : (
                   <>
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Reset Onboarding State</span>
+                    <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Reset</span>
                   </>
                 )}
               </button>
             </div>
 
-            {/* Switch Personas */}
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 space-y-2 flex flex-col justify-between">
-              <div>
-                <p className="text-sm font-semibold text-zinc-200">Switch Demo Persona</p>
-                <p className="text-xs text-zinc-500">
-                  Change active user to test student vs faculty vs department head views.
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-1">
+            <div className="pt-2 border-t border-zinc-850">
+              <span className="text-zinc-500 block mb-2 font-medium">Switch Active Demo Persona</span>
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => switchDemoUser("STU2026001")}
-                  className="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-mono font-semibold bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-zinc-700 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
                 >
                   Student
                 </button>
                 <button
                   type="button"
                   onClick={() => switchDemoUser("FAC1001")}
-                  className="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-mono font-semibold bg-zinc-800 hover:bg-zinc-700 text-blue-400 border border-zinc-700 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
                 >
                   Faculty
                 </button>
                 <button
                   type="button"
                   onClick={() => switchDemoUser("FAC1011")}
-                  className="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-mono font-semibold bg-zinc-800 hover:bg-zinc-700 text-purple-400 border border-zinc-700 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
                 >
                   HOD
                 </button>
@@ -236,27 +233,21 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-zinc-800/80">
+          <div className="pt-3 border-t border-zinc-800/80">
             <button
               onClick={logout}
-              className="py-2.5 px-4 rounded-xl bg-red-950/30 hover:bg-red-900/40 border border-red-900/40 text-red-300 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2 px-3 rounded-lg bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3.5 h-3.5 text-zinc-500" />
               <span>Sign Out of Current Session</span>
             </button>
           </div>
         </section>
 
-        {/* Section 5: About CampusGram */}
-        <section className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 text-xs text-zinc-500 space-y-2">
-          <div className="flex items-center justify-between text-zinc-400 font-semibold">
-            <span>CampusGram Portal</span>
-            <span>Version 1.0 (Hackathon Edition)</span>
-          </div>
-          <p>
-            Monorepo Module 1 (Campus Application) seamlessly integrated with Module 2 (AI Intelligence) and Module 3 (Lost & Found).
-          </p>
-        </section>
+        {/* Section 5: About */}
+        <footer className="text-center text-[11px] text-zinc-500 font-mono pt-4">
+          CampusGram • Version 1.0 (Release Candidate) • Smart Campus Monorepo
+        </footer>
       </div>
     </AppShell>
   );
