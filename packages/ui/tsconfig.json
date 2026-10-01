@@ -1,0 +1,7 @@
+{
+  "extends": "@smart-campus/config/typescript/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*"]
+}

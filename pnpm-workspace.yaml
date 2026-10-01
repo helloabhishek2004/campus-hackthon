@@ -1,0 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'modules/*'
+allowBuilds:
+  '@google/genai': true
+  esbuild: true
+  protobufjs: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@google/genai@2.25.0'

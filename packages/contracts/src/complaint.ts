@@ -1,0 +1,206 @@
+import { z } from "zod";
+
+// ==============================================================================
+// Enums and Primitives
+// ==============================================================================
+
+export const ComplaintCategorySchema = z.enum([
+  "infrastructure",
+  "academic",
+  "hostel",
+  "sanitation",
+  "security",
+  "administration",
+  "it_services",
+  "other",
+]);
+export type ComplaintCategory = z.infer<typeof ComplaintCategorySchema>;
+
+export const ComplaintSeverityLevelSchema = z.enum([
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
+export type ComplaintSeverityLevel = z.infer<
+  typeof ComplaintSeverityLevelSchema
+>;
+
+export const ComplaintStatusSchema = z.enum([
+  "submitted",
+  "under_review",
+  "in_progress",
+  "resolved",
+  "rejected",
+]);
+export type ComplaintStatus = z.infer<typeof ComplaintStatusSchema>;
+
+// ==============================================================================
+// Attachments
+// ==============================================================================
+
+export const ComplaintAttachmentSchema = z.object({
+  id: z.string().optional(),
+  url: z.string().url(),
+  filename: z.string().optional(),
+  mime_type: z.string().optional(),
+  size_bytes: z.number().int().nonnegative().optional(),
+});
+export type ComplaintAttachment = z.infer<typeof ComplaintAttachmentSchema>;
+
+// ==============================================================================
+// Intelligence Elements (Severity, Location, Entities, Matching)
+// ==============================================================================
+
+export const SeverityAnalysisSchema = z.object({
+  level: ComplaintSeverityLevelSchema,
+  score: z.number().min(0).max(10).describe("0-10 urgency and impact score"),
+  urgency_reasoning: z
+    .string()
+    .describe("Explanation for assigned severity level"),
+});
+export type SeverityAnalysis = z.infer<typeof SeverityAnalysisSchema>;
+
+export const LocationExtractionSchema = z.object({
+  building: z.string().nullable().optional(),
+  floor: z.string().nullable().optional(),
+  room: z.string().nullable().optional(),
+  area: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("e.g. Quadrangle, Library Hall, Cafeteria"),
+  raw_mention: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Unparsed text snippet indicating location"),
+});
+export type LocationExtraction = z.infer<typeof LocationExtractionSchema>;
+
+export const RecipientSuggestionSchema = z.object({
+  department: z
+    .string()
+    .describe("e.g. Estate Office, IT Helpdesk, Hostel Warden"),
+  role: z
+    .string()
+    .optional()
+    .describe("e.g. Electrical Supervisor, Network Admin"),
+  confidence: z.number().min(0).max(1),
+  reasoning: z.string(),
+});
+export type RecipientSuggestion = z.infer<typeof RecipientSuggestionSchema>;
+
+export const ExtractedEntitySchema = z.object({
+  entity: z.string(),
+  type: z.enum([
+    "equipment",
+    "facility",
+    "person",
+    "location",
+    "datetime",
+    "other",
+  ]),
+  description: z.string().optional(),
+});
+export type ExtractedEntity = z.infer<typeof ExtractedEntitySchema>;
+
+export const SimilarIssueMatchSchema = z.object({
+  complaint_id: z.string(),
+  title: z.string(),
+  similarity_score: z.number().min(0).max(1),
+  status: ComplaintStatusSchema.optional(),
+  summary: z.string().optional(),
+});
+export type SimilarIssueMatch = z.infer<typeof SimilarIssueMatchSchema>;
+
+export const IssueClusterMatchSchema = z.object({
+  is_potential_duplicate: z.boolean(),
+  cluster_id: z.string().nullable().optional(),
+  confidence: z.number().min(0).max(1),
+  similar_issues: z.array(SimilarIssueMatchSchema).default([]),
+});
+export type IssueClusterMatch = z.infer<typeof IssueClusterMatchSchema>;
+
+// ==============================================================================
+// Full Complaint Analysis Result Schema
+// ==============================================================================
+
+export const ComplaintAnalysisSchema = z.object({
+  category: ComplaintCategorySchema,
+  subcategory: z.string(),
+  title_summary: z
+    .string()
+    .describe("Concise 1-sentence headline of the problem"),
+  summary: z.string().describe("Clear structured description of the issue"),
+  severity: SeverityAnalysisSchema,
+  location: LocationExtractionSchema,
+  entities: z.array(ExtractedEntitySchema).default([]),
+  suggested_recipient: RecipientSuggestionSchema,
+  cluster_match: IssueClusterMatchSchema.optional(),
+  overall_confidence: z.number().min(0).max(1),
+  tags: z.array(z.string()).default([]),
+});
+export type ComplaintAnalysis = z.infer<typeof ComplaintAnalysisSchema>;
+
+// ==============================================================================
+// Module 1 <-> Module 2 Request Contract
+// ==============================================================================
+
+export const ComplaintAnalysisRequestSchema = z.object({
+  complaint_id: z.string(),
+  complainant: z
+    .object({
+      user_id: z.string().optional(),
+      department: z.string().optional(),
+      programme: z.string().optional(),
+      semester: z.number().int().optional(),
+      class: z.string().optional(),
+    })
+    .optional(),
+  text: z.string().min(5, "Complaint text must be at least 5 characters long"),
+  images: z.array(ComplaintAttachmentSchema).optional(),
+  documents: z.array(ComplaintAttachmentSchema).optional(),
+  requested_recipient: z
+    .object({
+      type: z.string().optional(),
+      scope: z.string().optional(),
+    })
+    .optional(),
+  metadata: z
+    .object({
+      source: z.string().optional(),
+      created_at: z.string().optional(),
+    })
+    .optional(),
+});
+export type ComplaintAnalysisRequest = z.infer<
+  typeof ComplaintAnalysisRequestSchema
+>;
+
+// ==============================================================================
+// Module 2 <-> Module 1 Response Contract
+// ==============================================================================
+
+export const ComplaintAnalysisResponseSchema = z.object({
+  success: z.boolean(),
+  complaint_id: z.string(),
+  processing: z.object({
+    status: z.enum(["completed", "failed"]),
+    provider: z.enum(["gemini", "mock"]).optional(),
+    model: z.string().optional(),
+    processed_at: z.string().optional(),
+    duration_ms: z.number().nonnegative().optional(),
+  }),
+  analysis: ComplaintAnalysisSchema.optional(),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+      details: z.any().optional(),
+    })
+    .optional(),
+});
+export type ComplaintAnalysisResponse = z.infer<
+  typeof ComplaintAnalysisResponseSchema
+>;
