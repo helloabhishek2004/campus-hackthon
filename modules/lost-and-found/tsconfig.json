@@ -1,0 +1,4 @@
+{
+  "extends": "@smart-campus/config/typescript/base.json",
+  "include": ["src/**/*", "tests/**/*"]
+}

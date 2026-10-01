@@ -2,6 +2,7 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'modules/*'
+  - 'workers/*'
 allowBuilds:
   '@google/genai': true
   esbuild: true

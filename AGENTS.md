@@ -30,6 +30,12 @@ smart-campus/
 ├── modules/complaint-intelligence/    # Owned by Module 2 (AI developer)
 │   └── AI classification, severity scoring, duplicate clustering, routing
 │
+├── modules/lost-and-found/            # Owned by Module 3 (Lost & Found developer)
+│   └── Matching engine, state machine, privacy rules, storage abstractions
+│
+├── services/lost-found-ai/            # Owned by Module 3 (Stateless FastAPI AI service)
+├── workers/lost-found-worker/         # Owned by Module 3 (Async background worker)
+│
 ├── packages/contracts/                # SHARED CONTRACTS — Single Source of Truth
 │   └── TypeScript types & Zod validation schemas
 │
@@ -41,15 +47,23 @@ smart-campus/
 
 ### Strict Non-Interference Rules
 
+- **Module 3 Developer/Agent (Lost & Found):**
+  - Owns `modules/lost-and-found/`, `services/lost-found-ai/`, `workers/lost-found-worker/`, and Lost & Found documentation.
+  - May modify `apps/web/app/lost-and-found/` and `apps/web/app/api/lost-found/`.
+  - MUST NOT casually modify Module 1 implementation (`apps/web/app/(portal)`), Module 2 implementation (`modules/complaint-intelligence/`), root configurations, or existing database migrations.
+  - Uses existing `public.profiles` / `auth.users` — MUST NOT create duplicate user identity systems.
+
 - **Module 2 Developer/Agent:**
   - Works inside `modules/complaint-intelligence/`.
   - Exposes ONLY `analyzeComplaint(request)` (and candidate search helpers).
   - MUST NOT import from `apps/web/` or depend on React/DOM.
   - MUST NOT create duplicate database tables for users, roles, or canonical complaints.
+
 - **Module 1 Developer/Agent:**
   - Works inside `apps/web/`.
-  - Interacts with Module 2 EXCLUSIVELY via `@smart-campus/contracts` and the public function `analyzeComplaint`.
-  - MUST NOT alter prompts, similarity algorithms, or internal files inside `modules/complaint-intelligence/src/`.
+  - Interacts with Module 2 and Module 3 EXCLUSIVELY via `@smart-campus/contracts` and public module exports.
+  - MUST NOT alter prompts, similarity algorithms, or internal files inside `modules/complaint-intelligence/` or `modules/lost-and-found/`.
+
 - **Shared Contracts:**
   - Modifying `packages/contracts` requires mutual alignment. Never make breaking changes silently. Always favor additive updates (e.g., optional fields) over renames.
 
@@ -68,12 +82,22 @@ smart-campus/
 ## 4. Deterministic Mock Mode
 
 - Module 2 provides a **Mock Mode** (`AI_PROVIDER=mock`).
-- Developers working on Module 1 (UI, feed, auth) can run and test the complete end-to-end complaint pipeline without needing a Gemini API key.
-- Mock mode must implement the EXACT same contract and Zod validation as live Gemini mode.
+- Institutional Authentication provides an **OTP Mock Mode** (`OTP_PROVIDER=mock`, test code `123456`).
+- Developers working on Module 1 (UI, feed, auth) can run and test the complete end-to-end complaint and login pipelines without needing external API keys or SMS gateways.
+- Mock modes implement the EXACT same contracts and Zod validation as live modes.
 
 ---
 
-## 5. Coding & Validation Standards
+## 5. Institutional Identity & Privacy Rules
+
+- **Pre-existing Biodata:** Users do NOT self-register raw profiles. The institution maintains canonical records in `institutional_users`, `student_biodata`, and `faculty_biodata`.
+- **Phone Masking & RLS:** Raw phone numbers MUST NEVER be exposed to unauthenticated clients. Identity lookups return masked phone numbers (e.g. `+91 ******0001` or `******0001`).
+- **Simulated OTP Verification:** Login verifies institutional ID against registered phone via simulated/mock OTP challenges before creating or linking application sessions (`public.profiles`).
+- **Multi-Responsibility Tags:** Users can hold multiple institutional tags simultaneously (`CAS_COORDINATOR`, `DEPARTMENT_COORDINATOR`, `COURSE_COORDINATOR`, `CLASS_COORDINATOR`, `HOD`).
+
+---
+
+## 6. Coding & Validation Standards
 
 - **Runtime Validation:** Never trust raw AI outputs or untrusted network inputs. Always validate using Zod schemas from `@smart-campus/contracts`.
 - **No Premature Complexity:**

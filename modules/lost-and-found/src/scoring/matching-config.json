@@ -1,0 +1,19 @@
+{
+  "_comment": "Starting baseline weights and threshold bands from Lost & Found build guide. These represent empirical heuristics, NOT calibrated probabilities, and require ongoing evaluation against campus feedback.",
+  "weights": {
+    "image": 0.45,
+    "text": 0.25,
+    "category": 0.1,
+    "location": 0.1,
+    "time": 0.1
+  },
+  "bands": {
+    "high": 0.8,
+    "medium": 0.65
+  },
+  "labels": {
+    "high": "Strong match",
+    "medium": "Possible match",
+    "low": "Unlikely match"
+  }
+}

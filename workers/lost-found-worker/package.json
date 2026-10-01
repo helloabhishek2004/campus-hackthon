@@ -1,0 +1,22 @@
+{
+  "name": "@smart-campus/lost-found-worker",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@smart-campus/contracts": "workspace:*",
+    "@smart-campus/lost-and-found": "workspace:*",
+    "@smart-campus/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@smart-campus/config": "workspace:*",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

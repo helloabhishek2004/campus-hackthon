@@ -162,3 +162,35 @@ When processing cannot be completed:
 
 1. **Additive Updates:** Introducing optional fields to request or response does not require version bumping.
 2. **Breaking Changes:** Any field removal, type alteration, or mandatory field addition requires a consensus agreement between Module 1 and Module 2 leads.
+
+---
+
+## 6. Institutional Identity & Authentication Contracts
+
+Shared schemas available via `@smart-campus/contracts`:
+
+```ts
+import {
+  InstitutionalLookupRequestSchema,
+  InstitutionalLookupResponseSchema,
+  RequestOtpRequestSchema,
+  RequestOtpResponseSchema,
+  VerifyOtpRequestSchema,
+  VerifyOtpResponseSchema,
+  InstitutionalRoleSchema,
+  InstitutionalTagSchema,
+} from "@smart-campus/contracts";
+```
+
+### Endpoints Specification
+
+| Route | Method | Request Payload | Response Payload | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/api/auth/lookup` | `POST` | `{ institutionalId: string }` | `{ success: boolean, profile: InstitutionalLookupResponse }` | Queries safe profile with masked phone (`+91 ******0001`). Raw phone is never exposed. |
+| `/api/auth/otp/send` | `POST` | `{ institutionalId: string }` | `RequestOtpResponse` | Dispatches simulated OTP challenge (`mockOtp: "123456"` when `OTP_PROVIDER=mock`). |
+| `/api/auth/otp/verify` | `POST` | `{ institutionalId: string, otp: string }` | `VerifyOtpResponse` | Validates 6-digit OTP and establishes authenticated session link. |
+
+### Roles & Responsibility Tags
+
+- **`InstitutionalRole`**: `"student" | "faculty" | "staff" | "admin"`
+- **`InstitutionalTag`**: `"CAS_COORDINATOR" | "DEPARTMENT_COORDINATOR" | "COURSE_COORDINATOR" | "CLASS_COORDINATOR" | "HOD"`
