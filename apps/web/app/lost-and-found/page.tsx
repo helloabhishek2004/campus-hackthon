@@ -1,142 +1,70 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import {
-  Button,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  Badge,
-} from "@smart-campus/ui";
-import {
-  Search,
-  PlusCircle,
-  ShieldAlert,
-  Archive,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@smart-campus/ui";
+import { Search, PlusCircle, CheckCircle } from "lucide-react";
 
-export default function LostAndFoundDashboardPage() {
+export default function LostAndFoundDashboard() {
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b pb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="bg-purple-600 text-white text-xs px-2.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
-              Module 3
-            </span>
-            <Badge variant="outline">Feature Boundary Skeleton</Badge>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mt-2">
-            Lost & Found Portal
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Multimodal AI matching, verified ownership claims, and secure campus
-            handovers.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link href="/lost-and-found/report/lost">
-            <Button variant="default">
-              <PlusCircle className="w-4 h-4 mr-1.5" />
-              Report Lost Item
-            </Button>
-          </Link>
-          <Link href="/lost-and-found/report/found">
-            <Button variant="secondary">
-              <CheckCircle className="w-4 h-4 mr-1.5 text-emerald-600" />
-              Report Found Item
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Action Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="hover:border-purple-300 transition-colors">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Browse Directory</CardTitle>
-              <Search className="w-4 h-4 text-purple-600" />
-            </div>
-            <CardDescription>
-              Search public catalog of items reported across campus.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/lost-and-found/browse">
-              <Button variant="outline" size="sm" className="w-full">
-                Open Catalog
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:border-purple-300 transition-colors">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">My Reports</CardTitle>
-              <Clock className="w-4 h-4 text-blue-600" />
-            </div>
-            <CardDescription>
-              Track status, potential match alerts, and active claims.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/lost-and-found/my-reports">
-              <Button variant="outline" size="sm" className="w-full">
-                View My Reports
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:border-purple-300 transition-colors">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Custody & Admin</CardTitle>
-              <ShieldAlert className="w-4 h-4 text-amber-600" />
-            </div>
-            <CardDescription>
-              Security officer dispatch, custody logging, and audit logs.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/lost-and-found/admin">
-              <Button variant="outline" size="sm" className="w-full">
-                Staff Dashboard
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Architecture Notice */}
-      <div className="bg-slate-100 border border-slate-200 rounded-lg p-5 text-sm text-slate-700">
-        <h4 className="font-semibold text-slate-900 mb-1 flex items-center gap-1.5">
-          <Archive className="w-4 h-4 text-purple-600" />
-          Module 3 Developer Boundary
-        </h4>
-        <p>
-          This dashboard establishes the frontend entry point for Developer C.
-          Backend API routes reside under{" "}
-          <code className="bg-white px-1.5 py-0.5 rounded border text-xs">
-            /api/lost-found/*
-          </code>
-          , matching logic in{" "}
-          <code className="bg-white px-1.5 py-0.5 rounded border text-xs">
-            modules/lost-and-found
-          </code>
-          , and background jobs in{" "}
-          <code className="bg-white px-1.5 py-0.5 rounded border text-xs">
-            workers/lost-found-worker
-          </code>
-          .
+    <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+          Smart Campus <span className="text-purple-600">Lost & Found</span>
+        </h1>
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          Report lost items or help reunite found items with their owners using our secure, AI-powered matching system.
         </p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6 pt-8">
+        <Link href="/lost-and-found/report/lost" className="group">
+          <Card className="h-full transition-all hover:border-purple-300 hover:shadow-md bg-gradient-to-br from-white to-purple-50/50">
+            <CardHeader>
+              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Search className="w-6 h-6" />
+              </div>
+              <CardTitle>I Lost Something</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-600 text-sm">
+                Submit a report with details and photos. Our AI will notify you when a match is found.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/lost-and-found/report/found" className="group">
+          <Card className="h-full transition-all hover:border-emerald-300 hover:shadow-md bg-gradient-to-br from-white to-emerald-50/50">
+            <CardHeader>
+              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <PlusCircle className="w-6 h-6" />
+              </div>
+              <CardTitle>I Found Something</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-600 text-sm">
+                Report an item you found. Keep private details hidden to verify the true owner.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/lost-and-found/browse" className="group">
+          <Card className="h-full transition-all hover:border-blue-300 hover:shadow-md bg-gradient-to-br from-white to-blue-50/50">
+            <CardHeader>
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <CardTitle>Browse Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-600 text-sm">
+                View the directory of all recently found and lost items across the campus.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   );

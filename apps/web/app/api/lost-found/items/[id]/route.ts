@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readDb } from "@smart-campus/lost-and-found";
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  return NextResponse.json(
-    {
-      success: true,
-      message: `Item ${id} retrieval boundary established`,
-      item: null,
-      note: "Item lookup with privacy redaction will be implemented by Developer C.",
-    },
-    { status: 200 },
-  );
-}
+  try {
+    const { id } = await params;
+    const db = readDb();
+    
+    const item = db.lost_found_items.find((i: any) => i.id === id);
+    if (!item) {
+      return NextResponse.json({ success: false, error: { message: "Item not found" } }, { status: 404 });
+    }
+    
+    item.images = db.lost_found_item_images?.filter((img: any) => img.item_id === id) || [];
+    
+    const reporterId = "33333333-3333-3333-3333-333333330001"; 
+    const isAdmin = false; 
 
-export async function PATCH(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  return NextResponse.json(
-    {
-      success: false,
-      message: `Item ${id} update boundary established (Not yet implemented)`,
-    },
-    { status: 501 },
-  );
+    if (item.reporter_id !== reporterId && !isAdmin) {
+      delete item.private_description;
+      delete item.identifying_marks;
+    }
+
+    return NextResponse.json({ success: true, item }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
+  }
 }
