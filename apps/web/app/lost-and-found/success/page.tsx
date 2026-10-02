@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@smart-campus/ui";
@@ -18,7 +18,7 @@ import {
 
 type MatchStatus = "processing" | "scanning" | "match_found" | "no_match";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type"); // "lost" | "found"
   const itemId = searchParams.get("id");
@@ -267,5 +267,22 @@ export default function SuccessPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
+          <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
+            <Search className="w-14 h-14 text-purple-600" />
+          </div>
+          <p className="text-slate-500 text-sm">Loading your report…</p>
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }

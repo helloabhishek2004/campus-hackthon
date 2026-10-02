@@ -2,6 +2,7 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'modules/*'
+  - '!modules/emergency'
   - 'workers/*'
 allowBuilds:
   '@google/genai': true

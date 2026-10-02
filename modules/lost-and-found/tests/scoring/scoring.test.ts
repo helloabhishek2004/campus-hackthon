@@ -7,10 +7,13 @@ import {
 describe("Module 3: Multimodal Matching & Scoring", () => {
   it("loads baseline config correctly", () => {
     const config = getMatchingConfig();
-    expect(config.weights.image).toBe(0.45);
-    expect(config.weights.text).toBe(0.25);
-    expect(config.bands.high).toBe(0.8);
-    expect(config.bands.medium).toBe(0.65);
+    expect(config.weights.image).toBe(0.2);
+    expect(config.weights.text).toBe(0.45);
+    expect(config.weights.category).toBe(0.15);
+    expect(config.weights.location).toBe(0.1);
+    expect(config.weights.time).toBe(0.1);
+    expect(config.bands.high).toBe(0.75);
+    expect(config.bands.medium).toBe(0.5);
   });
 
   it("calculates high match band for strong signals", () => {

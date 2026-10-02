@@ -139,7 +139,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                 <CardContent className="p-4 space-y-4">
                    {matches.length === 0 ? (
                       <p className="text-sm text-slate-500 text-center py-4">
-                         No matches found yet. We'll notify you if something turns up.
+                         No matches found yet. We&apos;ll notify you if something turns up.
                       </p>
                    ) : (
                       matches.map(match => {

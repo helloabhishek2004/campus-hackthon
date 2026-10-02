@@ -17,7 +17,7 @@ async function processItem(payload: any) {
     aiResult.textEmbedding = Array.from({ length: 384 }, (_, i) => Math.sin(seed * 0.1 + i) * 0.0721);
     aiResult.imageEmbedding = imageUrls?.length
       ? Array.from({ length: 512 }, (_, i) => Math.cos(imageUrls[0].length * 0.1 + i) * 0.0625)
-      : null;
+      : undefined;
   }
   console.log(`[WORKER] AI done for ${itemId}. isMock=${isMock} embLen=${aiResult.textEmbedding.length}`);
 
