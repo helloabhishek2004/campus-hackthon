@@ -41,7 +41,10 @@ export type ComplaintStatus = z.infer<typeof ComplaintStatusSchema>;
 
 export const ComplaintAttachmentSchema = z.object({
   id: z.string().optional(),
-  url: z.string().url(),
+  url: z.union([
+    z.string().url(),
+    z.string().regex(/^\/[^\s]+$/, "Must be a valid relative path starting with /"),
+  ]),
   filename: z.string().optional(),
   mime_type: z.string().optional(),
   size_bytes: z.number().int().nonnegative().optional(),
@@ -204,3 +207,88 @@ export const ComplaintAnalysisResponseSchema = z.object({
 export type ComplaintAnalysisResponse = z.infer<
   typeof ComplaintAnalysisResponseSchema
 >;
+
+// ==============================================================================
+// Complaint Record & Grouping Constants
+// ==============================================================================
+
+export const COMPLAINT_EMERGENCY_THRESHOLD = 5;
+export const DEFAULT_COMPLAINT_SIMILARITY_THRESHOLD = 0.35;
+
+export const ComplaintRecordSchema = z.object({
+  id: z.string(),
+  complainant_id: z.string().nullable().optional(),
+  text: z.string(),
+  status: ComplaintStatusSchema.default("submitted"),
+  category: z.string().nullable().optional(),
+  subcategory: z.string().nullable().optional(),
+  location_building: z.string().nullable().optional(),
+  location_room: z.string().nullable().optional(),
+  attachments: z.array(ComplaintAttachmentSchema).default([]),
+  cluster_id: z.string(),
+  is_emergency: z.boolean().default(false),
+  similar_count: z.number().int().nonnegative().default(1),
+  created_at: z.string(),
+  updated_at: z.string().optional(),
+});
+export type ComplaintRecord = z.infer<typeof ComplaintRecordSchema>;
+
+export const CreateComplaintRequestSchema = z.object({
+  text: z.string().min(5, "Complaint text must be at least 5 characters long"),
+  attachments: z.array(ComplaintAttachmentSchema).optional(),
+  complainant_id: z.string().optional(),
+  category: ComplaintCategorySchema.optional(),
+  location_building: z.string().optional(),
+  location_room: z.string().optional(),
+});
+export type CreateComplaintRequest = z.infer<
+  typeof CreateComplaintRequestSchema
+>;
+
+export const CreateComplaintResponseSchema = z.object({
+  success: z.boolean(),
+  complaint: ComplaintRecordSchema.optional(),
+  cluster: z
+    .object({
+      cluster_id: z.string(),
+      group_count: z.number().int().nonnegative(),
+      is_emergency: z.boolean(),
+    })
+    .optional(),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+      details: z.any().optional(),
+    })
+    .optional(),
+});
+export type CreateComplaintResponse = z.infer<
+  typeof CreateComplaintResponseSchema
+>;
+
+export const ComplaintListQuerySchema = z.object({
+  view: z.enum(["all", "normal", "emergency"]).default("all"),
+});
+export type ComplaintListQuery = z.infer<typeof ComplaintListQuerySchema>;
+
+export const ComplaintListResponseSchema = z.object({
+  success: z.boolean(),
+  complaints: z.array(ComplaintRecordSchema),
+  counts: z.object({
+    total: z.number().int().nonnegative(),
+    normal: z.number().int().nonnegative(),
+    emergency: z.number().int().nonnegative(),
+  }),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+      details: z.any().optional(),
+    })
+    .optional(),
+});
+export type ComplaintListResponse = z.infer<
+  typeof ComplaintListResponseSchema
+>;
+

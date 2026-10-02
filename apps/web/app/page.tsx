@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Button,
   Card,
@@ -136,6 +137,13 @@ export default function HomePage() {
             <strong>Persistence:</strong> Canonical records in Supabase
             PostgreSQL.
           </CardContent>
+          <CardFooter className="pt-0">
+            <Link href="/complaints" className="w-full">
+              <Button size="sm" variant="default" className="w-full">
+                Open Complaint System &rarr;
+              </Button>
+            </Link>
+          </CardFooter>
         </Card>
 
         <Card>
