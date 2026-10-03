@@ -53,7 +53,17 @@ export function CreatePostDialog({
   const [generalError, setGeneralError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isOpen) return null;
+  // Handle Escape key to close dialog
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !submitting) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, submitting]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError(null);
@@ -113,16 +123,7 @@ export function CreatePostDialog({
     }
   };
 
-  // Handle Escape key to close dialog
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !submitting) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, submitting]);
+  if (!isOpen) return null;
 
   return (
     <div

@@ -63,6 +63,7 @@ export function DocumentUploadDialog({
 
   // Handle Escape key
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !submitting) {
         onClose();
@@ -70,7 +71,7 @@ export function DocumentUploadDialog({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, submitting]);
+  }, [isOpen, onClose, submitting]);
 
   const handleTypeChange = (code: string) => {
     setSelectedTypeCode(code);
