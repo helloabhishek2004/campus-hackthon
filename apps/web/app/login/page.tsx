@@ -3,9 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CollegeIdForm } from "@/components/auth/college-id-form";
-import { CampusGramLogo } from "@/components/layout/logo";
 import { useCampusAuth } from "@/components/auth/auth-guard";
-import { SideRays } from "@/components/ui/SideRays";
 import { ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
@@ -19,50 +17,34 @@ export default function LoginPage() {
   }, [user, loading, router]);
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden">
-      {/* Background Ambient Side Rays Effect */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-70">
-        <SideRays
-          speed={1.5}
-          rayColor1="#71717a"
-          rayColor2="#e4e4e7"
-          intensity={1.2}
-          spread={2}
-          origin="top-right"
-          tilt={0}
-          saturation={0}
-          blend={0.65}
-          falloff={1.8}
-          opacity={0.5}
-        />
-      </div>
+    <div className="relative flex min-h-screen min-h-[100svh] overflow-hidden bg-zinc-50 px-5 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 sm:px-10 lg:px-14">
 
-      {/* Header */}
-      <header className="relative z-10 max-w-sm w-full mx-auto flex items-center justify-between">
-        <CampusGramLogo size="md" />
-        <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
-          Access
-        </span>
-      </header>
-
-      {/* Main Login Form */}
-      <main className="relative z-10 max-w-sm w-full mx-auto my-auto py-8 space-y-6">
-        <div className="space-y-1.5 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
-            Institutional access
+      <main className="relative z-10 m-auto grid w-full max-w-6xl items-center gap-12 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,28rem)] lg:gap-24">
+        <div className="max-w-xl space-y-5 text-center animate-apple-in lg:text-left">
+          <span className="inline-flex rounded-full border border-zinc-300 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+            CampusGram
+          </span>
+          <h1 className="text-4xl font-semibold tracking-[-0.04em] text-zinc-950 dark:text-zinc-100 sm:text-5xl lg:text-6xl lg:leading-[1.05]">
+            Your campus, clearly connected.
           </h1>
-          <p className="text-xs text-zinc-400">
-            Enter your official university ID to access your campus dashboard.
+          <p className="max-w-md text-base leading-7 text-zinc-600 dark:text-zinc-400 sm:text-lg">
+            Sign in with your institutional identity to continue to the calm, verified campus workspace.
           </p>
         </div>
 
-        <CollegeIdForm />
+        <section className="w-full max-w-md justify-self-center rounded-[2rem] border border-zinc-200 bg-white p-6 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.18)] animate-apple-scale dark:border-zinc-800 dark:bg-zinc-900 sm:p-8 lg:justify-self-end">
+          <div className="mb-6 space-y-1.5">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">Institutional access</h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Use your official university ID to continue.</p>
+          </div>
+          <CollegeIdForm />
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 max-w-sm w-full mx-auto text-center border-t border-zinc-900 pt-5">
-        <p className="text-xs text-zinc-500 flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
+      <footer className="absolute bottom-5 left-0 right-0 z-10 px-5 text-center sm:bottom-8">
+        <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <ShieldCheck className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
           <span>Verified against institutional directory records</span>
         </p>
       </footer>

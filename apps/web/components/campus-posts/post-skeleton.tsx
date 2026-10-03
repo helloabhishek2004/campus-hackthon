@@ -2,7 +2,7 @@ import React from "react";
 
 export function PostCardSkeleton() {
   return (
-    <article className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5 space-y-4 animate-pulse">
+    <article className="animate-pulse space-y-4 rounded-xl border border-slate-200 bg-white/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900/40">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/60">
         <div className="flex items-center gap-3">

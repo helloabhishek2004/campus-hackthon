@@ -1,8 +1,23 @@
 import fs from 'fs';
 import path from 'path';
 
-// Use an absolute path so both Next.js and Worker write to the EXACT SAME file!
-const DB_PATH = '/home/adarsh_us/campus-hackthon/modules/lost-and-found/data/db.json';
+// Keep the local fallback database inside this checkout instead of relying on a
+// developer-specific absolute path. Set LOST_FOUND_LOCAL_DB_PATH to override it
+// when the web app and worker need to share a different location.
+function findWorkspaceRoot(start: string): string {
+    let current = path.resolve(start);
+    while (true) {
+        if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml'))) return current;
+        const parent = path.dirname(current);
+        if (parent === current) return path.resolve(start);
+        current = parent;
+    }
+}
+
+const DB_PATH = path.resolve(
+    process.env.LOST_FOUND_LOCAL_DB_PATH ||
+        path.join(findWorkspaceRoot(process.cwd()), 'modules/lost-and-found/data/db.json'),
+);
 
 if (!fs.existsSync(path.dirname(DB_PATH))) {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });

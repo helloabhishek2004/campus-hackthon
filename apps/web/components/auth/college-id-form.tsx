@@ -67,7 +67,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
     <div className={cn("w-full max-w-sm mx-auto space-y-5", className)}>
       <form onSubmit={handleLookup} className="space-y-4">
         <div>
-          <label htmlFor="college-id-input" className="block text-xs font-mono uppercase text-zinc-400 mb-1.5">
+          <label htmlFor="college-id-input" className="mb-1.5 block text-xs font-mono uppercase text-zinc-500 dark:text-zinc-400">
             College ID
           </label>
           <div className="relative">
@@ -82,7 +82,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
               placeholder="e.g. STU2026001"
               disabled={loading}
               autoFocus
-              className="w-full px-3.5 py-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 font-mono tracking-wide focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 transition-colors text-sm disabled:opacity-50"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-3 font-mono text-sm tracking-wide text-zinc-900 placeholder:text-zinc-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
           </div>
         </div>
@@ -91,9 +91,9 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
         {error && (
           <div
             role="alert"
-            className="p-3 bg-red-950/40 border border-red-900/60 rounded-lg flex items-start gap-2 text-xs text-red-300"
+            className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
           >
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500 dark:text-red-400" />
             <div className="space-y-0.5">
               <p className="font-medium">{error}</p>
             </div>
@@ -104,11 +104,11 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
         <button
           type="submit"
           disabled={loading || !institutionalId.trim()}
-          className="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white disabled:bg-zinc-800 text-zinc-950 disabled:text-zinc-500 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors disabled:cursor-not-allowed shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
         >
           {loading ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-950" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
               <span>Verifying ID...</span>
             </>
           ) : (
@@ -121,19 +121,19 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
       </form>
 
       {/* Demo helper box for hackathon judges */}
-      <div className="p-3.5 rounded-lg border border-zinc-800/80 bg-zinc-900/40 space-y-2">
+      <div className="space-y-2 rounded-xl border border-zinc-200 bg-zinc-50 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/30">
         <div className="flex items-center justify-between text-[11px]">
-          <span className="font-mono text-zinc-400 uppercase tracking-wider">
+          <span className="font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Demo Credentials
           </span>
-          <span className="font-mono text-zinc-500 text-[10px]">Tap to fill</span>
+          <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500">Tap to fill</span>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
             onClick={() => setDemoId("STU2026001")}
-            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
+            className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-mono text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             STU2026001 <span className="text-[10px] text-zinc-500">(Student)</span>
           </button>
@@ -141,7 +141,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
           <button
             type="button"
             onClick={() => setDemoId("FAC1001")}
-            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
+             className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-mono text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             FAC1001 <span className="text-[10px] text-zinc-500">(Faculty)</span>
           </button>
@@ -149,7 +149,7 @@ export function CollegeIdForm({ onSuccess, className }: CollegeIdFormProps) {
           <button
             type="button"
             onClick={() => setDemoId("FAC1011")}
-            className="text-xs font-mono bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-2 py-1 rounded transition-colors"
+             className="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-mono text-zinc-700 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             FAC1011 <span className="text-[10px] text-zinc-500">(HOD)</span>
           </button>

@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { InstitutionalLookupResponse } from "@smart-campus/contracts";
 import { mockIdentityService } from "@/lib/services/identity-service";
 import { IdentityCard } from "@/components/auth/identity-card";
-import { CampusGramLogo } from "@/components/layout/logo";
 import { useCampusAuth } from "@/components/auth/auth-guard";
 import { ArrowRight, ArrowLeft, Loader2, AlertCircle, Check } from "lucide-react";
 import Link from "next/link";
@@ -54,13 +53,12 @@ function VerifyContent() {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto my-auto py-8 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-1.5">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+    <div className="m-auto w-full max-w-md space-y-6 py-8 animate-apple-in">
+      <div className="space-y-1.5 text-center">
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">
           Verify your identity
         </h1>
-        <p className="text-xs text-zinc-400">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Please confirm the institutional record associated with your ID.
         </p>
       </div>
@@ -141,17 +139,11 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col justify-between p-6 sm:p-10 select-none">
-      <header className="max-w-md w-full mx-auto flex items-center justify-between">
-        <CampusGramLogo size="md" />
-        <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
-          Verification
-        </span>
-      </header>
+    <div className="relative flex min-h-screen min-h-[100svh] overflow-hidden bg-zinc-50 px-5 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 sm:px-10">
 
       <Suspense
         fallback={
-          <div className="max-w-md w-full mx-auto my-auto py-12 flex flex-col items-center justify-center space-y-2.5">
+          <div className="m-auto flex w-full max-w-md flex-col items-center justify-center space-y-2.5 py-12">
             <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
             <p className="text-xs text-zinc-500">Loading record...</p>
           </div>
@@ -160,8 +152,8 @@ export default function VerifyPage() {
         <VerifyContent />
       </Suspense>
 
-      <footer className="max-w-md w-full mx-auto text-center border-t border-zinc-900 pt-5">
-        <p className="text-xs text-zinc-500">
+      <footer className="absolute bottom-5 left-0 right-0 px-5 text-center sm:bottom-8">
+        <p className="text-xs text-slate-500 dark:text-zinc-500">
           Institutional records are protected. Phone numbers remain masked for privacy.
         </p>
       </footer>

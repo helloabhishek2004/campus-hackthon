@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect } from "react";
 
 export type Theme = "dark" | "light";
 
@@ -15,34 +15,37 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = "campusgram_theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(THEME_STORAGE_KEY);
-        if (saved === "light" || saved === "dark") {
-          return saved;
-        }
-      } catch {
-        // Fallback to default
-      }
-    }
-    return "dark";
-  });
+  // Keep the server render deterministic; the DOM is corrected before paint below.
+  const [theme, setThemeState] = useState<Theme>("dark");
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.remove("dark");
-      root.classList.add("light");
+  useLayoutEffect(() => {
+    let nextTheme: Theme = "dark";
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved === "light" || saved === "dark") nextTheme = saved;
+      else if (window.matchMedia("(prefers-color-scheme: light)").matches) nextTheme = "light";
+    } catch {
+      // Use the deterministic dark default when browser storage is unavailable.
     }
+    setThemeState(nextTheme);
+  }, []);
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
       // Ignore storage errors
     }
+  }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.colorScheme = theme;
   }, [theme]);
 
   const setTheme = (t: Theme) => {

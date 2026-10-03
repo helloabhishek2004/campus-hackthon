@@ -52,7 +52,7 @@ export function IdentityCard({
                 <span className="text-xs font-mono text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
                   {profile.institutionalId}
                 </span>
-                <span className="text-xs font-mono capitalize text-emerald-400 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
+                <span className="text-xs font-mono capitalize text-zinc-600 dark:text-zinc-300 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
                   {profile.role}
                 </span>
               </div>
@@ -127,7 +127,7 @@ export function IdentityCard({
               Contact & Privacy
             </span>
             <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <ShieldCheck className="w-3 h-3 text-zinc-500 dark:text-zinc-400" />
               Masked for privacy
             </span>
           </div>

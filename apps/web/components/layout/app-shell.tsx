@@ -9,19 +9,25 @@ import { EmergencyBanner } from "../emergency/emergency-banner";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { CommandPalette } from "./command-palette";
 import { KeyboardShortcutsHandler } from "./keyboard-shortcuts";
+import { cn } from "@smart-campus/utils";
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
-  const { isCommandPaletteOpen, setCommandPaletteOpen } = useSidebar();
+  const { isCollapsed, isCommandPaletteOpen, setCommandPaletteOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col md:flex-row antialiased selection:bg-zinc-800 selection:text-zinc-100 transition-colors duration-200">
+    <div className="min-h-screen min-h-[100svh] overflow-x-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col md:flex-row antialiased selection:bg-zinc-800 selection:text-zinc-100 transition-colors duration-200">
       <KeyboardShortcutsHandler />
 
       {/* Desktop Application Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col transition-[padding] duration-300",
+          isCollapsed ? "md:pl-16" : "md:pl-64"
+        )}
+      >
         {/* Desktop TopBar with Spotlight Search */}
         <DesktopTopBar />
 
@@ -32,7 +38,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         <EmergencyBanner />
 
         {/* Page Body with fluid Apple entry animation */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-5xl w-full mx-auto pb-24 md:pb-12 animate-apple-in">
+        <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12 animate-apple-in">
           {children}
         </main>
 

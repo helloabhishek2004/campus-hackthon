@@ -28,7 +28,7 @@ export function Avatar({ name, role, size = "md", className }: AvatarProps) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center justify-center font-mono font-medium bg-zinc-900 border border-zinc-800 text-zinc-200 select-none shrink-0 transition-colors",
+        "relative inline-flex items-center justify-center font-mono font-medium bg-slate-100 border border-slate-300 text-slate-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200 select-none shrink-0 transition-colors",
         sizeClasses,
         className
       )}

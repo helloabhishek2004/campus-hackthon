@@ -104,10 +104,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 p-4 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <CampusGramLogo size="lg" />
-        <div className="flex items-center gap-2 mt-4 text-xs font-mono text-zinc-500">
-          <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+        <div className="mt-4 flex items-center gap-2 text-xs font-mono text-zinc-500 dark:text-zinc-500">
+          <Loader2 className="h-4 w-4 animate-spin text-zinc-500 dark:text-zinc-400" />
           <span>Verifying Campus Session...</span>
         </div>
       </div>
