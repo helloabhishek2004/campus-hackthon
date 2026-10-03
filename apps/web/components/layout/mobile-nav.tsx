@@ -60,7 +60,7 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center justify-center min-w-[52px] py-1 px-1 rounded-lg text-[9px] font-medium transition-colors select-none",
+              "apple-press flex flex-col items-center justify-center min-w-[52px] py-1 px-1 rounded-lg text-[9px] font-medium transition-colors select-none",
               isActive
                 ? isEmergency
                   ? "text-red-400 font-bold"

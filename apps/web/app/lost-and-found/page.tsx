@@ -61,8 +61,8 @@ export default function LostAndFoundDashboard() {
         {/* Primary Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Lost Item */}
-          <Link href="/lost-and-found/report/lost" className="group">
-            <Card className="h-full border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 hover:border-purple-500/40 transition-all rounded-xl">
+          <Link href="/lost-and-found/report/lost" className="group apple-press">
+            <Card className="apple-card h-full border-zinc-800/80 bg-zinc-900/60 hover:bg-zinc-900/90 hover:border-purple-500/40 transition-all rounded-xl">
               <CardHeader className="pb-3">
                 <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
                   <Search className="w-5 h-5" />
@@ -84,8 +84,8 @@ export default function LostAndFoundDashboard() {
           </Link>
 
           {/* Found Item */}
-          <Link href="/lost-and-found/report/found" className="group">
-            <Card className="h-full border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 hover:border-emerald-500/40 transition-all rounded-xl">
+          <Link href="/lost-and-found/report/found" className="group apple-press">
+            <Card className="apple-card h-full border-zinc-800/80 bg-zinc-900/60 hover:bg-zinc-900/90 hover:border-emerald-500/40 transition-all rounded-xl">
               <CardHeader className="pb-3">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
                   <PlusCircle className="w-5 h-5" />
@@ -107,8 +107,8 @@ export default function LostAndFoundDashboard() {
           </Link>
 
           {/* Browse Catalog */}
-          <Link href="/lost-and-found/browse" className="group">
-            <Card className="h-full border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 hover:border-blue-500/40 transition-all rounded-xl">
+          <Link href="/lost-and-found/browse" className="group apple-press">
+            <Card className="apple-card h-full border-zinc-800/80 bg-zinc-900/60 hover:bg-zinc-900/90 hover:border-blue-500/40 transition-all rounded-xl">
               <CardHeader className="pb-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
                   <PackageSearch className="w-5 h-5" />

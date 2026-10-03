@@ -242,7 +242,7 @@ export default function EmergencyControlPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab("sos")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition-colors shadow-sm"
+              className="apple-press flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition-colors shadow-sm"
             >
               <Flame className="w-3.5 h-3.5" />
               <span>Report SOS</span>
@@ -250,7 +250,7 @@ export default function EmergencyControlPage() {
             <button
               onClick={fetchEmergencyData}
               disabled={refreshing}
-              className="p-2 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
+              className="apple-press p-2 rounded-lg border border-zinc-800/80 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
               title="Refresh"
             >
               <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
@@ -259,13 +259,13 @@ export default function EmergencyControlPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-zinc-900/60 p-1.5 rounded-xl border border-zinc-800 text-xs font-medium">
+        <div className="flex flex-wrap items-center gap-1.5 bg-zinc-900/60 p-1.5 rounded-xl border border-zinc-800/80 text-xs font-medium backdrop-blur-md">
           <button
             onClick={() => setActiveTab("live")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
+              "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
               activeTab === "live"
-                ? "bg-zinc-800 text-zinc-100 font-semibold"
+                ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs"
                 : "text-zinc-400 hover:text-zinc-200"
             )}
           >
@@ -281,9 +281,9 @@ export default function EmergencyControlPage() {
           <button
             onClick={() => setActiveTab("sos")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
+              "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
               activeTab === "sos"
-                ? "bg-zinc-800 text-zinc-100 font-semibold"
+                ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs"
                 : "text-zinc-400 hover:text-zinc-200"
             )}
           >
@@ -294,9 +294,9 @@ export default function EmergencyControlPage() {
           <button
             onClick={() => setActiveTab("hotlines")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
+              "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
               activeTab === "hotlines"
-                ? "bg-zinc-800 text-zinc-100 font-semibold"
+                ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs"
                 : "text-zinc-400 hover:text-zinc-200"
             )}
           >
@@ -307,9 +307,9 @@ export default function EmergencyControlPage() {
           <button
             onClick={() => setActiveTab("reports")}
             className={cn(
-              "px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
+              "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5",
               activeTab === "reports"
-                ? "bg-zinc-800 text-zinc-100 font-semibold"
+                ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs"
                 : "text-zinc-400 hover:text-zinc-200"
             )}
           >
@@ -324,7 +324,7 @@ export default function EmergencyControlPage() {
             <button
               onClick={() => setActiveTab("dispatch")}
               className={cn(
-                "px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ml-auto",
+                "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ml-auto",
                 activeTab === "dispatch"
                   ? "bg-red-950/80 text-red-200 border border-red-800 font-semibold"
                   : "text-red-400/80 hover:text-red-300 hover:bg-red-950/30"
