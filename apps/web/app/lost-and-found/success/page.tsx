@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@smart-campus/ui";
 import {
   CheckCircle2,
@@ -14,13 +15,16 @@ import {
   ArrowRight,
   Sparkles,
   Package,
+  ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
+import { cn } from "@smart-campus/utils";
 
 type MatchStatus = "processing" | "scanning" | "match_found" | "no_match";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const type = searchParams.get("type"); // "lost" | "found"
+  const type = searchParams.get("type");
   const itemId = searchParams.get("id");
 
   const [status, setStatus] = useState<MatchStatus>("processing");
@@ -36,16 +40,15 @@ function SuccessContent() {
 
       if (data.status === "processing") {
         setStatus("scanning");
-        return; // keep polling
+        return;
       }
 
       if (data.found && data.match) {
         setMatch(data.match);
         setStatus("match_found");
-        return; // stop polling
+        return;
       }
 
-      // After 8 polls (~8 seconds) with no match, give up gracefully
       setPollCount((c) => {
         const next = c + 1;
         if (next >= 8) setStatus("no_match");
@@ -59,10 +62,7 @@ function SuccessContent() {
   useEffect(() => {
     if (type !== "lost" || !itemId) return;
 
-    // Start with "scanning" state after 500ms
     const initialDelay = setTimeout(() => setStatus("scanning"), 500);
-
-    // Poll every 1.5 seconds
     const interval = setInterval(() => {
       pollForMatches();
     }, 1500);
@@ -73,109 +73,114 @@ function SuccessContent() {
     };
   }, [pollForMatches, type, itemId]);
 
-  // ── FOUND ITEM submitted ─────────────────────────────
+  // Found item submitted
   if (type === "found") {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-14 h-14 text-emerald-500" />
+      <div className="max-w-md mx-auto py-12 text-center space-y-5">
+        <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+          <CheckCircle2 className="w-8 h-8" />
         </div>
-        <h1 className="text-3xl font-bold text-slate-800">Found Item Reported!</h1>
-        <p className="text-slate-500 text-sm leading-relaxed">
-          Thank you for reporting this item. Our AI is actively scanning lost item reports for
-          potential matches. If a match is found, the owner will be notified immediately.
-        </p>
-        <div className="flex flex-col gap-3 pt-4">
+        <div>
+          <h1 className="text-xl font-bold text-zinc-100">Found Item Registered</h1>
+          <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed">
+            Thank you for turning in this item. The AI matching worker is scanning lost item reports. 
+            If a match is confirmed, the verified owner will be prompted for security desk custody handover.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2.5 pt-2">
           {itemId && (
             <Link href={`/lost-and-found/items/${itemId}`}>
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                View Item Details <ArrowRight className="w-4 h-4 ml-2" />
+              <Button className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 text-xs font-semibold py-2">
+                <span>View Item Details</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
               </Button>
             </Link>
           )}
           <Link href="/lost-and-found">
-            <Button variant="outline" className="w-full text-slate-700">Return to Dashboard</Button>
+            <Button
+              variant="outline"
+              className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 text-xs"
+            >
+              Return to Lost & Found
+            </Button>
           </Link>
         </div>
       </div>
     );
   }
 
-  // ── LOST ITEM submitted — show AI scanning states ────
+  // Lost item submitted — show AI scanning states
   return (
-    <div className="max-w-lg mx-auto px-4 py-10 space-y-6">
-
-      {/* ── Processing / Scanning ── */}
+    <div className="max-w-lg mx-auto py-8 space-y-6">
       {(status === "processing" || status === "scanning") && (
-        <div className="text-center space-y-6">
-          <div className="relative mx-auto w-28 h-28">
-            <div className="absolute inset-0 rounded-full bg-purple-100 animate-ping opacity-40" />
-            <div className="relative w-28 h-28 bg-purple-100 rounded-full flex items-center justify-center">
-              <Search className="w-14 h-14 text-purple-600 animate-pulse" />
+        <div className="text-center space-y-5">
+          <div className="relative mx-auto w-20 h-20">
+            <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
+            <div className="relative w-20 h-20 bg-zinc-900 border border-purple-500/40 rounded-full flex items-center justify-center text-purple-400">
+              <Search className="w-8 h-8 animate-pulse" />
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Lost Report Submitted!</h1>
-            <p className="text-purple-700 font-semibold mt-1 text-sm">
-              🔍 AI is scanning the Found Items directory…
+            <h1 className="text-xl font-bold text-zinc-100">Lost Report Submitted</h1>
+            <p className="text-purple-400 font-medium text-xs mt-1">
+              AI multimodal pipeline is scanning found items catalog...
             </p>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left space-y-2 text-sm text-slate-600">
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-left space-y-2 text-xs text-zinc-400">
             <p className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse inline-block" />
-              Running CLIP image similarity model
+              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse inline-block" />
+              <span>Generating semantic description vector embedding</span>
             </p>
             <p className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block" />
-              Running MiniLM text embedding model
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block" />
+              <span>Matching against pgvector similarity catalog</span>
             </p>
             <p className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-              Calculating weighted match scores
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
+              <span>Calculating composite match threshold</span>
             </p>
           </div>
-          <p className="text-xs text-slate-400">This usually takes 2–5 seconds…</p>
+          <p className="text-[11px] text-zinc-500 font-mono">This usually takes 2–4 seconds...</p>
         </div>
       )}
 
-      {/* ── MATCH FOUND ── */}
       {status === "match_found" && match && (
         <div className="space-y-5">
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-              <Sparkles className="w-12 h-12 text-emerald-600" />
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+              <Sparkles className="w-7 h-7" />
             </div>
-            <h1 className="text-3xl font-bold text-emerald-700">Your Item Was Found! 🎉</h1>
-            <p className="text-slate-500 text-sm">
-              Our AI matched your report with a found item in the directory.
+            <h1 className="text-xl font-bold text-emerald-400">Potential Match Located</h1>
+            <p className="text-zinc-400 text-xs">
+              AI found an item matching your description in campus custody.
             </p>
           </div>
 
-          {/* AI Match confidence */}
           <div className="flex items-center justify-center gap-3">
-            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-              ${match.band === 'high' ? 'bg-emerald-100 text-emerald-700' :
-                match.band === 'medium' ? 'bg-amber-100 text-amber-700' :
-                'bg-slate-100 text-slate-600'}`}>
-              {match.band === 'high' ? 'Strong Match' : match.band === 'medium' ? 'Possible Match' : 'Weak Match'}
-            </div>
-            <span className="text-sm text-slate-500 font-medium">
-              {match.score}% AI Confidence
+            <span
+              className={cn(
+                "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border",
+                match.band === "high"
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                  : "bg-amber-950/80 text-amber-300 border-amber-800"
+              )}
+            >
+              {match.band === "high" ? "High Confidence" : "Possible Match"}
+            </span>
+            <span className="text-xs text-zinc-400 font-mono font-medium">
+              {match.score}% Similarity
             </span>
           </div>
 
-          {/* Matched Item card */}
-          <div className="bg-white border border-emerald-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100">
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide flex items-center gap-1">
-                <Package className="w-3 h-3" /> Matched Found Item
-              </p>
+          {/* Matched card */}
+          <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl overflow-hidden">
+            <div className="bg-zinc-950/60 px-4 py-2.5 border-b border-zinc-800 flex items-center gap-1.5 text-xs text-zinc-300 font-medium">
+              <Package className="w-3.5 h-3.5 text-purple-400" />
+              <span>Matched Item Preview</span>
             </div>
 
-            {/* Image if available */}
             {match.matchedItem?.images?.length > 0 && (
-              <div className="h-48 bg-slate-100 overflow-hidden">
+              <div className="h-44 bg-zinc-950 overflow-hidden">
                 <img
                   src={match.matchedItem.images[0].public_url}
                   alt={match.matchedItem.title}
@@ -185,10 +190,12 @@ function SuccessContent() {
             )}
 
             <div className="p-4 space-y-2">
-              <h3 className="font-bold text-slate-800 text-lg">{match.matchedItem?.title}</h3>
-              <p className="text-slate-600 text-sm">{match.matchedItem?.public_description}</p>
+              <h3 className="font-semibold text-zinc-100 text-sm">{match.matchedItem?.title}</h3>
+              <p className="text-zinc-400 text-xs leading-relaxed">
+                {match.matchedItem?.public_description}
+              </p>
               {match.matchedItem?.location_description && (
-                <p className="text-xs text-slate-500 flex items-center gap-1">
+                <p className="text-[11px] text-zinc-500 flex items-center gap-1 font-mono">
                   <MapPin className="w-3 h-3" /> Found at: {match.matchedItem.location_description}
                 </p>
               )}
@@ -196,72 +203,78 @@ function SuccessContent() {
           </div>
 
           {/* Contact Details */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-4">
-            <h3 className="font-bold text-blue-900 text-base">
-              📞 Contact the Finder
-            </h3>
-            <p className="text-xs text-blue-700">
-              This information is logged and shared only with verified users. Please coordinate item handover at campus security.
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 bg-white rounded-xl p-3 border border-blue-100">
-                <Phone className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-slate-500">Phone</p>
-                  <p className="font-bold text-slate-800 font-mono">{match.contact.phone}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 bg-white rounded-xl p-3 border border-blue-100">
-                <Mail className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-slate-500">Email</p>
-                  <p className="font-bold text-slate-800">{match.contact.email}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 bg-white rounded-xl p-3 border border-blue-100">
-                <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Note from Finder</p>
-                  <p className="text-slate-700 text-sm">{match.contact.note}</p>
-                </div>
+          {match.contact && (
+            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-3">
+              <h3 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-purple-400" /> Verified Custody Contact
+              </h3>
+              <p className="text-[11px] text-zinc-400">
+                Coordinated handovers must occur at the Campus Security Desk with student ID.
+              </p>
+              <div className="space-y-2 pt-1 text-xs">
+                {match.contact.phone && (
+                  <div className="flex items-center gap-2.5 bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                    <Phone className="w-4 h-4 text-purple-400 shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-zinc-500 uppercase">Phone</p>
+                      <p className="font-mono text-zinc-200 font-semibold">{match.contact.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {match.contact.email && (
+                  <div className="flex items-center gap-2.5 bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
+                    <Mail className="w-4 h-4 text-purple-400 shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-zinc-500 uppercase">Email</p>
+                      <p className="text-zinc-200">{match.contact.email}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          <Link href="/lost-and-found">
-            <Button variant="outline" className="w-full text-slate-700">Return to Dashboard</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/lost-and-found" className="flex-1">
+              <Button variant="outline" className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 text-xs">
+                Lost & Found Home
+              </Button>
+            </Link>
+            {itemId && (
+              <Link href={`/lost-and-found/items/${itemId}`} className="flex-1">
+                <Button className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 text-xs font-semibold">
+                  Inspect Item
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
-      {/* ── NO MATCH ── */}
       {status === "no_match" && (
-        <div className="text-center space-y-6">
-          <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-12 h-12 text-amber-500" />
+        <div className="text-center space-y-5">
+          <div className="w-14 h-14 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center mx-auto text-zinc-400">
+            <AlertCircle className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">No Match Found Yet</h1>
-            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-              Your lost item report has been saved. No matching found items are in the directory right
-              now, but you will be automatically matched as soon as someone reports finding it.
+            <h1 className="text-xl font-bold text-zinc-100">Report Saved to Registry</h1>
+            <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed max-w-sm mx-auto">
+              No matching found item was discovered in the current catalog. Your report is permanently active, 
+              and the AI matcher will alert you as soon as a match is submitted.
             </p>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600 text-left space-y-1">
-            <p>✅ Report saved permanently</p>
-            <p>✅ AI will auto-match new found reports</p>
-            <p>✅ You will be notified immediately on a match</p>
-          </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 pt-2">
             {itemId && (
               <Link href={`/lost-and-found/items/${itemId}`}>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                  View Your Report <ArrowRight className="w-4 h-4 ml-2" />
+                <Button className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 text-xs font-semibold py-2">
+                  View My Item Status <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Button>
               </Link>
             )}
             <Link href="/lost-and-found/browse">
-              <Button variant="outline" className="w-full text-slate-700">Browse Found Items</Button>
+              <Button variant="outline" className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 text-xs">
+                Browse Found Catalog
+              </Button>
             </Link>
           </div>
         </div>
@@ -272,17 +285,17 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-          <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
-            <Search className="w-14 h-14 text-purple-600" />
+    <AppShell>
+      <Suspense
+        fallback={
+          <div className="py-20 flex flex-col items-center justify-center gap-2 text-zinc-500">
+            <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
+            <span className="text-xs">Loading report confirmation...</span>
           </div>
-          <p className="text-slate-500 text-sm">Loading your report…</p>
-        </div>
-      }
-    >
-      <SuccessContent />
-    </Suspense>
+        }
+      >
+        <SuccessContent />
+      </Suspense>
+    </AppShell>
   );
 }

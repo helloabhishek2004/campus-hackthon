@@ -194,3 +194,35 @@ import {
 
 - **`InstitutionalRole`**: `"student" | "faculty" | "staff" | "admin"`
 - **`InstitutionalTag`**: `"CAS_COORDINATOR" | "DEPARTMENT_COORDINATOR" | "COURSE_COORDINATOR" | "CLASS_COORDINATOR" | "HOD"`
+
+---
+
+## 7. Module 4: Emergency Alert System Contracts
+
+Shared schemas available via `@smart-campus/contracts`:
+
+```ts
+import {
+  EmergencyReportSchema,
+  EmergencyAlertSchema,
+  EmergencyIncidentSchema,
+  CreateEmergencyReportInputSchema,
+  CreateEmergencyAlertInputSchema,
+  SafetyCheckInSchema,
+  EmergencyTypeSchema,
+  EmergencySeveritySchema,
+  EmergencyScopeSchema,
+  AlertChannelSchema,
+} from "@smart-campus/contracts";
+```
+
+### Endpoints Specification
+
+| Route | Method | Request Payload | Response Payload | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/api/emergency/alerts` | `GET` | _None_ | `{ success: true, alerts: EmergencyAlert[], active: EmergencyAlert[], hotlines: EmergencyContact[] }` | Fetches active and recent campus emergency broadcasts alongside 24/7 hotline directory. |
+| `/api/emergency/alerts` | `POST` | `CreateEmergencyAlertInput` | `{ success: true, message: string, alert: EmergencyAlert }` | Dispatches priority broadcast alert across selected delivery channels (`in_app`, `push`, `sms`, `siren`). |
+| `/api/emergency/reports` | `GET` | _None_ | `{ success: true, reports: EmergencyReport[] }` | Retrieves recent emergency incident reports. |
+| `/api/emergency/reports` | `POST` | `CreateEmergencyReportInput` | `{ success: true, message: string, report: EmergencyReport }` | Transmits 1-tap SOS report, assigns rule priority (1..4), and triggers responder dispatch. |
+| `/api/emergency/check-in` | `POST` | `SafetyCheckIn` | `{ success: true, message: string, totalSafe: number }` | Logs real-time personal safety check-in (`safe` or `need_help`) against an active incident. |
+

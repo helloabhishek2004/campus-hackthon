@@ -38,5 +38,6 @@ Thumbs.db
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
+.freebuff/
 modules/lost-and-found/data/db.json
 *.tsbuildinfo

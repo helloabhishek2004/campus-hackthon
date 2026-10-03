@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { AppShell } from "@/components/layout/app-shell";
 import {
   Button,
   Card,
@@ -31,7 +32,10 @@ import {
   Flame,
   FileText,
   AlertCircle,
+  ShieldAlert,
+  Sparkles,
 } from "lucide-react";
+import { cn } from "@smart-campus/utils";
 
 export default function ComplaintsPage() {
   // Form State
@@ -98,47 +102,51 @@ export default function ComplaintsPage() {
         map.set(c.cluster_id, list);
       }
     }
+
     return Array.from(map.entries()).map(([clusterId, items]) => {
       const sorted = [...items].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       const latest = sorted[0];
-      const attachment = sorted
-        .flatMap((it) => it.attachments || [])
-        .find((att) => !!att?.url);
+
+      // Find first available thumbnail among all attachments
+      let thumbnail: string | null = null;
+      for (const item of items) {
+        if (item.attachments && item.attachments.length > 0) {
+          thumbnail = item.attachments[0].url;
+          break;
+        }
+      }
 
       return {
         clusterId,
-        items: sorted,
-        count: sorted.length,
-        latestReport: latest,
-        category: latest.category || "General",
+        count: items.length,
+        category: latest.category,
         latestDate: latest.created_at,
-        thumbnailUrl: attachment?.url,
+        latestReport: latest,
+        items: sorted,
+        thumbnailUrl: thumbnail,
       };
     });
   }, [complaints]);
 
-  // Handle file select
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setFormError(null);
-
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setFormError("Only image files (JPEG, PNG, WebP, GIF) are accepted.");
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setFormError("Only JPG, PNG, WebP, and GIF images are allowed.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setFormError("Image file size must not exceed 5 MB.");
+      setFormError("Image must not exceed 5 MB.");
       return;
     }
 
+    setFormError(null);
     setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleRemoveImage = () => {
@@ -152,7 +160,6 @@ export default function ComplaintsPage() {
     }
   };
 
-  // Submit Complaint
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -160,7 +167,7 @@ export default function ComplaintsPage() {
 
     const trimmed = complaintText.trim();
     if (trimmed.length < 5) {
-      setFormError("Complaint description must be at least 5 characters long.");
+      setFormError("Complaint text must be at least 5 characters long.");
       return;
     }
 
@@ -169,7 +176,7 @@ export default function ComplaintsPage() {
     try {
       const attachments: ComplaintAttachment[] = [];
 
-      // 1. Upload image if selected (strictly storage/display, ZERO ML)
+      // 1. Upload image if selected
       if (selectedFile) {
         const formData = new FormData();
         formData.append("file", selectedFile);
@@ -187,7 +194,7 @@ export default function ComplaintsPage() {
         attachments.push(uploadData.attachment);
       }
 
-      // 2. Submit complaint with text (similarity pipeline uses ONLY text)
+      // 2. Submit complaint with text (similarity pipeline uses text)
       const submitRes = await fetch("/api/complaints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,17 +218,14 @@ export default function ComplaintsPage() {
       };
 
       setSubmitSuccess({
-        message: "Your complaint has been successfully recorded and grouped.",
+        message: "Your complaint has been recorded and clustered with AI similarity.",
         isEmergency: clusterInfo.is_emergency,
         groupCount: clusterInfo.group_count,
         clusterId: clusterInfo.cluster_id,
       });
 
-      // Clear form
       setComplaintText("");
       handleRemoveImage();
-
-      // Refresh list
       fetchComplaints(activeTab);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Submission error occurred");
@@ -244,653 +248,641 @@ export default function ComplaintsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6 gap-4">
-        <div>
-          <Link
-            href="/"
-            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 font-medium mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Portal Home
-          </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
-              Campus Complaint System
+    <AppShell>
+      <div className="space-y-6">
+        {/* Module Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-zinc-800 gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-amber-400 font-semibold tracking-wider">
+                Module 2
+              </span>
+              <span className="text-xs text-zinc-500 font-mono">Grievance & Intelligence</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
+              <span>Campus Complaints System</span>
+              <Sparkles className="w-5 h-5 text-amber-400" />
             </h1>
-            <Badge variant="default">CampusGram</Badge>
+            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
+              AI-assisted severity evaluation, duplicate clustering, and automated department routing. 
+              Clusters with 5 or more corroborating reports escalate to Emergency automatically.
+            </p>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Automated text-similarity grouping & emergency thresholding (&ge; 5 reports escalate to Emergency).
-          </p>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/emergency"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 bg-red-950/30 text-red-300 hover:bg-red-900/40 transition-colors"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+              <span>Life-Safety SOS</span>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchComplaints(activeTab)}
+              disabled={isLoadingFeed}
+              className="flex items-center gap-1.5 border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", isLoadingFeed && "animate-spin")} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchComplaints(activeTab)}
-            disabled={isLoadingFeed}
-            className="flex items-center gap-1.5"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingFeed ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Complaint Submission Form (5 cols) */}
-        <div className="lg:col-span-5">
-          <Card className="sticky top-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <CardTitle className="text-slate-900 dark:text-slate-50">Submit a Grievance</CardTitle>
-              </div>
-              <CardDescription className="text-slate-500 dark:text-slate-400">
-                Describe your campus issue. Similarity is calculated strictly from text.
-              </CardDescription>
-            </CardHeader>
-
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                {/* Text Area */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Complaint Text <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[110px] break-words whitespace-pre-wrap"
-                    placeholder="e.g. Water is not available in hostel block A since morning..."
-                    value={complaintText}
-                    onChange={(e) => setComplaintText(e.target.value)}
-                    disabled={isSubmitting}
-                  />
-                  <div className="flex justify-between items-center text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    <span>Min 5 characters</span>
-                    <span>{complaintText.length} chars</span>
-                  </div>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column: Complaint Submission Form (5 cols) */}
+          <div className="lg:col-span-5">
+            <Card className="sticky top-20 border-zinc-800 bg-zinc-900/70 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <CardTitle className="text-sm font-semibold text-zinc-100">
+                    File a New Grievance
+                  </CardTitle>
                 </div>
+                <CardDescription className="text-xs text-zinc-400">
+                  Describe your campus issue. Similarity is computed strictly from text representation.
+                </CardDescription>
+              </CardHeader>
 
-                {/* Category Selection */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Category
-                  </label>
-                  <select
-                    className="w-full rounded-md border border-slate-300 dark:border-slate-700 p-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
-                    disabled={isSubmitting}
-                  >
-                    <option value="infrastructure">Infrastructure & Maintenance</option>
-                    <option value="hostel">Hostel & Living</option>
-                    <option value="sanitation">Sanitation & Water</option>
-                    <option value="it_services">Campus IT & Network</option>
-                    <option value="academic">Academic & Classroom</option>
-                    <option value="security">Campus Security & Safety</option>
-                    <option value="administration">Administration</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                {/* Image Attachment (strictly storage/display, NO ML) */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Optional Image Attachment
-                  </label>
-
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    disabled={isSubmitting}
-                  />
-
-                  {!previewUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                  {/* Text Area */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                      Issue Description <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600 min-h-[105px] break-words whitespace-pre-wrap"
+                      placeholder="e.g. Water is not available in hostel block A since morning. Pressure pump seems damaged..."
+                      value={complaintText}
+                      onChange={(e) => setComplaintText(e.target.value)}
                       disabled={isSubmitting}
-                      className="w-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-lg p-4 flex flex-col items-center justify-center gap-2 bg-slate-50/50 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    />
+                    <div className="flex justify-between items-center text-[10px] text-zinc-500 mt-1 font-mono">
+                      <span>Min 5 characters</span>
+                      <span>{complaintText.length} chars</span>
+                    </div>
+                  </div>
+
+                  {/* Category Selection */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                      Category
+                    </label>
+                    <select
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as ComplaintCategory)}
+                      disabled={isSubmitting}
                     >
-                      <Upload className="w-5 h-5 text-slate-400 dark:text-slate-500" />
-                      <span className="text-xs font-medium">Click to attach photo (max 5 MB)</span>
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500">JPG, PNG, WebP, GIF only</span>
-                    </button>
-                  ) : (
-                    <div className="relative border border-slate-200 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-800/50">
-                      <div className="relative h-40 w-full overflow-hidden rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        {/* Preview */}
-                        <img
-                          src={previewUrl}
-                          alt="Attachment preview"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-2 px-1">
-                        <span className="text-xs text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
-                          {selectedFile?.name}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemoveImage}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 h-7 px-2 text-xs flex items-center gap-1"
-                        >
-                          <X className="w-3.5 h-3.5" /> Remove
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Validation / Form Error */}
-                {formError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-md text-xs flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 dark:text-red-400" />
-                    <span>{formError}</span>
+                      <option value="infrastructure">Infrastructure & Maintenance</option>
+                      <option value="hostel">Hostel & Living</option>
+                      <option value="sanitation">Sanitation & Water</option>
+                      <option value="it_services">Campus IT & Network</option>
+                      <option value="academic">Academic & Classroom</option>
+                      <option value="security">Campus Security & Safety</option>
+                      <option value="administration">Administration</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
-                )}
 
-                {/* Submission Success Feedback */}
-                {submitSuccess && (
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 rounded-md text-xs space-y-1">
-                    <div className="flex items-center gap-1.5 font-semibold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>{submitSuccess.message}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge
-                        variant={submitSuccess.isEmergency ? "destructive" : "secondary"}
-                        className="text-[11px]"
+                  {/* Image Attachment */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+                      Attachment (Optional Photo)
+                    </label>
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={isSubmitting}
+                    />
+
+                    {!previewUrl ? (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isSubmitting}
+                        className="w-full border border-dashed border-zinc-800 hover:border-zinc-600 rounded-lg p-3.5 flex flex-col items-center justify-center gap-1.5 bg-zinc-950/60 text-zinc-400 hover:text-zinc-200 transition-colors"
                       >
-                        {submitSuccess.isEmergency
-                          ? "Escalated to Emergency"
-                          : "Status: Normal Priority"}
-                      </Badge>
-                      <span className="text-slate-600 dark:text-slate-300">
-                        Group size: <strong>{submitSuccess.groupCount}</strong> complaints
-                      </span>
-                    </div>
+                        <Upload className="w-4 h-4 text-zinc-500" />
+                        <span className="text-xs font-medium">Attach Photo (max 5 MB)</span>
+                        <span className="text-[10px] text-zinc-600">JPG, PNG, WebP only</span>
+                      </button>
+                    ) : (
+                      <div className="relative border border-zinc-800 rounded-lg p-2 bg-zinc-950">
+                        <div className="relative h-32 w-full overflow-hidden rounded bg-zinc-900 flex items-center justify-center">
+                          <img
+                            src={previewUrl}
+                            alt="Attachment preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-2 px-1">
+                          <span className="text-xs text-zinc-300 truncate max-w-[180px]">
+                            {selectedFile?.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"
+                          >
+                            <X className="w-3.5 h-3.5" /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </CardContent>
 
-              <CardFooter className="pt-2">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || complaintText.trim().length < 5}
-                  className="w-full flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Analyzing & Grouping...
-                    </>
-                  ) : (
-                    "Submit Complaint"
+                  {/* Form Error */}
+                  {formError && (
+                    <div className="p-3 bg-red-950/40 border border-red-900/60 text-red-300 rounded-lg text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                      <span>{formError}</span>
+                    </div>
                   )}
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-        </div>
 
-        {/* Right Column: Complaint Feed & Emergency / Normal Views (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          {/* Tabs Filter */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab("all")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                  activeTab === "all"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                All Grievances
-                <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === "all" ? "bg-blue-800 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {counts.total}
-                </span>
-              </button>
+                  {/* Submission Feedback */}
+                  {submitSuccess && (
+                    <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 text-emerald-200 rounded-lg text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-semibold">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>{submitSuccess.message}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={cn(
+                            "text-[10px] font-mono px-2 py-0.5 rounded font-semibold",
+                            submitSuccess.isEmergency
+                              ? "bg-red-900/80 text-red-200 border border-red-800"
+                              : "bg-zinc-800 text-zinc-300"
+                          )}
+                        >
+                          {submitSuccess.isEmergency ? "Escalated to Emergency" : "Normal Priority"}
+                        </span>
+                        <span className="text-zinc-400 text-[11px]">
+                          Cluster count: <strong>{submitSuccess.groupCount}</strong> reports
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("normal")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                  activeTab === "normal"
-                    ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                Normal
-                <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === "normal" ? "bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                }`}>
-                  {counts.normal}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("emergency")}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                  activeTab === "emergency"
-                    ? "bg-red-600 text-white shadow-sm"
-                    : "text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
-                }`}
-              >
-                <Flame className="w-3.5 h-3.5" />
-                Emergency (&ge; 5)
-                <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === "emergency" ? "bg-red-800 text-white" : "bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-200"
-                }`}>
-                  {counts.emergency}
-                </span>
-              </button>
-            </div>
-
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-              Threshold: &ge; 5 items
-            </div>
+                <CardFooter className="pt-2">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || complaintText.trim().length < 5}
+                    className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 font-semibold text-xs py-2 flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        Analyzing & Grouping...
+                      </>
+                    ) : (
+                      "Submit Grievance"
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
           </div>
 
-          {/* Emergency Alert Banner if Emergency Issues Exist */}
-          {counts.emergency > 0 && activeTab !== "normal" && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2.5 text-xs text-red-900 dark:text-red-200 shadow-xs">
-              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-semibold">Active Campus Emergency Clusters Detected!</strong>
-                <p className="text-red-700 dark:text-red-300 text-[11px] mt-0.5">
-                  Complaints grouped with 5 or more matching reports have been automatically escalated to Emergency priority.
-                </p>
+          {/* Right Column: Feed & Views (7 cols) */}
+          <div className="lg:col-span-7 space-y-4">
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("all")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5",
+                    activeTab === "all"
+                      ? "bg-zinc-800 text-zinc-100 font-semibold"
+                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                  )}
+                >
+                  All Grievances
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-zinc-800 border border-zinc-700/60 text-zinc-300">
+                    {counts.total}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("normal")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5",
+                    activeTab === "normal"
+                      ? "bg-zinc-800 text-zinc-100 font-semibold"
+                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                  )}
+                >
+                  Normal
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-zinc-800 border border-zinc-700/60 text-zinc-300">
+                    {counts.normal}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("emergency")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5",
+                    activeTab === "emergency"
+                      ? "bg-red-950/80 border border-red-800/80 text-red-200 font-semibold"
+                      : "text-red-400/80 hover:text-red-300 hover:bg-red-950/30"
+                  )}
+                >
+                  <Flame className="w-3.5 h-3.5 text-red-400" />
+                  Emergency (&ge; 5)
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-900/60 text-red-200 border border-red-800">
+                    {counts.emergency}
+                  </span>
+                </button>
+              </div>
+
+              <div className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                Threshold: &ge; 5
               </div>
             </div>
-          )}
 
-          {/* Feed Error */}
-          {feedError && (
-            <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 rounded-lg text-sm flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0 text-red-600 dark:text-red-400" />
-              <span>{feedError}</span>
-            </div>
-          )}
-
-          {/* Feed List Rendering */}
-          {isLoadingFeed ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
-              <RefreshCw className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="text-xs font-medium">Loading complaints...</span>
-            </div>
-          ) : activeTab === "emergency" ? (
-            /* Emergency View: Grouped by cluster_id into 1 card per cluster */
-            emergencyClusters.length === 0 ? (
-              <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-2">
-                <Layers className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  No active emergency complaints.
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  No similarity groups have reached the 5-complaint emergency threshold yet.
-                </p>
+            {/* Emergency Alert Banner */}
+            {counts.emergency > 0 && activeTab !== "normal" && (
+              <div className="p-3 bg-red-950/30 border border-red-900/60 rounded-xl flex items-start gap-2.5 text-xs text-red-200">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-semibold text-red-200">Active High-Volume Escalations!</strong>
+                  <p className="text-red-300/80 text-[11px] mt-0.5">
+                    Issues reported by 5 or more distinct members have auto-escalated to Emergency status for expedited dispatch.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {emergencyClusters.map((cluster) => (
-                  <Card
-                    key={cluster.clusterId}
-                    className="border-red-300 dark:border-red-800 bg-red-50/40 dark:bg-red-950/20 ring-1 ring-red-200 dark:ring-red-900 transition-shadow hover:shadow-md"
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="destructive" className="flex items-center gap-1 font-bold text-white bg-red-600 dark:bg-red-600">
-                            <Flame className="w-3 h-3" /> EMERGENCY CLUSTER
-                          </Badge>
+            )}
 
-                          <Badge
-                            variant="outline"
-                            className="capitalize text-[11px] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                          >
-                            {cluster.category?.replace("_", " ") || "General"}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                          <span>Latest: {formatDate(cluster.latestDate)}</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-3 text-sm">
-                      <p className="text-slate-900 dark:text-slate-100 font-medium leading-relaxed break-words whitespace-pre-wrap">
-                        {cluster.latestReport.text}
-                      </p>
-
-                      {/* Display thumbnail if cluster has any attached images */}
-                      {cluster.thumbnailUrl && (
-                        <div className="pt-1">
-                          <div
-                            onClick={() => setExpandedImage(cluster.thumbnailUrl || null)}
-                            className="group relative h-20 w-28 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-2xs hover:opacity-90"
-                          >
-                            <img
-                              src={cluster.thumbnailUrl}
-                              alt="Cluster attachment thumbnail"
-                              className="h-full w-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-medium">
-                              View Image
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-
-                    <CardFooter className="pt-2 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-500 dark:text-slate-400">Similarity Group:</span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
-                          {cluster.clusterId.substring(0, 16)}...
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold px-2 py-0.5 rounded text-[11px] bg-red-100 text-red-800 dark:bg-red-950/80 dark:text-red-200 dark:border dark:border-red-800">
-                          {cluster.count} similar reports
-                        </span>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedCluster({ clusterId: cluster.clusterId, items: cluster.items })}
-                          className="h-7 text-xs px-2.5 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-950/50"
-                        >
-                          View reports ({cluster.count}) &rarr;
-                        </Button>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
+            {/* Error state */}
+            {feedError && (
+              <div className="p-4 bg-red-950/40 border border-red-900 text-red-300 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{feedError}</span>
               </div>
-            )
-          ) : (
-            /* All or Normal View */
-            complaints.length === 0 ? (
-              <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-2">
-                <Layers className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  {activeTab === "normal"
-                    ? "No normal complaints."
-                    : "No complaints have been reported yet."}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {activeTab === "normal"
-                    ? "There are currently no normal priority complaints."
-                    : "No grievances registered. Submit one using the form on the left."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {complaints.map((item) => {
-                  const isEmergency = item.is_emergency;
+            )}
 
-                  return (
+            {/* List */}
+            {isLoadingFeed ? (
+              <div className="py-12 flex flex-col items-center justify-center gap-2 text-zinc-500">
+                <RefreshCw className="w-5 h-5 animate-spin text-zinc-400" />
+                <span className="text-xs">Loading grievance records...</span>
+              </div>
+            ) : activeTab === "emergency" ? (
+              /* Emergency View */
+              emergencyClusters.length === 0 ? (
+                <div className="p-10 text-center bg-zinc-900/40 rounded-xl border border-dashed border-zinc-800 text-zinc-500 space-y-2">
+                  <Layers className="w-8 h-8 text-zinc-700 mx-auto" />
+                  <p className="text-xs font-semibold text-zinc-300">No active emergency clusters</p>
+                  <p className="text-[11px] text-zinc-500">
+                    No similarity groups have met the 5-complaint threshold yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {emergencyClusters.map((cluster) => (
                     <Card
-                      key={item.id}
-                      className={`transition-shadow hover:shadow-md ${
-                        isEmergency
-                          ? "border-red-300 dark:border-red-800 bg-red-50/40 dark:bg-red-950/20 ring-1 ring-red-200 dark:ring-red-900"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-                      }`}
+                      key={cluster.clusterId}
+                      className="border-red-900/60 bg-red-950/20 rounded-xl transition-colors hover:border-red-700/80"
                     >
                       <CardHeader className="pb-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            {isEmergency ? (
-                              <Badge variant="destructive" className="flex items-center gap-1 font-bold text-white bg-red-600 dark:bg-red-600">
-                                <Flame className="w-3 h-3" /> EMERGENCY
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                                Normal
-                              </Badge>
-                            )}
+                            <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-red-900 text-red-100 border border-red-700">
+                              <Flame className="w-3 h-3 text-red-200" /> EMERGENCY CLUSTER
+                            </span>
 
-                            <Badge
-                              variant="outline"
-                              className="capitalize text-[11px] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                            >
-                              {item.category?.replace("_", " ") || "General"}
-                            </Badge>
+                            <span className="capitalize text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-300">
+                              {cluster.category?.replace("_", " ") || "General"}
+                            </span>
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                            <span>{formatDate(item.created_at)}</span>
+                          <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono">
+                            <Clock className="w-3 h-3 text-zinc-500" />
+                            <span>Latest: {formatDate(cluster.latestDate)}</span>
                           </div>
                         </div>
                       </CardHeader>
 
-                      <CardContent className="space-y-3 text-sm">
-                        <p className="text-slate-900 dark:text-slate-100 font-medium leading-relaxed break-words whitespace-pre-wrap">
-                          {item.text}
+                      <CardContent className="space-y-3 text-xs">
+                        <p className="text-zinc-200 font-medium leading-relaxed break-words whitespace-pre-wrap">
+                          {cluster.latestReport.text}
                         </p>
 
-                        {/* Attached Image if available (Display ONLY) */}
-                        {item.attachments && item.attachments.length > 0 && (
-                          <div className="flex items-center gap-3 pt-1">
-                            {item.attachments.map((att, idx) => (
-                              <div
-                                key={att.id || idx}
-                                onClick={() => setExpandedImage(att.url)}
-                                className="group relative h-20 w-28 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-2xs hover:opacity-90"
-                              >
-                                <img
-                                  src={att.url}
-                                  alt={att.filename || "Complaint attachment"}
-                                  className="h-full w-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-medium">
-                                  View
-                                </div>
+                        {cluster.thumbnailUrl && (
+                          <div className="pt-1">
+                            <div
+                              onClick={() => setExpandedImage(cluster.thumbnailUrl || null)}
+                              className="group relative h-20 w-28 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900 cursor-pointer hover:opacity-90"
+                            >
+                              <img
+                                src={cluster.thumbnailUrl}
+                                alt="Cluster attachment"
+                                className="h-full w-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-zinc-100 text-[10px] font-medium">
+                                View
                               </div>
-                            ))}
+                            </div>
                           </div>
                         )}
                       </CardContent>
 
-                      <CardFooter className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        {/* Cluster & Similar count badge */}
+                      <CardFooter className="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-500 dark:text-slate-400">Similarity Group:</span>
-                          <span className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
-                            {item.cluster_id.substring(0, 16)}...
+                          <span className="text-zinc-500 text-[11px]">Cluster ID:</span>
+                          <span className="font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded text-[10px] border border-zinc-800">
+                            {cluster.clusterId.substring(0, 14)}...
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`font-semibold px-2 py-0.5 rounded text-[11px] ${
-                              isEmergency
-                                ? "bg-red-100 text-red-800 dark:bg-red-950/80 dark:text-red-200 dark:border dark:border-red-800 font-bold"
-                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                            }`}
-                          >
-                            {item.similar_count} {item.similar_count === 1 ? "report" : "similar reports"}
+                          <span className="font-bold px-2 py-0.5 rounded text-[10px] bg-red-900/40 text-red-200 border border-red-800/80 font-mono">
+                            {cluster.count} matching reports
                           </span>
 
-                          {isEmergency && item.similar_count >= 5 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const clusterItems = complaints.filter(
-                                  (c) => c.cluster_id === item.cluster_id,
-                                );
-                                setSelectedCluster({
-                                  clusterId: item.cluster_id,
-                                  items: clusterItems.length > 0 ? clusterItems : [item],
-                                });
-                              }}
-                              className="h-7 text-xs px-2 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-950/50"
-                            >
-                              View cluster &rarr;
-                            </Button>
-                          )}
+                          <button
+                            onClick={() => setSelectedCluster({ clusterId: cluster.clusterId, items: cluster.items })}
+                            className="text-xs px-2.5 py-1 rounded-lg text-red-300 border border-red-900/60 bg-red-950/40 hover:bg-red-900/40 transition-colors font-medium"
+                          >
+                            Inspect Group ({cluster.count}) &rarr;
+                          </button>
                         </div>
                       </CardFooter>
                     </Card>
-                  );
-                })}
-              </div>
-            )
-          )}
-        </div>
-      </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              /* All or Normal View */
+              complaints.length === 0 ? (
+                <div className="p-10 text-center bg-zinc-900/40 rounded-xl border border-dashed border-zinc-800 text-zinc-500 space-y-2">
+                  <Layers className="w-8 h-8 text-zinc-700 mx-auto" />
+                  <p className="text-xs font-semibold text-zinc-300">
+                    {activeTab === "normal"
+                      ? "No normal complaints currently."
+                      : "No complaints have been reported yet."}
+                  </p>
+                  <p className="text-[11px] text-zinc-500">
+                    Use the form on the left to submit a grievance.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {complaints.map((item) => {
+                    const isEmergency = item.is_emergency;
 
-      {/* Cluster Reports Detail Modal */}
-      {selectedCluster && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 backdrop-blur-xs"
-          onClick={() => setSelectedCluster(null)}
-        >
+                    return (
+                      <Card
+                        key={item.id}
+                        className={cn(
+                          "rounded-xl transition-colors",
+                          isEmergency
+                            ? "border-red-900/60 bg-red-950/20"
+                            : "border-zinc-800/90 bg-zinc-900/60 hover:border-zinc-700/80"
+                        )}
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              {isEmergency ? (
+                                <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-red-900 text-red-100 border border-red-700">
+                                  <Flame className="w-3 h-3 text-red-200" /> EMERGENCY
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                                  Standard
+                                </span>
+                              )}
+
+                              <span className="capitalize text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400">
+                                {item.category?.replace("_", " ") || "General"}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 text-[11px] text-zinc-500 font-mono">
+                              <Clock className="w-3 h-3 text-zinc-500" />
+                              <span>{formatDate(item.created_at)}</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="space-y-3 text-xs">
+                          <p className="text-zinc-200 font-medium leading-relaxed break-words whitespace-pre-wrap">
+                            {item.text}
+                          </p>
+
+                          {item.attachments && item.attachments.length > 0 && (
+                            <div className="flex items-center gap-2 pt-1">
+                              {item.attachments.map((att, idx) => (
+                                <div
+                                  key={att.id || idx}
+                                  onClick={() => setExpandedImage(att.url)}
+                                  className="group relative h-16 w-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900 cursor-pointer hover:opacity-90"
+                                >
+                                  <img
+                                    src={att.url}
+                                    alt={att.filename || "Attachment"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-zinc-100 text-[9px]">
+                                    View
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+
+                        <CardFooter className="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-zinc-500 text-[11px]">Cluster:</span>
+                            <span className="font-mono text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded text-[10px] border border-zinc-800">
+                              {item.cluster_id.substring(0, 14)}...
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "font-mono text-[10px] px-2 py-0.5 rounded font-medium",
+                                isEmergency
+                                  ? "bg-red-900/40 text-red-200 border border-red-800"
+                                  : "bg-zinc-800 text-zinc-400"
+                              )}
+                            >
+                              {item.similar_count} {item.similar_count === 1 ? "report" : "similar reports"}
+                            </span>
+
+                            {isEmergency && item.similar_count >= 5 && (
+                              <button
+                                onClick={() => {
+                                  const clusterItems = complaints.filter(
+                                    (c) => c.cluster_id === item.cluster_id
+                                  );
+                                  setSelectedCluster({
+                                    clusterId: item.cluster_id,
+                                    items: clusterItems.length > 0 ? clusterItems : [item],
+                                  });
+                                }}
+                                className="text-xs px-2.5 py-1 rounded-lg text-red-300 border border-red-900/60 bg-red-950/40 hover:bg-red-900/40 transition-colors font-medium"
+                              >
+                                View cluster &rarr;
+                              </button>
+                            )}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Cluster Detail Modal */}
+        {selectedCluster && (
           <div
-            className="relative max-w-2xl w-full max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs"
+            onClick={() => setSelectedCluster(null)}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-slate-800/50">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="destructive" className="flex items-center gap-1 font-bold text-white bg-red-600 dark:bg-red-600">
-                    <Flame className="w-3 h-3" /> EMERGENCY CLUSTER
-                  </Badge>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-                    {selectedCluster.items.length} Reports Registered
+            <div
+              className="relative max-w-2xl w-full max-h-[85vh] bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-zinc-800 p-4 bg-zinc-900/60">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded font-bold bg-red-900 text-red-100 border border-red-700">
+                      <Flame className="w-3 h-3 text-red-200" /> EMERGENCY CLUSTER
+                    </span>
+                    <span className="font-semibold text-zinc-100 text-sm">
+                      {selectedCluster.items.length} Reports Registered
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 font-mono truncate max-w-md">
+                    Cluster ID: {selectedCluster.clusterId}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCluster(null)}
+                  className="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="overflow-y-auto p-4 space-y-3">
+                <div className="text-xs text-amber-200 bg-amber-950/30 border border-amber-900/50 rounded-lg p-2.5 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    Reports below matched with lexical text similarity &ge; 0.35 and were aggregated into this emergency incident group.
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-md">
-                  Cluster ID: {selectedCluster.clusterId}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedCluster(null)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Modal Body / Report List */}
-            <div className="overflow-y-auto p-4 space-y-3">
-              <div className="text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-lg p-2.5 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  All complaints below matched with lexical text similarity &ge; 0.35 and were aggregated into this emergency incident group.
-                </span>
-              </div>
-
-              {selectedCluster.items.map((report, idx) => (
-                <div
-                  key={report.id || idx}
-                  className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/60 shadow-2xs space-y-2"
-                >
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-slate-500 dark:text-slate-400 font-semibold">
-                        #{idx + 1}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="capitalize text-[10px] text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
-                      >
-                        {report.category?.replace("_", " ") || "General"}
-                      </Badge>
+                {selectedCluster.items.map((report, idx) => (
+                  <div
+                    key={report.id || idx}
+                    className="p-3 rounded-lg border border-zinc-800/80 bg-zinc-900/50 space-y-2"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-zinc-500 font-semibold">#{idx + 1}</span>
+                        <span className="capitalize text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-400">
+                          {report.category?.replace("_", " ") || "General"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-zinc-500 text-[11px] font-mono">
+                        <Clock className="w-3 h-3 text-zinc-500" />
+                        <span>{formatDate(report.created_at)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
-                      <Clock className="w-3 h-3 text-slate-400" />
-                      <span>{formatDate(report.created_at)}</span>
-                    </div>
-                  </div>
 
-                  <p className="text-slate-900 dark:text-slate-100 text-sm font-medium leading-relaxed break-words whitespace-pre-wrap">
-                    {report.text}
-                  </p>
+                    <p className="text-zinc-200 text-xs font-medium leading-relaxed break-words whitespace-pre-wrap">
+                      {report.text}
+                    </p>
 
-                  {report.attachments && report.attachments.length > 0 && (
-                    <div className="flex items-center gap-2 pt-1">
-                      {report.attachments.map((att, attIdx) => (
-                        <div
-                          key={att.id || attIdx}
-                          onClick={() => setExpandedImage(att.url)}
-                          className="group relative h-16 w-24 rounded border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer"
-                        >
-                          <img
-                            src={att.url}
-                            alt={att.filename || "Attachment"}
-                            className="h-full w-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
-                            View
+                    {report.attachments && report.attachments.length > 0 && (
+                      <div className="flex items-center gap-2 pt-1">
+                        {report.attachments.map((att, attIdx) => (
+                          <div
+                            key={att.id || attIdx}
+                            onClick={() => setExpandedImage(att.url)}
+                            className="group relative h-16 w-24 rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden cursor-pointer"
+                          >
+                            <img
+                              src={att.url}
+                              alt={att.filename || "Attachment"}
+                              className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-zinc-100 text-[9px]">
+                              View
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-            {/* Modal Footer */}
-            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedCluster(null)}
-              >
-                Close
-              </Button>
+              {/* Modal Footer */}
+              <div className="p-3 border-t border-zinc-800 bg-zinc-900/60 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCluster(null)}
+                  className="border-zinc-800 text-zinc-300 hover:bg-zinc-800 text-xs"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Expanded Image Modal */}
-      {expandedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 backdrop-blur-xs"
-          onClick={() => setExpandedImage(null)}
-        >
+        {/* Enlarged Image Modal */}
+        {expandedImage && (
           <div
-            className="relative max-w-3xl max-h-[85vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-2xl p-2"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 backdrop-blur-xs"
+            onClick={() => setExpandedImage(null)}
           >
-            <button
-              onClick={() => setExpandedImage(null)}
-              className="absolute top-3 right-3 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 p-1.5 rounded-full shadow-md z-10 transition-colors"
+            <div
+              className="relative max-w-3xl max-h-[85vh] bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden p-2"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-5 h-5" />
-            </button>
-            <img
-              src={expandedImage}
-              alt="Enlarged attachment"
-              className="max-h-[80vh] w-auto object-contain rounded"
-            />
+              <button
+                onClick={() => setExpandedImage(null)}
+                className="absolute top-3 right-3 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 p-1.5 rounded-full z-10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <img
+                src={expandedImage}
+                alt="Enlarged attachment"
+                className="max-h-[80vh] w-auto object-contain rounded-lg"
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </AppShell>
   );
 }

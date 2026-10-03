@@ -6,4 +6,5 @@ export * from "./identity";
 export * from "./documents";
 export * from "./campus-posts";
 export * from "./faculty-academic-documents";
+export * from "./emergency";
 

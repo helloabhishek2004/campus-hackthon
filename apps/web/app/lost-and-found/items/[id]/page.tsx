@@ -3,19 +3,30 @@
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { AppShell } from "@/components/layout/app-shell";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   Badge,
-  Button
+  Button,
 } from "@smart-campus/ui";
-import { ArrowLeft, MapPin, Calendar, Tag, Info, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Info,
+  AlertTriangle,
+  Lock,
+  Sparkles,
+  RefreshCw,
+} from "lucide-react";
+import { cn } from "@smart-campus/utils";
 
 export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  
+
   const [item, setItem] = useState<any>(null);
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +48,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
             const matchesRes = await fetch(`/api/lost-found/items/${id}/matches`);
             if (matchesRes.ok) {
               const matchesData = await matchesRes.json();
-              setMatches(matchesData.matches);
+              setMatches(matchesData.matches || []);
             }
           }
         }
@@ -50,127 +61,192 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
     fetchData();
   }, [id]);
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (!item) return <div className="p-8 text-center text-red-500">Item not found.</div>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="py-20 flex flex-col items-center justify-center gap-2 text-zinc-500">
+          <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
+          <span className="text-xs">Loading item details...</span>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!item) {
+    return (
+      <AppShell>
+        <div className="py-20 text-center space-y-3">
+          <p className="text-sm font-semibold text-red-400">Item not found.</p>
+          <Link
+            href="/lost-and-found/browse"
+            className="text-xs text-zinc-400 hover:text-zinc-200 underline"
+          >
+            &larr; Return to directory
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   const isOwner = item.reporter_id === currentUserId;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <Link
-        href="/lost-and-found/browse"
-        className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Browse
-      </Link>
+    <AppShell>
+      <div className="space-y-6">
+        <Link
+          href="/lost-and-found/browse"
+          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Directory
+        </Link>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Left Col: Details */}
-        <div className="flex-1 space-y-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Badge variant={item.type === "lost" ? "destructive" : "success"}>
-                {item.type.toUpperCase()}
-              </Badge>
-              <Badge variant="outline" className="capitalize">{item.status.replace('_', ' ')}</Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Details (8 cols) */}
+          <div className="lg:col-span-8 space-y-5">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className={cn(
+                    "text-[10px] font-mono px-2 py-0.5 rounded font-bold border",
+                    item.type === "lost"
+                      ? "bg-red-950/80 text-red-300 border-red-800"
+                      : "bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                  )}
+                >
+                  {item.type.toUpperCase()}
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 uppercase">
+                  {item.status?.replace("_", " ")}
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 capitalize">
+                  {item.category?.replace("_", " ")}
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">{item.title}</h1>
             </div>
-            <h1 className="text-3xl font-bold">{item.title}</h1>
+
+            {item.images?.length > 0 ? (
+              <div className="aspect-video bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800">
+                <img
+                  src={item.images[0].public_url}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="aspect-video bg-zinc-900/40 rounded-xl border border-dashed border-zinc-800 flex items-center justify-center text-zinc-500 text-xs">
+                No photo provided for this report
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-2.5 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
+                <MapPin className="w-4 h-4 text-purple-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                    Location
+                  </p>
+                  <p className="text-xs font-medium text-zinc-200 truncate">
+                    {item.location_description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
+                <Calendar className="w-4 h-4 text-purple-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                    Event Date
+                  </p>
+                  <p className="text-xs font-medium text-zinc-200 truncate">
+                    {format(new Date(item.event_date || item.created_at), "MMM d, yyyy - h:mm a")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 bg-zinc-900/40 p-4 rounded-xl border border-zinc-800">
+              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                <Info className="w-4 h-4 text-purple-400" /> Public Description
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                {item.public_description || "No public notes provided."}
+              </p>
+
+              {isOwner && item.identifying_marks && (
+                <div className="mt-3 p-3 bg-purple-950/30 rounded-lg border border-purple-900/50 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-300">
+                    <Lock className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Private Identifying Marks (Hidden from Public)</span>
+                  </div>
+                  <p className="text-xs text-purple-200/90 leading-relaxed">
+                    {item.identifying_marks}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {item.images?.length > 0 ? (
-            <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
-               <img src={item.images[0].public_url} alt={item.title} className="w-full h-full object-cover" />
-            </div>
-          ) : (
-            <div className="aspect-video bg-slate-50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
-               No image provided
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-             <div className="flex items-center gap-2 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <MapPin className="w-5 h-5 text-slate-400" />
-                <div>
-                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</p>
-                   <p className="text-sm font-medium">{item.location_description}</p>
+          {/* Right Col: AI Matches (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <Card className="border-zinc-800 bg-zinc-900/60 rounded-xl overflow-hidden">
+              <CardHeader className="bg-zinc-950/60 border-b border-zinc-800/80 p-3.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+                    AI Match Candidates
+                  </CardTitle>
                 </div>
-             </div>
-             <div className="flex items-center gap-2 text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                <Calendar className="w-5 h-5 text-slate-400" />
-                <div>
-                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Date & Time</p>
-                   <p className="text-sm font-medium">{format(new Date(item.event_date), "MMM d, yyyy - h:mm a")}</p>
-                </div>
-             </div>
-          </div>
+              </CardHeader>
+              <CardContent className="p-3.5 space-y-3">
+                {matches.length === 0 ? (
+                  <div className="text-center py-6 text-zinc-500 text-xs space-y-1">
+                    <p className="font-medium text-zinc-400">No match candidates yet</p>
+                    <p className="text-[11px] text-zinc-600">
+                      Our multimodal embeddings worker continuously scans newly filed items.
+                    </p>
+                  </div>
+                ) : (
+                  matches.map((match) => {
+                    const otherItem = item.type === "lost" ? match.found_item : match.lost_item;
+                    if (!otherItem) return null;
 
-          <div className="prose prose-slate max-w-none">
-            <h3 className="flex items-center gap-2 text-lg font-semibold border-b pb-2">
-               <Info className="w-5 h-5" /> Description
-            </h3>
-            <p>{item.public_description}</p>
-            
-            {isOwner && item.private_description && (
-               <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-100">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-purple-900 mb-1">
-                     <AlertTriangle className="w-4 h-4" /> Private Description (Only visible to you & AI)
-                  </h4>
-                  <p className="text-sm text-purple-800 m-0">{item.private_description}</p>
-               </div>
-            )}
-             {isOwner && item.identifying_marks && (
-               <div className="mt-2 p-4 bg-purple-50 rounded-lg border border-purple-100">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-purple-900 mb-1">
-                     <AlertTriangle className="w-4 h-4" /> Identifying Marks (Only visible to you & AI)
-                  </h4>
-                  <p className="text-sm text-purple-800 m-0">{item.identifying_marks}</p>
-               </div>
-            )}
+                    return (
+                      <div
+                        key={match.id}
+                        className="border border-zinc-800 rounded-lg p-3 space-y-2 hover:border-purple-500/50 transition-colors bg-zinc-950/60"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-semibold text-xs text-zinc-100 line-clamp-1">
+                            {otherItem.title}
+                          </h4>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 border border-purple-800 text-purple-300 shrink-0 font-bold">
+                            {(match.overall_score * 100).toFixed(0)}% Match
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+                          {otherItem.public_description}
+                        </p>
+                        <div className="pt-2 border-t border-zinc-800/80">
+                          <Link href={`/lost-and-found/matches/${match.id}`}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs h-7 border-zinc-800 bg-zinc-900 text-purple-300 hover:bg-zinc-800"
+                            >
+                              Review & Verify Match &rarr;
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        {/* Right Col: Matches (if owner) */}
-        {isOwner && (
-          <div className="w-full md:w-80 space-y-4">
-             <Card>
-                <CardHeader className="bg-slate-50 border-b">
-                   <CardTitle className="text-lg">AI Matches</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                   {matches.length === 0 ? (
-                      <p className="text-sm text-slate-500 text-center py-4">
-                         No matches found yet. We&apos;ll notify you if something turns up.
-                      </p>
-                   ) : (
-                      matches.map(match => {
-                         const otherItem = item.type === "lost" ? match.found_item : match.lost_item;
-                         if (!otherItem) return null;
-                         
-                         return (
-                           <div key={match.id} className="border rounded-lg p-3 space-y-2 hover:border-purple-300 transition-colors cursor-pointer bg-white">
-                              <div className="flex justify-between items-start">
-                                 <h4 className="font-semibold text-sm line-clamp-1">{otherItem.title}</h4>
-                                 <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 ml-2 shrink-0">
-                                    {(match.overall_score * 100).toFixed(0)}% Match
-                                 </Badge>
-                              </div>
-                              <p className="text-xs text-slate-500 line-clamp-2">{otherItem.public_description}</p>
-                              <div className="pt-2 border-t mt-2">
-                                 <Link href={`/lost-and-found/matches/${match.id}`}>
-                                    <Button size="sm" variant="outline" className="w-full text-xs">
-                                       Review Match
-                                    </Button>
-                                 </Link>
-                              </div>
-                           </div>
-                         )
-                      })
-                   )}
-                </CardContent>
-             </Card>
-          </div>
-        )}
       </div>
-    </div>
+    </AppShell>
   );
 }

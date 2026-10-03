@@ -1,0 +1,111 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { ShieldAlert, AlertTriangle, ArrowRight, X, Info } from "lucide-react";
+import { EmergencyAlert } from "@smart-campus/contracts";
+import { emergencyClientService } from "@/lib/services/emergency-client-service";
+import { cn } from "@smart-campus/utils";
+
+export function EmergencyBanner() {
+  const [activeAlert, setActiveAlert] = useState<EmergencyAlert | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadAlerts() {
+      try {
+        const res = await emergencyClientService.getAlerts();
+        if (mounted && res.active && res.active.length > 0) {
+          // Priority to critical or warning
+          const criticalOrWarning = res.active.find(
+            (a) => a.severity === "critical" || a.severity === "warning"
+          );
+          setActiveAlert(criticalOrWarning || res.active[0]);
+        }
+      } catch {
+        // Silent catch for banner
+      }
+    }
+
+    loadAlerts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!activeAlert || dismissed) return null;
+
+  const isCritical = activeAlert.severity === "critical";
+  const isWarning = activeAlert.severity === "warning";
+
+  return (
+    <div
+      role="region"
+      aria-label="Campus Emergency Alert"
+      className={cn(
+        "relative w-full border-b transition-colors px-4 py-2.5 flex items-center justify-between text-xs",
+        isCritical
+          ? "bg-red-950/90 border-red-800 text-red-100"
+          : isWarning
+          ? "bg-amber-950/80 border-amber-800/80 text-amber-100"
+          : "bg-blue-950/80 border-blue-800/80 text-blue-100"
+      )}
+    >
+      <div className="flex items-center gap-2.5 max-w-4xl min-w-0 pr-6">
+        <div className="shrink-0 p-1 rounded-md bg-black/20">
+          {isCritical ? (
+            <ShieldAlert className="w-4 h-4 text-red-400 animate-pulse" />
+          ) : isWarning ? (
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Info className="w-4 h-4 text-blue-400" />
+          )}
+        </div>
+        <div className="min-w-0 flex items-center gap-2 flex-wrap">
+          <span
+            className={cn(
+              "font-mono uppercase text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider",
+              isCritical
+                ? "bg-red-800 text-red-100"
+                : isWarning
+                ? "bg-amber-800/90 text-amber-100"
+                : "bg-blue-800/90 text-blue-100"
+            )}
+          >
+            {activeAlert.is_drill ? "DRILL" : activeAlert.severity}
+          </span>
+          <p className="font-medium truncate">{activeAlert.title}</p>
+          <span className="hidden sm:inline text-zinc-400">|</span>
+          <span className="hidden sm:inline text-zinc-300 truncate max-w-md">
+            {activeAlert.action_required || activeAlert.body}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        <Link
+          href="/emergency"
+          className={cn(
+            "flex items-center gap-1 font-semibold hover:underline text-xs whitespace-nowrap",
+            isCritical
+              ? "text-red-300 hover:text-red-100"
+              : isWarning
+              ? "text-amber-300 hover:text-amber-100"
+              : "text-blue-300 hover:text-blue-100"
+          )}
+        >
+          <span>Control Center</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+        <button
+          onClick={() => setDismissed(true)}
+          className="p-1 rounded hover:bg-black/20 text-zinc-400 hover:text-zinc-200 transition-colors"
+          aria-label="Dismiss alert banner"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}

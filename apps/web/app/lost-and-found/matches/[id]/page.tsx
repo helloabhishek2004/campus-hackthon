@@ -3,20 +3,21 @@
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/layout/app-shell";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-  Badge,
-  Button
+  Button,
 } from "@smart-campus/ui";
-import { ArrowLeft, CheckCircle, ShieldAlert } from "lucide-react";
+import { ArrowLeft, CheckCircle, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
+import { cn } from "@smart-campus/utils";
 
 export default function MatchReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  
+
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -24,127 +25,158 @@ export default function MatchReviewPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     const fetchData = async () => {
-        try {
-            const res = await fetch(`/api/lost-found/matches/single/${id}`);
-            if (res.ok) {
-                const data = await res.json();
-                setMatch(data.match);
-            }
-        } catch(e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/lost-found/matches/single/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMatch(data.match);
         }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, [id]);
 
   const handleClaim = async () => {
-      if (!consent) return alert("You must agree to the privacy policy");
-      setClaiming(true);
-      try {
-          const res = await fetch(`/api/lost-found/matches/${id}/claim`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ownerConsent: true })
-          });
-          if (res.ok) {
-              const data = await res.json();
-              router.push(`/lost-and-found/claims/${data.claim.id}`);
-          } else {
-              const data = await res.json();
-              alert(data.error?.message || "Failed to start claim");
-          }
-      } catch (err) {
-          console.error(err);
-      } finally {
-          setClaiming(false);
+    if (!consent) return alert("You must agree to the privacy protocol");
+    setClaiming(true);
+    try {
+      const res = await fetch(`/api/lost-found/matches/${id}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerConsent: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/lost-and-found/claims/${data.claim.id}`);
+      } else {
+        const data = await res.json();
+        alert(data.error?.message || "Failed to initiate claim");
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setClaiming(false);
+    }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading match details...</div>;
-  if (!match) return <div className="p-8 text-center text-red-500">Match not found.</div>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="py-20 flex flex-col items-center justify-center gap-2 text-zinc-500">
+          <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
+          <span className="text-xs">Loading match evaluation...</span>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!match) {
+    return (
+      <AppShell>
+        <div className="py-20 text-center space-y-3">
+          <p className="text-sm font-semibold text-red-400">Match record not found.</p>
+          <Link href="/lost-and-found" className="text-xs text-zinc-400 hover:text-zinc-200 underline">
+            &larr; Back to Lost & Found
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   const foundItem = match.found_item;
   const matchScore = (match.overall_score * 100).toFixed(0);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-       <button onClick={() => router.back()} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to Item
-       </button>
+    <AppShell>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <button
+          onClick={() => router.back()}
+          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Item
+        </button>
 
-       <Card className="border-purple-200">
-          <CardHeader className="bg-purple-50 rounded-t-xl border-b border-purple-100 flex flex-row items-start justify-between">
-             <div>
-                <CardTitle className="text-purple-900 flex items-center gap-2">
-                   <CheckCircle className="text-purple-600" />
-                   AI Match Review
-                </CardTitle>
-                <p className="text-sm text-purple-700 mt-1">
-                   Our system thinks this found item matches your lost report.
-                </p>
-             </div>
-             <Badge className="bg-purple-600 text-white text-base py-1 px-3">
-                 {matchScore}% Match
-             </Badge>
+        <Card className="border-zinc-800 bg-zinc-900/70 rounded-xl overflow-hidden shadow-sm">
+          <CardHeader className="bg-zinc-950/60 border-b border-zinc-800 p-5 flex flex-row items-start justify-between">
+            <div>
+              <CardTitle className="text-zinc-100 text-base flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <span>AI Multimodal Match Review</span>
+              </CardTitle>
+              <p className="text-xs text-zinc-400 mt-1">
+                Our semantic model matched this found item against your lost report.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-purple-950 border border-purple-800 text-purple-300">
+              {matchScore}% Match
+            </span>
           </CardHeader>
-          <CardContent className="p-6 space-y-6">
-              
-              <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">Found Item Details</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                          <p className="text-slate-500 mb-1">Title</p>
-                          <p className="font-medium">{foundItem.title}</p>
-                      </div>
-                      <div>
-                          <p className="text-slate-500 mb-1">Found Location</p>
-                          <p className="font-medium">{foundItem.location_description}</p>
-                      </div>
-                      <div className="col-span-2">
-                          <p className="text-slate-500 mb-1">Public Description</p>
-                          <p className="font-medium">{foundItem.public_description}</p>
-                      </div>
-                  </div>
+          <CardContent className="p-5 space-y-5 text-xs">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px] border-b border-zinc-800 pb-2">
+                Found Item Overview
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+                  <p className="text-[10px] text-zinc-500 uppercase">Title</p>
+                  <p className="font-medium text-zinc-200 mt-0.5">{foundItem?.title}</p>
+                </div>
+                <div className="bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+                  <p className="text-[10px] text-zinc-500 uppercase">Found Location</p>
+                  <p className="font-medium text-zinc-200 mt-0.5">
+                    {foundItem?.location_description}
+                  </p>
+                </div>
+                <div className="sm:col-span-2 bg-zinc-950 p-3 rounded-lg border border-zinc-800">
+                  <p className="text-[10px] text-zinc-500 uppercase">Public Notes</p>
+                  <p className="text-zinc-300 mt-0.5 leading-relaxed">
+                    {foundItem?.public_description}
+                  </p>
+                </div>
               </div>
+            </div>
 
-              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg flex gap-3 text-orange-800">
-                  <ShieldAlert className="shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                      <p className="font-semibold mb-1">Before you claim</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                          <li>You will need to answer a verification question set by the AI or the finder.</li>
-                          <li>The finder will review your answer.</li>
-                          <li>Your contact details will <b>only</b> be shared if the claim is approved.</li>
-                      </ul>
-                  </div>
+            <div className="bg-amber-950/20 border border-amber-900/50 p-3.5 rounded-xl flex gap-3 text-amber-200">
+              <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-300">Custody Verification Protocol</p>
+                <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-amber-200/90 leading-relaxed">
+                  <li>You will answer a verification challenge regarding private identifying features.</li>
+                  <li>Physical custody handover is completed at the Central Security Desk.</li>
+                  <li>Contact details are shared only after identity verification is passed.</li>
+                </ul>
               </div>
+            </div>
 
-              <div className="space-y-4 pt-4 border-t">
-                  <label className="flex items-start gap-3 cursor-pointer">
-                      <input 
-                         type="checkbox" 
-                         className="mt-1 w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                         checked={consent}
-                         onChange={(e) => setConsent(e.target.checked)}
-                      />
-                      <span className="text-sm text-slate-700">
-                          I consent to starting the verification process and agree to share my contact information securely with the finder if this claim is approved.
-                      </span>
-                  </label>
+            <div className="space-y-3 pt-3 border-t border-zinc-800">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 w-4 h-4 rounded bg-zinc-950 border-zinc-700 text-purple-600 focus:ring-purple-500"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                <span className="text-zinc-300 text-xs leading-relaxed select-none">
+                  I consent to initiate verification and agree to present my institutional ID at the Campus Security Desk.
+                </span>
+              </label>
 
-                  <Button 
-                     onClick={handleClaim} 
-                     disabled={!consent || claiming} 
-                     className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                      {claiming ? "Starting Claim..." : "Start Claim Process"}
-                  </Button>
-              </div>
-
+              <Button
+                onClick={handleClaim}
+                disabled={!consent || claiming}
+                className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2"
+              >
+                {claiming ? "Initiating Claim..." : "Proceed with Claim"}
+              </Button>
+            </div>
           </CardContent>
-       </Card>
-    </div>
+        </Card>
+      </div>
+    </AppShell>
   );
 }

@@ -59,13 +59,14 @@ smart-campus/
   - MUST NOT import from `apps/web/` or depend on React/DOM.
   - MUST NOT create duplicate database tables for users, roles, or canonical complaints.
 
-- **Module 1 Developer/Agent:**
-  - Works inside `apps/web/`.
-  - Interacts with Module 2 and Module 3 EXCLUSIVELY via `@smart-campus/contracts` and public module exports.
-  - MUST NOT alter prompts, similarity algorithms, or internal files inside `modules/complaint-intelligence/` or `modules/lost-and-found/`.
+- **Module 4 Developer/Agent (Emergency Alert System):**
+  - Owns emergency schemas in `@smart-campus/contracts/src/emergency.ts`, `apps/web/lib/emergency/`, `apps/web/app/emergency/`, and `apps/web/app/api/emergency/`.
+  - Exposes 1-tap SOS reporting, priority calculation (rules + keywords), and multi-channel broadcast simulation.
+  - Integrates life-safety notifications into the unified AppShell via `EmergencyBanner`.
 
 - **Shared Contracts:**
   - Modifying `packages/contracts` requires mutual alignment. Never make breaking changes silently. Always favor additive updates (e.g., optional fields) over renames.
+
 
 ---
 

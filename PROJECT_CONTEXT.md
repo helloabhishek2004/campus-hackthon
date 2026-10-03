@@ -47,16 +47,16 @@ Authentication
         ↓
 Personalized Campus Portal
         ↓
-┌───────────────┬──────────────────┬──────────────────┐
-│ Campus Portal │ Complaint         │ Lost & Found     │
-│ / Module 1    │ Intelligence      │ / Module 3       │
-│               │ / Module 2        │                  │
-└───────────────┴──────────────────┴──────────────────┘
+┌───────────────┬──────────────────┬──────────────────┬──────────────────┐
+│ Campus Portal │ Complaint        │ Lost & Found     │ Emergency Alert  │
+│ / Module 1    │ Intelligence     │ / Module 3       │ System / Mod 4   │
+│               │ / Module 2       │                  │                  │
+└───────────────┴──────────────────┴──────────────────┴──────────────────┘
         ↓
 Shared Database + Contracts + Services
 ```
 
-The platform should feel like **one product**, not three unrelated projects.
+The platform should feel like **one cohesive product**, seamlessly combining 4 core modules.
 
 ---
 
@@ -782,21 +782,25 @@ S =
 + wTime * time_similarity
 ```
 
-Baseline weights:
+Current weights:
 
 ```text
-image     = 0.45
-text      = 0.25
-category  = 0.10
+image     = 0.20
+text      = 0.45
+category  = 0.15
 location  = 0.10
 time      = 0.10
 ```
 
-Baseline match bands:
+Text is the primary signal because image embeddings are frequently absent when a
+report is filed without a photo. The weights sum to `1.00`.
+
+Current match bands:
 
 ```text
-high   >= 0.80
-medium >= 0.65
+high   >= 0.75
+medium >= 0.50
+low    <  0.50
 ```
 
 These values are starting points.
@@ -804,6 +808,16 @@ These values are starting points.
 They are NOT calibrated probabilities.
 
 Do not present them as probability or certainty.
+
+Authoritative source:
+
+```text
+modules/lost-and-found/src/scoring/matching-config.json
+```
+
+`calculateMatchScore()` in `modules/lost-and-found/src/scoring/scoring.ts` reads
+the weights and bands from that file and accepts optional per-call overrides.
+Treat the JSON as the source of truth; if it changes, update this section too.
 
 ---
 
@@ -1770,6 +1784,34 @@ hackathon-ready
 
 ---
 
+# 59. Module 4 — Emergency Alert System
+
+Module 4 is the mission-critical life-safety and emergency alert system for the campus community.
+Originally conceived alongside facility incident tracking, it is treated as a first-class, dedicated module with top-priority UI routing, real-time safety banners, and multi-channel broadcast simulation.
+
+## 59.1 Core Capabilities
+
+1. **One-Tap Emergency SOS Reporting:**
+   - Instant categorization across `fire`, `medical`, `security_threat`, `hazmat`, `building_problem`, and `other`.
+   - Rule-based priority assignment (Priority 1: Life Safety/Threat/Fire/Hazmat; Priority 2: Stuck elevator/accident/missing person; Priority 3: Facility failure).
+   - Generates human-auditable incident references (`EMR-2026-XXX`) and notifies responders immediately.
+
+2. **Campus Broadcast Dispatch Console:**
+   - Authorized personnel (Security Heads, Wardens, Deans) can draft and broadcast high-priority announcements.
+   - Severity grades: `critical` (immediate danger / evacuation), `warning` (severe caution / weather), `advisory` (routine info / all-clear).
+   - Target scopes: `campus_wide`, `audience` (targeted buildings/departments), `responders_only`.
+   - Multi-channel fan-out delivery simulation: `in_app`, `push`, `sms`, `siren`.
+
+3. **Global Life-Safety Banner & Interactive Safety Check-In:**
+   - Prominently rendered across the application shell on both desktop and mobile views whenever a critical or warning alert is active.
+   - Allows users to report their safety status in 1 click (`I am Safe` vs `Need Assistance`).
+   - Displays designated emergency evacuation assembly points and immediate action checklists.
+
+4. **Emergency Directory & Hotlines:**
+   - 24/7 direct dial access for Central Security Control Room, Health & Trauma Center, Fire & Hazmat Unit, Women's Safety Helpline, and Psychological Counseling.
+
+---
+
 # 60. Final Instruction to AI Agents
 
 When working on this repository:
@@ -1794,4 +1836,5 @@ When working on this repository:
 >
 > Keep the system coherent.
 
-**Smart Campus is one product with three major development modules, not three independent applications.**
+**Smart Campus is one unified product with four major integrated modules (Module 1: Campus Portal, Module 2: Complaint Intelligence, Module 3: Lost & Found Intelligence, Module 4: Emergency Alert System), sharing a cohesive CampusGram UI and strong contract boundaries.**
+

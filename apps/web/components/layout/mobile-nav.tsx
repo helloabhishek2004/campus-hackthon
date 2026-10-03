@@ -3,17 +3,24 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, Settings, User, GraduationCap } from "lucide-react";
+import {
+  Home,
+  FileText,
+  AlertCircle,
+  PackageSearch,
+  ShieldAlert,
+} from "lucide-react";
 import { CampusGramLogo } from "./logo";
 import { Avatar } from "../ui/avatar";
 import { useCampusAuth } from "../auth/auth-guard";
 import { cn } from "@smart-campus/utils";
 
-const NAV_ITEMS = [
+const MOBILE_NAV_ITEMS = [
   { name: "Home", href: "/home", icon: Home },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Profile", href: "/profile", icon: User },
+  { name: "Docs", href: "/documents", icon: FileText },
+  { name: "Complaints", href: "/complaints", icon: AlertCircle },
+  { name: "Lost&Found", href: "/lost-and-found", icon: PackageSearch },
+  { name: "Emergency", href: "/emergency", icon: ShieldAlert },
 ];
 
 export function MobileHeader() {
@@ -37,42 +44,42 @@ export function MobileHeader() {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { user } = useCampusAuth();
-
-  const isFacultyOrAdmin = user?.role === "faculty" || user?.role === "admin";
-
-  const items = isFacultyOrAdmin
-    ? [
-        { name: "Home", href: "/home", icon: Home },
-        { name: "Faculty", href: "/faculty", icon: GraduationCap },
-        { name: "Docs", href: "/documents", icon: FileText },
-        { name: "Profile", href: "/profile", icon: User },
-      ]
-    : NAV_ITEMS;
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950 border-t border-zinc-800 px-3 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 backdrop-blur-md border-t border-zinc-800 px-2 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       aria-label="Mobile Navigation Bar"
     >
-      {items.map((item) => {
+      {MOBILE_NAV_ITEMS.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+        const isEmergency = item.href === "/emergency";
+
         return (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center justify-center min-w-[56px] py-1 px-2 rounded-lg text-[10px] font-medium transition-colors select-none",
+              "flex flex-col items-center justify-center min-w-[52px] py-1 px-1 rounded-lg text-[9px] font-medium transition-colors select-none",
               isActive
-                ? "text-zinc-100 font-semibold"
+                ? isEmergency
+                  ? "text-red-400 font-bold"
+                  : "text-zinc-100 font-bold"
+                : isEmergency
+                ? "text-red-500/80 hover:text-red-400"
                 : "text-zinc-500 hover:text-zinc-300"
             )}
           >
             <Icon
               className={cn(
                 "w-4 h-4 mb-1 transition-colors",
-                isActive ? "text-zinc-100" : "text-zinc-500"
+                isActive
+                  ? isEmergency
+                    ? "text-red-400"
+                    : "text-zinc-100"
+                  : isEmergency
+                  ? "text-red-500/80"
+                  : "text-zinc-500"
               )}
             />
             <span>{item.name}</span>

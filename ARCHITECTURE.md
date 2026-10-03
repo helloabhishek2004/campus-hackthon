@@ -93,20 +93,56 @@ flowchart TD
 
 ---
 
-## 3. Monorepo Layer Responsibilities
+## 3. Module 4: Emergency Alert System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client Layer (Browser & Mobile)"]
+        EmergencyUI["Emergency Control Center (/emergency)"]
+        GlobalBanner["EmergencyBanner (AppShell Header)"]
+    end
+
+    subgraph AppLayer ["Next.js Server Layer (apps/web)"]
+        EmergencyAPI["Emergency API Routes (/api/emergency/*)"]
+        EmergencySvc["Emergency Service (Priority Scoring & Dispatch)"]
+    end
+
+    subgraph Contracts ["Shared Contracts (@smart-campus/contracts)"]
+        EmergencyContracts["EmergencyReport & EmergencyAlert Schemas"]
+    end
+
+    subgraph Channels ["Multi-Channel Broadcast Simulation"]
+        InApp["In-App Broadcast Feed"]
+        Push["Push Notification Web Worker"]
+        SMS["SMS Notification Provider"]
+        Siren["Campus PA Siren Network"]
+    end
+
+    EmergencyUI -->|"Submit SOS Report / Broadcast"| EmergencyAPI
+    GlobalBanner -->|"Poll Active Broadcasts & Check-In"| EmergencyAPI
+    EmergencyAPI -->|"Validate Request"| EmergencyContracts
+    EmergencyAPI --> EmergencySvc
+    EmergencySvc -->|"Fan-Out Broadcast"| Channels
+```
+
+---
+
+## 4. Monorepo Layer Responsibilities
 
 | Layer / Workspace             | Path                             | Key Responsibilities                                                                                                             |
 | :---------------------------- | :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| **Main App**                  | `apps/web`                       | Next.js App Router, campus portal, complaints UI, Lost & Found UI (`/lost-and-found`), and API routes.                           |
+| **Main App (CampusGram)**     | `apps/web`                       | Next.js App Router, campus portal, complaints UI (`/complaints`), Lost & Found UI (`/lost-and-found`), Emergency Center (`/emergency`), and API routes. |
 | **Complaint Intelligence**    | `modules/complaint-intelligence` | Categorization, severity scoring, location/entity extraction, clustering, Gemini API calls. Pure logic, zero React dependencies. |
 | **Lost & Found Intelligence** | `modules/lost-and-found`         | Multimodal matching score, state machine transitions, privacy sanitization, storage abstraction, and contract validations.       |
+| **Emergency Alert System**    | `apps/web/lib/emergency` & contracts | Incident priority evaluation (P1-P4), 1-tap SOS triage, multi-channel broadcast dispatch console, and real-time safety banner.    |
 | **Lost & Found AI Service**   | `services/lost-found-ai`         | Stateless Python FastAPI microservice running YOLO11n, CLIP, and MiniLM models.                                                  |
 | **Lost & Found Worker**       | `workers/lost-found-worker`      | Node.js background process for async embedding generation, matching sweeps, and notification dispatch.                           |
-| **Contracts**                 | `packages/contracts`             | TypeScript interfaces and Zod schemas shared across all modules (`complaint`, `posts`, `users`, `lost-and-found`).               |
-| **Shared UI**                 | `packages/ui`                    | Common UI primitives (Button, Card, Badge) styled with Tailwind CSS.                                                             |
+| **Contracts**                 | `packages/contracts`             | TypeScript interfaces and Zod schemas shared across all modules (`complaint`, `posts`, `users`, `lost-and-found`, `emergency`).   |
+| **Shared UI**                 | `packages/ui`                    | Common UI primitives (Button, Card, Badge) styled with Tailwind CSS and shadcn tokens.                                          |
 | **Shared Utils**              | `packages/utils`                 | Pure utility functions (`cn`, custom errors, date formatters).                                                                   |
 | **Shared Config**             | `packages/config`                | Shared TypeScript and ESLint configurations.                                                                                     |
-| **Supabase**                  | `supabase/`                      | SQL migrations (`001_initial_schema.sql`, `002_lost_and_found.sql`), seed data, and local configuration.                         |
+| **Supabase**                  | `supabase/`                      | SQL migrations (`001` through `007`), seed data, and local configuration.                                                        |
+
 
 ---
 
