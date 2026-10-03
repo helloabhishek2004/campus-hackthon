@@ -12,11 +12,12 @@ import {
   CardDescription,
   CardContent,
 } from "@smart-campus/ui";
-import { ArrowLeft, Camera, Loader2, X, Lock } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, X, Lock, AlertTriangle } from "lucide-react";
 
 export default function ReportLostItemPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [files, setFiles] = useState<{ file: File; preview: string }[]>([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -30,17 +31,35 @@ export default function ReportLostItemPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files).slice(0, 3);
-      const fileObjects = selectedFiles.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      setFiles((prev) => [...prev, ...fileObjects].slice(0, 3));
+      setFormError(null);
+      const rawFiles = Array.from(e.target.files);
+      const validFiles: { file: File; preview: string }[] = [];
+
+      for (const file of rawFiles) {
+        if (!file.type.startsWith("image/")) {
+          setFormError("Only image files (JPG, PNG, WebP) are allowed.");
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          setFormError(`Image "${file.name}" exceeds the 5MB size limit.`);
+          return;
+        }
+        validFiles.push({
+          file,
+          preview: URL.createObjectURL(file),
+        });
+      }
+
+      setFiles((prev) => [...prev, ...validFiles].slice(0, 3));
     }
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const removed = prev[index];
+      if (removed?.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const toBase64 = (file: File): Promise<string> =>
@@ -53,6 +72,9 @@ export default function ReportLostItemPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setFormError(null);
     setIsSubmitting(true);
 
     try {
@@ -77,7 +99,7 @@ export default function ReportLostItemPage() {
       router.push(`/lost-and-found/success?type=lost&id=${data.item.id}`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "An error occurred");
+      setFormError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -109,6 +131,14 @@ export default function ReportLostItemPage() {
           </CardHeader>
           <CardContent className="pt-5">
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              {/* Form Error Banner */}
+              {formError && (
+                <div className="p-3 bg-red-950/40 border border-red-900/60 text-red-300 rounded-lg text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
               {/* Photos */}
               <div className="space-y-2">
                 <label className="font-semibold text-zinc-200">Photos (max 3)</label>

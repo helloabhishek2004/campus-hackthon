@@ -39,6 +39,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const requestSeqRef = useRef(0);
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -49,8 +50,9 @@ export default function HomePage() {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Initial and filtered feed fetch
+  // Initial and filtered feed fetch with race condition protection
   const fetchFeed = useCallback(async () => {
+    const currentSeq = ++requestSeqRef.current;
     setLoading(true);
     try {
       const res = await campusPostsClientService.getFeed({
@@ -59,14 +61,18 @@ export default function HomePage() {
         limit: PAGE_SIZE,
       });
 
-      setPosts(res.items);
-      setNextCursor(res.nextCursor);
-      setHasMore(res.hasMore);
-      setTotalCount(res.count);
+      if (currentSeq === requestSeqRef.current) {
+        setPosts(res.items);
+        setNextCursor(res.nextCursor);
+        setHasMore(res.hasMore);
+        setTotalCount(res.count);
+      }
     } catch (_err) {
       // Handled in client service
     } finally {
-      setLoading(false);
+      if (currentSeq === requestSeqRef.current) {
+        setLoading(false);
+      }
     }
   }, [filter, debouncedQuery]);
 

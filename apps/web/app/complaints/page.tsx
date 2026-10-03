@@ -67,24 +67,47 @@ export default function ComplaintsPage() {
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fetchComplaintsSeq = useRef(0);
 
-  // Load complaints
+  // Keyboard Escape listener to dismiss open modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (expandedImage) {
+          setExpandedImage(null);
+        } else if (selectedCluster) {
+          setSelectedCluster(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [expandedImage, selectedCluster]);
+
+  // Load complaints with in-flight race condition protection
   const fetchComplaints = async (view: "all" | "normal" | "emergency") => {
+    const currentSeq = ++fetchComplaintsSeq.current;
     setIsLoadingFeed(true);
     setFeedError(null);
     try {
       const res = await fetch(`/api/complaints?view=${view}`);
       const data: ComplaintListResponse = await res.json();
-      if (data.success) {
-        setComplaints(data.complaints);
-        setCounts(data.counts);
-      } else {
-        setFeedError(data.error?.message || "Failed to load complaints");
+      if (currentSeq === fetchComplaintsSeq.current) {
+        if (data.success) {
+          setComplaints(data.complaints);
+          setCounts(data.counts);
+        } else {
+          setFeedError(data.error?.message || "Failed to load complaints");
+        }
       }
     } catch (err) {
-      setFeedError(err instanceof Error ? err.message : "Network error");
+      if (currentSeq === fetchComplaintsSeq.current) {
+        setFeedError(err instanceof Error ? err.message : "Network error");
+      }
     } finally {
-      setIsLoadingFeed(false);
+      if (currentSeq === fetchComplaintsSeq.current) {
+        setIsLoadingFeed(false);
+      }
     }
   };
 

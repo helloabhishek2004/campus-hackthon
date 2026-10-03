@@ -11,7 +11,17 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = readDb();
-    let items = db.lost_found_items.filter((i: any) => i.status === "open");
+    const statusParam = searchParams.get("status");
+    const q = searchParams.get("q")?.toLowerCase().trim();
+
+    let items = db.lost_found_items || [];
+
+    if (statusParam && statusParam !== "all") {
+      items = items.filter((i: any) => i.status === statusParam);
+    } else if (!statusParam) {
+      // Default to active visible items
+      items = items.filter((i: any) => i.status === "open" || i.status === "processing");
+    }
 
     if (type && (type === "lost" || type === "found")) {
       items = items.filter((i: any) => i.type === type);
@@ -19,16 +29,33 @@ export async function GET(req: NextRequest) {
     if (category) {
       items = items.filter((i: any) => i.category === category);
     }
+    if (q) {
+      items = items.filter((i: any) =>
+        i.title?.toLowerCase().includes(q) ||
+        i.public_description?.toLowerCase().includes(q) ||
+        i.location_description?.toLowerCase().includes(q)
+      );
+    }
 
     items.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    // Attach images
-    items = items.map((i: any) => ({
-        ...i,
-        images: db.lost_found_item_images?.filter((img: any) => img.item_id === i.id) || []
+    // Attach images using O(N+M) Map index
+    const imageMap = new Map<string, any[]>();
+    for (const img of (db.lost_found_item_images || [])) {
+      const arr = imageMap.get(img.item_id);
+      if (arr) {
+        arr.push(img);
+      } else {
+        imageMap.set(img.item_id, [img]);
+      }
+    }
+
+    const itemsWithImages = items.map((i: any) => ({
+      ...i,
+      images: imageMap.get(i.id) || []
     }));
 
-    return NextResponse.json({ success: true, items, pagination: { total: items.length } }, { status: 200 });
+    return NextResponse.json({ success: true, items: itemsWithImages, pagination: { total: itemsWithImages.length } }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
   }

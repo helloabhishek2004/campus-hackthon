@@ -58,16 +58,16 @@ export function DesktopTopBar() {
       {/* Middle: Spotlight search pill */}
       <button
         onClick={toggleCommandPalette}
-        className="apple-press flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700/80 text-zinc-400 hover:text-zinc-200 transition-all text-xs font-normal shadow-xs min-w-[280px] max-w-sm justify-between group"
+        className="apple-press flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700/80 text-zinc-400 hover:text-zinc-200 transition-all text-xs font-normal shadow-xs w-48 sm:w-60 lg:w-72 justify-between group shrink-0"
         title="Spotlight Search (⌘K / Ctrl+K)"
       >
-        <div className="flex items-center gap-2">
-          <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-300" />
-          <span className="text-[11px] text-zinc-400 group-hover:text-zinc-200">
-            Search campus, items, SOS...
+        <div className="flex items-center gap-2 min-w-0">
+          <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-300 shrink-0" />
+          <span className="text-[11px] text-zinc-400 group-hover:text-zinc-200 truncate">
+            Search campus, SOS...
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <span className="apple-kbd">⌘K</span>
         </div>
       </button>

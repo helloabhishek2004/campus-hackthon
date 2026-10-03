@@ -99,12 +99,12 @@ export default function EmergencyControlPage() {
     "live"
   );
 
-  const fetchEmergencyData = useCallback(async () => {
+  const fetchEmergencyData = useCallback(async (forceRefresh = false) => {
     try {
       setRefreshing(true);
       const [alertsRes, reportsRes] = await Promise.all([
-        emergencyClientService.getAlerts(),
-        emergencyClientService.getReports(),
+        emergencyClientService.getAlerts(forceRefresh),
+        emergencyClientService.getReports(forceRefresh),
       ]);
 
       if (alertsRes.success) setData(alertsRes);
@@ -118,13 +118,13 @@ export default function EmergencyControlPage() {
   }, []);
 
   useEffect(() => {
-    fetchEmergencyData();
+    fetchEmergencyData(false);
   }, [fetchEmergencyData]);
 
   // Handle SOS submission
   const handleSosSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sosLocation.trim() || !sosDescription.trim()) return;
+    if (!sosLocation.trim() || !sosDescription.trim() || sosSubmitting) return;
 
     setSosSubmitting(true);
     setSosFeedback(null);
@@ -141,7 +141,7 @@ export default function EmergencyControlPage() {
         setSosFeedback({ message: res.message, ref: res.report?.public_ref });
         setSosDescription("");
         setSosLocation("");
-        fetchEmergencyData();
+        fetchEmergencyData(true);
       } else {
         setSosFeedback({ message: res.message || "Failed to transmit SOS report" });
       }
@@ -154,6 +154,7 @@ export default function EmergencyControlPage() {
 
   // Handle Safety Check-In
   const handleCheckIn = async (alertId: string, status: "safe" | "need_help") => {
+    if (checkInLoading) return;
     setCheckInLoading(alertId);
     try {
       const res = await emergencyClientService.checkIn({
@@ -176,7 +177,7 @@ export default function EmergencyControlPage() {
   // Handle Broadcast Dispatch
   const handleBroadcastSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!broadcastTitle.trim() || !broadcastBody.trim()) return;
+    if (!broadcastTitle.trim() || !broadcastBody.trim() || broadcastSubmitting) return;
 
     setBroadcastSubmitting(true);
     setBroadcastResult(null);
@@ -199,7 +200,7 @@ export default function EmergencyControlPage() {
         setBroadcastTitle("");
         setBroadcastBody("");
         setBroadcastAction("");
-        fetchEmergencyData();
+        fetchEmergencyData(true);
         setActiveTab("live");
       } else {
         setBroadcastResult(res.message || "Failed to dispatch broadcast");
@@ -248,7 +249,7 @@ export default function EmergencyControlPage() {
               <span>Report SOS</span>
             </button>
             <button
-              onClick={fetchEmergencyData}
+              onClick={() => fetchEmergencyData(true)}
               disabled={refreshing}
               className="apple-press p-2 rounded-lg border border-zinc-800/80 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
               title="Refresh"
@@ -324,7 +325,7 @@ export default function EmergencyControlPage() {
             <button
               onClick={() => setActiveTab("dispatch")}
               className={cn(
-                "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ml-auto",
+                "apple-press px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 sm:ml-auto",
                 activeTab === "dispatch"
                   ? "bg-red-950/80 text-red-200 border border-red-800 font-semibold"
                   : "text-red-400/80 hover:text-red-300 hover:bg-red-950/30"

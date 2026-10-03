@@ -52,7 +52,7 @@ export function EmergencyBanner() {
           : "bg-blue-950/80 border-blue-800/80 text-blue-100"
       )}
     >
-      <div className="flex items-center gap-2.5 max-w-4xl min-w-0 pr-6">
+      <div className="flex items-center gap-2 max-w-4xl min-w-0 pr-2 sm:pr-6">
         <div className="shrink-0 p-1 rounded-md bg-black/20">
           {isCritical ? (
             <ShieldAlert className="w-4 h-4 text-red-400 animate-pulse" />
@@ -62,10 +62,10 @@ export function EmergencyBanner() {
             <Info className="w-4 h-4 text-blue-400" />
           )}
         </div>
-        <div className="min-w-0 flex items-center gap-2 flex-wrap">
+        <div className="min-w-0 flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <span
             className={cn(
-              "font-mono uppercase text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider",
+              "font-mono uppercase text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider shrink-0",
               isCritical
                 ? "bg-red-800 text-red-100"
                 : isWarning
@@ -75,19 +75,19 @@ export function EmergencyBanner() {
           >
             {activeAlert.is_drill ? "DRILL" : activeAlert.severity}
           </span>
-          <p className="font-medium truncate">{activeAlert.title}</p>
-          <span className="hidden sm:inline text-zinc-400">|</span>
-          <span className="hidden sm:inline text-zinc-300 truncate max-w-md">
+          <p className="font-medium truncate text-[11px] sm:text-xs">{activeAlert.title}</p>
+          <span className="hidden md:inline text-zinc-400">|</span>
+          <span className="hidden md:inline text-zinc-300 truncate max-w-sm">
             {activeAlert.action_required || activeAlert.body}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <Link
           href="/emergency"
           className={cn(
-            "flex items-center gap-1 font-semibold hover:underline text-xs whitespace-nowrap",
+            "flex items-center gap-1 font-semibold hover:underline text-[11px] sm:text-xs whitespace-nowrap",
             isCritical
               ? "text-red-300 hover:text-red-100"
               : isWarning
@@ -95,8 +95,9 @@ export function EmergencyBanner() {
               : "text-blue-300 hover:text-blue-100"
           )}
         >
-          <span>Control Center</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Control Center</span>
+          <span className="sm:hidden">View</span>
+          <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         </Link>
         <button
           onClick={() => setDismissed(true)}

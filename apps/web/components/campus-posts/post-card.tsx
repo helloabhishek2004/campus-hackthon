@@ -69,13 +69,16 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
     if (reacting) return;
     setReacting(true);
 
-    // Optimistic UI
+    const prevReaction = userReaction;
+    const prevLikes = likesCount;
+    const prevDislikes = dislikesCount;
+
+    // Optimistic UI update
     if (userReaction === type) {
       setUserReaction(null);
       if (type === "like") setLikesCount((c) => Math.max(0, c - 1));
       if (type === "dislike") setDislikesCount((c) => Math.max(0, c - 1));
     } else {
-      const prevReaction = userReaction;
       setUserReaction(type);
       if (type === "like") {
         setLikesCount((c) => c + 1);
@@ -95,7 +98,10 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
         setUserReaction(res.userReaction);
       }
     } catch (_err) {
-      // Revert if error
+      // Revert accurately if network fails
+      setUserReaction(prevReaction);
+      setLikesCount(prevLikes);
+      setDislikesCount(prevDislikes);
     } finally {
       setReacting(false);
     }

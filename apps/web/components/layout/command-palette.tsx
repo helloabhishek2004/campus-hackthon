@@ -289,6 +289,18 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     }
   }, [selectedIndex]);
 
+  const executeCommand = React.useCallback(
+    (item: CommandItem) => {
+      onClose();
+      if (item.action) {
+        item.action();
+      } else if (item.href) {
+        router.push(item.href);
+      }
+    },
+    [onClose, router]
+  );
+
   // Handle keyboard navigation inside the palette
   useEffect(() => {
     if (!isOpen) return;
@@ -323,16 +335,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, filteredItems, selectedIndex]);
-
-  const executeCommand = (item: CommandItem) => {
-    onClose();
-    if (item.action) {
-      item.action();
-    } else if (item.href) {
-      router.push(item.href);
-    }
-  };
+  }, [isOpen, filteredItems, selectedIndex, executeCommand, onClose]);
 
   if (!isOpen) return null;
 

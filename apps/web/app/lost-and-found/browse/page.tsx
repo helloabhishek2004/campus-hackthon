@@ -31,29 +31,57 @@ export default function BrowseItemsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"all" | "lost" | "found">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
-  const fetchItems = async () => {
+  const fetchItems = React.useCallback(async () => {
+    // Abort previous in-flight request to avoid race condition
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       setLoading(true);
       let url = "/api/lost-found/items";
       if (filterType !== "all") {
         url += `?type=${filterType}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
       const data = await res.json();
       if (data.success) {
-        setItems(data.items);
+        setItems(data.items || []);
       }
-    } catch (err) {
-      console.error("Failed to fetch items:", err);
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.error("Failed to fetch items:", err);
+      }
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
-  };
+  }, [filterType]);
 
   useEffect(() => {
     fetchItems();
-  }, [filterType]);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchItems]);
+
+  const formatSafeDate = (d?: string) => {
+    if (!d) return "Recently";
+    try {
+      const parsed = new Date(d);
+      if (isNaN(parsed.getTime())) return "Recently";
+      return format(parsed, "MMM d");
+    } catch {
+      return "Recently";
+    }
+  };
 
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return items;
@@ -170,10 +198,14 @@ export default function BrowseItemsPage() {
                 <Card className="h-full border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900 hover:border-zinc-700/80 transition-all rounded-xl overflow-hidden flex flex-col justify-between">
                   <div>
                     <div className="h-44 bg-zinc-950 flex items-center justify-center text-zinc-600 relative overflow-hidden border-b border-zinc-800/60">
-                      {item.images && item.images.length > 0 ? (
+                      {item.images && item.images.length > 0 && item.images[0].public_url ? (
                         <img
                           src={item.images[0].public_url}
                           alt={item.title}
+                          onError={(e) => {
+                            // Graceful fallback on broken image link
+                            (e.currentTarget as HTMLElement).style.display = "none";
+                          }}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -218,7 +250,7 @@ export default function BrowseItemsPage() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Calendar className="w-3 h-3 shrink-0 text-zinc-500" />
-                      <span>{format(new Date(item.event_date), "MMM d")}</span>
+                      <span>{formatSafeDate(item.event_date)}</span>
                     </div>
                   </div>
                 </Card>
