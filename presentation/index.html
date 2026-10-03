@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05070b" />
+    <title>CampusGram — Connect the campus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="presentation" aria-live="polite">
+      <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+      <section id="slide" class="slide" aria-labelledby="slide-title"></section>
+      <nav class="hud" aria-label="Presentation controls">
+        <span id="slide-count" class="count"></span>
+        <div class="progress"><span id="progress-fill"></span></div>
+        <div class="controls">
+          <button id="previous" aria-label="Previous slide" title="Previous slide">←</button>
+          <button id="next" aria-label="Next slide" title="Next slide">→</button>
+          <button id="demo" class="demo-button" title="Open local CampusGram demo">Live demo</button>
+          <button id="fullscreen" aria-label="Toggle fullscreen" title="Fullscreen">⛶</button>
+        </div>
+      </nav>
+      <div id="toast" class="toast" role="status"></div>
+    </main>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="components/flow.js"></script>
+    <script src="components/doodles.js"></script>
+    <script src="data/slides.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
