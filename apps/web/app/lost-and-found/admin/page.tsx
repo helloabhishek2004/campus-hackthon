@@ -67,12 +67,12 @@ export default function AdminDashboardPage() {
           <div className="space-y-1">
             <Link
               href="/lost-and-found"
-              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium mb-1.5"
+              className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1 font-medium mb-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
             </Link>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 text-purple-400" />
+              <ShieldAlert className="w-6 h-6 text-zinc-200" />
               <span>Custody & Audit Desk</span>
             </h1>
             <p className="text-xs text-zinc-400">
@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
           <Card className="bg-zinc-900/60 border-zinc-800 rounded-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-zinc-300 text-xs font-medium flex items-center gap-2">
-                <Eye className="w-4 h-4 text-purple-400" /> Contact Reveals
+                <Eye className="w-4 h-4 text-zinc-400" /> Contact Reveals
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -142,11 +142,11 @@ export default function AdminDashboardPage() {
           <Card className="bg-zinc-900/60 border-zinc-800 rounded-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-zinc-300 text-xs font-medium flex items-center gap-2">
-                <Activity className="w-4 h-4 text-blue-400" /> Item Events
+                <Activity className="w-4 h-4 text-zinc-400" /> Item Events
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-extrabold text-blue-400 font-mono">
+              <p className="text-3xl font-extrabold text-zinc-100 font-mono">
                 {logs.filter((l) => l.type === "item_event").length}
               </p>
               <p className="text-[11px] text-zinc-500 mt-1">State machine transitions</p>

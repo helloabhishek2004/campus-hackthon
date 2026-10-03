@@ -110,7 +110,7 @@ export default function ReportLostItemPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <Link
           href="/lost-and-found"
-          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+          className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
         </Link>
@@ -118,7 +118,7 @@ export default function ReportLostItemPage() {
         <Card className="border-zinc-800 bg-zinc-900/70 shadow-sm rounded-xl">
           <CardHeader className="border-b border-zinc-800/80 pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-purple-500/20 bg-purple-500/10 text-purple-400 font-semibold">
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-zinc-700 bg-zinc-800 text-zinc-300 font-semibold">
                 Module 3 Report
               </span>
             </div>
@@ -254,7 +254,7 @@ export default function ReportLostItemPage() {
               {/* Identifying Marks (Hidden) */}
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-purple-400" />
+                  <Lock className="w-3.5 h-3.5 text-zinc-400" />
                   <label className="font-semibold text-zinc-200">Private Identifying Marks (Protected)</label>
                 </div>
                 <textarea
@@ -262,7 +262,7 @@ export default function ReportLostItemPage() {
                   value={formData.identifying_marks}
                   onChange={(e) => setFormData({ ...formData, identifying_marks: e.target.value })}
                   placeholder="Specific stickers, wallpaper, serial suffix, scratches. NEVER shown publicly; used only during claim verification."
-                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg resize-none bg-zinc-950/80 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg resize-none bg-zinc-950/80 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
                 />
               </div>
 

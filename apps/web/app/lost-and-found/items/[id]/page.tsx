@@ -19,7 +19,7 @@ import {
   Info,
   AlertTriangle,
   Lock,
-  Sparkles,
+  ScanSearch,
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@smart-campus/utils";
@@ -95,7 +95,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
       <div className="space-y-6">
         <Link
           href="/lost-and-found/browse"
-          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+          className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Directory
         </Link>
@@ -141,7 +141,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex items-center gap-2.5 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
-                <MapPin className="w-4 h-4 text-purple-400 shrink-0" />
+                <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
                     Location
@@ -153,7 +153,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="flex items-center gap-2.5 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
-                <Calendar className="w-4 h-4 text-purple-400 shrink-0" />
+                <Calendar className="w-4 h-4 text-zinc-400 shrink-0" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
                     Event Date
@@ -167,19 +167,19 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-3 bg-zinc-900/40 p-4 rounded-xl border border-zinc-800">
               <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-300">
-                <Info className="w-4 h-4 text-purple-400" /> Public Description
+                <Info className="w-4 h-4 text-zinc-400" /> Public Description
               </h3>
               <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
                 {item.public_description || "No public notes provided."}
               </p>
 
               {isOwner && item.identifying_marks && (
-                <div className="mt-3 p-3 bg-purple-950/30 rounded-lg border border-purple-900/50 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-300">
-                    <Lock className="w-3.5 h-3.5 text-purple-400" />
+                <div className="mt-3 p-3 bg-zinc-950/60 rounded-lg border border-zinc-800 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-200">
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
                     <span>Private Identifying Marks (Hidden from Public)</span>
                   </div>
-                  <p className="text-xs text-purple-200/90 leading-relaxed">
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     {item.identifying_marks}
                   </p>
                 </div>
@@ -192,7 +192,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
             <Card className="border-zinc-800 bg-zinc-900/60 rounded-xl overflow-hidden">
               <CardHeader className="bg-zinc-950/60 border-b border-zinc-800/80 p-3.5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <ScanSearch className="w-4 h-4 text-zinc-300" />
                   <CardTitle className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
                     AI Match Candidates
                   </CardTitle>
@@ -214,13 +214,13 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                     return (
                       <div
                         key={match.id}
-                        className="border border-zinc-800 rounded-lg p-3 space-y-2 hover:border-purple-500/50 transition-colors bg-zinc-950/60"
+                        className="border border-zinc-800 rounded-lg p-3 space-y-2 hover:border-zinc-700 transition-colors bg-zinc-950/60"
                       >
                         <div className="flex justify-between items-start gap-2">
                           <h4 className="font-semibold text-xs text-zinc-100 line-clamp-1">
                             {otherItem.title}
                           </h4>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 border border-purple-800 text-purple-300 shrink-0 font-bold">
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-200 shrink-0 font-bold">
                             {(match.overall_score * 100).toFixed(0)}% Match
                           </span>
                         </div>
@@ -232,7 +232,7 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full text-xs h-7 border-zinc-800 bg-zinc-900 text-purple-300 hover:bg-zinc-800"
+                              className="w-full text-xs h-7 border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 hover:text-white"
                             >
                               Review & Verify Match &rarr;
                             </Button>

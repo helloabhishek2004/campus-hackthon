@@ -35,13 +35,13 @@ const originToFlip = (origin: string): [number, number] => {
 
 export const SideRays: React.FC<SideRaysProps> = ({
   speed = 2.5,
-  rayColor1 = '#EAB308',
-  rayColor2 = '#96c8ff',
+  rayColor1 = '#71717a',
+  rayColor2 = '#e4e4e7',
   intensity = 2,
   spread = 2,
   origin = 'top-right',
   tilt = 0,
-  saturation = 1.5,
+  saturation = 0,
   blend = 0.75,
   falloff = 1.6,
   opacity = 1.0,

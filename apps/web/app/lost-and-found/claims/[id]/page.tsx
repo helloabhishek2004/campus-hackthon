@@ -100,7 +100,7 @@ export default function ClaimReviewPage({ params }: { params: Promise<{ id: stri
       <div className="max-w-2xl mx-auto space-y-6">
         <button
           onClick={() => router.back()}
-          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+          className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
@@ -108,7 +108,7 @@ export default function ClaimReviewPage({ params }: { params: Promise<{ id: stri
         <Card className="border-zinc-800 bg-zinc-900/70 rounded-xl overflow-hidden shadow-sm">
           <CardHeader className="bg-zinc-950/60 border-b border-zinc-800 p-5 flex flex-row items-center justify-between">
             <CardTitle className="text-zinc-100 text-base flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-purple-400" />
+              <ShieldCheck className="w-5 h-5 text-zinc-300" />
               <span>Custody Claim Verification</span>
             </CardTitle>
             <span
@@ -175,7 +175,7 @@ export default function ClaimReviewPage({ params }: { params: Promise<{ id: stri
                 {contact && (
                   <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-3">
                     <h4 className="font-semibold text-zinc-200 text-xs flex items-center gap-2 uppercase tracking-wider">
-                      <Users className="w-4 h-4 text-purple-400" /> Authorized Contact Details
+                      <Users className="w-4 h-4 text-zinc-400" /> Authorized Contact Details
                     </h4>
                     {contact.mode === "in_person" ? (
                       <div className="bg-zinc-900 p-3 rounded-lg border border-zinc-800 text-xs space-y-1">

@@ -8,9 +8,9 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-blue-600 text-white shadow hover:bg-blue-700",
+          "border-transparent bg-zinc-900 text-white shadow dark:bg-zinc-100 dark:text-zinc-950",
         secondary:
-          "border-transparent bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-50",
+          "border-transparent bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100",
         destructive:
           "border-transparent bg-red-600 text-white shadow hover:bg-red-700",
         warning:
@@ -18,7 +18,7 @@ const badgeVariants = cva(
         success:
           "border-transparent bg-emerald-600 text-white shadow hover:bg-emerald-700",
         outline:
-          "text-slate-950 dark:text-slate-50 border-slate-300 dark:border-slate-700",
+          "text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700",
       },
     },
     defaultVariants: {

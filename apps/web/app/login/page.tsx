@@ -24,16 +24,16 @@ export default function LoginPage() {
       <div className="absolute inset-0 pointer-events-none z-0 opacity-70">
         <SideRays
           speed={1.5}
-          rayColor1="#3b82f6"
-          rayColor2="#6366f1"
-          intensity={1.5}
+          rayColor1="#71717a"
+          rayColor2="#e4e4e7"
+          intensity={1.2}
           spread={2}
           origin="top-right"
           tilt={0}
-          saturation={1.2}
+          saturation={0}
           blend={0.65}
           falloff={1.8}
-          opacity={0.8}
+          opacity={0.5}
         />
       </div>
 

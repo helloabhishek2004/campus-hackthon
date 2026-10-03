@@ -11,7 +11,7 @@ import {
   CardContent,
   Button,
 } from "@smart-campus/ui";
-import { ArrowLeft, CheckCircle, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle, ShieldAlert, ScanSearch, RefreshCw } from "lucide-react";
 import { cn } from "@smart-campus/utils";
 
 export default function MatchReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -96,7 +96,7 @@ export default function MatchReviewPage({ params }: { params: Promise<{ id: stri
       <div className="max-w-2xl mx-auto space-y-6">
         <button
           onClick={() => router.back()}
-          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium"
+          className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Item
         </button>
@@ -105,14 +105,14 @@ export default function MatchReviewPage({ params }: { params: Promise<{ id: stri
           <CardHeader className="bg-zinc-950/60 border-b border-zinc-800 p-5 flex flex-row items-start justify-between">
             <div>
               <CardTitle className="text-zinc-100 text-base flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
+                <ScanSearch className="w-5 h-5 text-zinc-300" />
                 <span>AI Multimodal Match Review</span>
               </CardTitle>
               <p className="text-xs text-zinc-400 mt-1">
                 Our semantic model matched this found item against your lost report.
               </p>
             </div>
-            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-purple-950 border border-purple-800 text-purple-300">
+            <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-zinc-900 border border-zinc-800 text-zinc-200">
               {matchScore}% Match
             </span>
           </CardHeader>
@@ -157,7 +157,7 @@ export default function MatchReviewPage({ params }: { params: Promise<{ id: stri
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="mt-0.5 w-4 h-4 rounded bg-zinc-950 border-zinc-700 text-purple-600 focus:ring-purple-500"
+                  className="mt-0.5 w-4 h-4 rounded bg-zinc-950 border-zinc-700 text-zinc-100 focus:ring-zinc-400 accent-zinc-800"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                 />

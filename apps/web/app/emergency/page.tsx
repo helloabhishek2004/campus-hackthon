@@ -622,12 +622,12 @@ export default function EmergencyControlPage() {
                         className={cn(
                           "text-[10px] font-mono px-2 py-0.5 rounded font-bold border",
                           contact.category === "Security"
-                            ? "bg-purple-950/80 text-purple-300 border-purple-800"
+                            ? "bg-zinc-800 text-zinc-200 border-zinc-700"
                             : contact.category === "Medical"
                             ? "bg-emerald-950/80 text-emerald-300 border-emerald-800"
                             : contact.category === "Fire"
                             ? "bg-red-950/80 text-red-300 border-red-800"
-                            : "bg-blue-950/80 text-blue-300 border-blue-800"
+                            : "bg-zinc-800 text-zinc-300 border-zinc-700"
                         )}
                       >
                         {contact.category.toUpperCase()}

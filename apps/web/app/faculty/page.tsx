@@ -190,7 +190,7 @@ export default function FacultyDashboardPage() {
               </h3>
               <p className="text-[11px] text-neutral-500 mt-1">Courses & sections</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-zinc-800/80 border border-zinc-700 text-zinc-300 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
           </div>

@@ -80,7 +80,7 @@ const COMMAND_ITEMS: CommandItem[] = [
     icon: PackageSearch,
     shortcut: "G L",
     badge: "M3 L&F",
-    badgeColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    badgeColor: "text-zinc-300 bg-zinc-800/80 border-zinc-700",
     keywords: ["lost", "found", "items", "keys", "wallet", "laptop", "matching"],
   },
   {
@@ -157,7 +157,7 @@ const COMMAND_ITEMS: CommandItem[] = [
     href: "/lost-and-found/report/lost",
     icon: PackageSearch,
     badge: "Report Lost",
-    badgeColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    badgeColor: "text-zinc-300 bg-zinc-800/80 border-zinc-700",
     keywords: ["report lost", "lost keys", "lost id", "lost phone"],
   },
   {
@@ -168,7 +168,7 @@ const COMMAND_ITEMS: CommandItem[] = [
     href: "/lost-and-found/report/found",
     icon: PlusCircle,
     badge: "Report Found",
-    badgeColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    badgeColor: "text-zinc-300 bg-zinc-800/80 border-zinc-700",
     keywords: ["report found", "found keys", "found card", "found bag"],
   },
   {
@@ -188,7 +188,7 @@ const COMMAND_ITEMS: CommandItem[] = [
     href: "/lost-and-found/my-reports",
     icon: FolderGit2,
     badge: "My Claims",
-    badgeColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    badgeColor: "text-zinc-300 bg-zinc-800/80 border-zinc-700",
     keywords: ["my items", "my reports", "my matches", "claims"],
   },
   {
@@ -234,7 +234,7 @@ const COMMAND_ITEMS: CommandItem[] = [
     href: "/emergency",
     icon: PhoneCall,
     badge: "Hotlines",
-    badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    badgeColor: "text-zinc-300 bg-zinc-800/80 border-zinc-700",
     keywords: ["call", "phone", "hotline", "ambulance", "security", "police", "control room"],
   },
 ];
