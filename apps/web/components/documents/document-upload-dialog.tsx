@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   CampusDocument,
   DocumentType,
@@ -27,6 +28,7 @@ export function DocumentUploadDialog({
   onClose,
   onSuccess,
 }: DocumentUploadDialogProps) {
+  const [mounted, setMounted] = useState(false);
   const [types, setTypes] = useState<DocumentType[]>([]);
   const [selectedTypeCode, setSelectedTypeCode] = useState("");
   const [title, setTitle] = useState("");
@@ -38,6 +40,20 @@ export function DocumentUploadDialog({
   const [submitting, setSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, mounted]);
 
   useEffect(() => {
     if (isOpen) {
@@ -142,18 +158,18 @@ export function DocumentUploadDialog({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="upload-dialog-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-hidden animate-apple-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-apple-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden transition-all"
+        className="relative w-full max-w-lg my-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden transition-all animate-apple-scale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
@@ -332,6 +348,7 @@ export function DocumentUploadDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

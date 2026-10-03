@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   AcademicDocument,
   AcademicDocumentType,
@@ -56,8 +57,23 @@ export function CreateAcademicDocDialog({
   onClose,
   onSuccess,
 }: CreateAcademicDocDialogProps) {
+  const [mounted, setMounted] = useState(false);
   const [scopes, setScopes] = useState<FacultyAuthorizedScopeItem[]>([]);
   const [loadingScopes, setLoadingScopes] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, mounted]);
 
   const [selectedScopeId, setSelectedScopeId] = useState<string>("");
   const [documentType, setDocumentType] = useState<AcademicDocumentType>("Academic Notice");
@@ -149,9 +165,11 @@ export function CreateAcademicDocDialog({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-2xl overflow-hidden">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-apple-in">
+      <div className="relative w-full max-w-xl my-auto max-h-[88vh] flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-2xl overflow-hidden animate-apple-scale">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
           <div>
@@ -331,6 +349,7 @@ export function CreateAcademicDocDialog({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

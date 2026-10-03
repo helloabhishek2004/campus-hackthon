@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AcademicDocument } from "@smart-campus/contracts";
 import { facultyAcademicClientService } from "@/lib/services/faculty-academic-client-service";
 import {
@@ -34,10 +35,25 @@ export function AcademicDocDetailDialog({
   onDocumentUpdated,
   isSentView = false,
 }: AcademicDocDetailDialogProps) {
+  const [mounted, setMounted] = useState(false);
   const [markingRead, setMarkingRead] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  if (!isOpen || !document) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (!isOpen || !mounted || !document) return;
+    const originalOverflow = window.document.body.style.overflow;
+    window.document.body.style.overflow = "hidden";
+    return () => {
+      window.document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, mounted, document]);
+
+  if (!isOpen || !document || !mounted) return null;
 
   const isUnread = !isSentView && document.isRead === false;
 
@@ -85,9 +101,9 @@ export function AcademicDocDetailDialog({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-apple-in" onClick={onClose}>
+      <div className="relative w-full max-w-2xl my-auto max-h-[88vh] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-apple-scale" onClick={(e) => e.stopPropagation()}>
         {/* Top Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950/40">
           <div className="flex items-center gap-2 flex-wrap">
@@ -290,6 +306,7 @@ export function AcademicDocDetailDialog({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    globalThis.document.body
   );
 }

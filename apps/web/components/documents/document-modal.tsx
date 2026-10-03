@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CampusDocument } from "@smart-campus/contracts";
 import { X, ShieldCheck, Download, FileText, Loader2 } from "lucide-react";
 import { documentsClientService } from "../../lib/services/documents-client-service";
@@ -14,6 +15,11 @@ interface DocumentModalProps {
 export function DocumentModal({ document: docProp, documentItem, onClose }: DocumentModalProps) {
   const activeDoc = docProp || documentItem || null;
   const [downloading, setDownloading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -21,17 +27,16 @@ export function DocumentModal({ document: docProp, documentItem, onClose }: Docu
     };
     if (activeDoc && typeof window !== "undefined") {
       window.addEventListener("keydown", handleKeyDown);
+      const originalOverflow = window.document.body.style.overflow;
       window.document.body.style.overflow = "hidden";
-    }
-    return () => {
-      if (typeof window !== "undefined") {
+      return () => {
         window.removeEventListener("keydown", handleKeyDown);
-        window.document.body.style.overflow = "auto";
-      }
-    };
+        window.document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [activeDoc, onClose]);
 
-  if (!activeDoc) return null;
+  if (!activeDoc || !mounted) return null;
 
   const handleDownload = async () => {
     if (!activeDoc) return;
@@ -56,16 +61,16 @@ export function DocumentModal({ document: docProp, documentItem, onClose }: Docu
     }
   };
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="document-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-apple-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg my-auto rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto animate-apple-scale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -180,6 +185,7 @@ export function DocumentModal({ document: docProp, documentItem, onClose }: Docu
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
