@@ -14,7 +14,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const { isCommandPaletteOpen, setCommandPaletteOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row antialiased selection:bg-zinc-800 selection:text-zinc-100">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col md:flex-row antialiased selection:bg-zinc-800 selection:text-zinc-100 transition-colors duration-200">
       <KeyboardShortcutsHandler />
 
       {/* Desktop Application Sidebar */}
@@ -52,9 +52,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <SidebarProvider>
-        <AppShellContent>{children}</AppShellContent>
-      </SidebarProvider>
+      <AppShellContent>{children}</AppShellContent>
     </ProtectedRoute>
   );
 }

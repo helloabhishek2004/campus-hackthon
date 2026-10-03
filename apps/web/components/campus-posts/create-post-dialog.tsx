@@ -113,55 +113,68 @@ export function CreatePostDialog({
     }
   };
 
+  // Handle Escape key to close dialog
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !submitting) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, submitting]);
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-post-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm overflow-hidden animate-apple-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={submitting}
-          className="absolute top-4 right-4 p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400"
-          aria-label="Close dialog"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Fixed Header */}
+        <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between shrink-0 bg-zinc-50/80 dark:bg-zinc-950/90 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300 shrink-0">
+              <Send className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 id="create-post-title" className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                Publish Campus Notice
+              </h3>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Targeted student activities, circulars, and announcements.
+              </p>
+            </div>
+          </div>
 
-        {/* Title */}
-        <div className="flex items-start gap-3.5 pr-6">
-          <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
-            <Send className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 id="create-post-title" className="text-base font-semibold text-zinc-100">
-              Publish Campus Information
-            </h3>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Share student activities, club updates, or notices with targeted campus audiences.
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="apple-press p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+            aria-label="Close dialog"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {generalError && (
-          <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-3 flex items-start gap-2.5 text-xs text-red-300">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
-            <span>{generalError}</span>
-          </div>
-        )}
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} id="create-post-form" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs">
+          {generalError && (
+            <div className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 p-2.5 flex items-start gap-2.5 text-xs text-red-700 dark:text-red-300">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+              <span>{generalError}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Post Title */}
-          <div className="space-y-1.5">
-            <label className="font-medium text-zinc-300">Title</label>
+          <div className="space-y-1">
+            <label className="font-medium text-zinc-700 dark:text-zinc-300">Notice Title</label>
             <input
               type="text"
               required
@@ -170,110 +183,113 @@ export function CreatePostDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Annual Campus Hackathon 2026 - Registrations Live"
-              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors"
             />
           </div>
 
-          {/* Category Selection (Role-Aware) */}
-          <div className="space-y-1.5">
-            <label className="font-medium text-zinc-300">Category</label>
-            {isRegularStudent ? (
-              <div className="p-2.5 rounded-lg border border-zinc-800 bg-zinc-900/60 flex items-center justify-between text-xs text-zinc-400">
-                <span className="font-medium text-zinc-200">Non-Academic</span>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  Academic notices restricted to Coordinators
-                </span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCategory("non-academic")}
-                  className={cn(
-                    "py-2 px-3 rounded-lg border text-center font-medium transition-colors",
-                    category === "non-academic"
-                      ? "bg-zinc-800 border-zinc-600 text-white"
-                      : "bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:text-zinc-200"
-                  )}
-                >
-                  Non-Academic
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCategory("academic")}
-                  className={cn(
-                    "py-2 px-3 rounded-lg border text-center font-medium transition-colors",
-                    category === "academic"
-                      ? "bg-zinc-800 border-zinc-600 text-white"
-                      : "bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:text-zinc-200"
-                  )}
-                >
-                  Academic
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Audience Scope Selection (Role-Aware) */}
-          <div className="space-y-1.5">
-            <label className="font-medium text-zinc-300">Target Audience</label>
-            <select
-              value={audienceScope}
-              onChange={(e) =>
-                setAudienceScope(e.target.value as CampusPostAudienceScope)
-              }
-              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors"
-            >
+          {/* Category & Scope (Dual Grid on larger screens) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Category Selection */}
+            <div className="space-y-1">
+              <label className="font-medium text-zinc-700 dark:text-zinc-300">Category</label>
               {isRegularStudent ? (
-                <>
-                  <option value="students">All Students</option>
-                  <option value="class">My Class Only</option>
-                </>
+                <div className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center justify-between text-xs text-zinc-500">
+                  <span className="font-medium text-zinc-800 dark:text-zinc-200">Non-Academic</span>
+                  <span className="text-[10px] font-mono">Student</span>
+                </div>
               ) : (
-                <>
-                  <option value="campus">Entire Campus</option>
-                  <option value="department">
-                    My Department ({user?.departmentCode || "CSE"})
-                  </option>
-                  <option value="students">Student Community</option>
-                  <option value="class">My Class Only</option>
-                </>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCategory("non-academic")}
+                    className={cn(
+                      "py-1.5 px-2 rounded-lg border text-center font-medium transition-colors text-[11px]",
+                      category === "non-academic"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent shadow-xs"
+                        : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    Non-Academic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategory("academic")}
+                    className={cn(
+                      "py-1.5 px-2 rounded-lg border text-center font-medium transition-colors text-[11px]",
+                      category === "academic"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent shadow-xs"
+                        : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    Academic
+                  </button>
+                </div>
               )}
-            </select>
+            </div>
+
+            {/* Target Audience Scope */}
+            <div className="space-y-1">
+              <label className="font-medium text-zinc-700 dark:text-zinc-300">Audience Scope</label>
+              <select
+                value={audienceScope}
+                onChange={(e) =>
+                  setAudienceScope(e.target.value as CampusPostAudienceScope)
+                }
+                className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors"
+              >
+                {isRegularStudent ? (
+                  <>
+                    <option value="students">All Students</option>
+                    <option value="class">My Class Only</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="campus">Entire Campus</option>
+                    <option value="department">
+                      My Dept ({user?.departmentCode || "CAMPUS"})
+                    </option>
+                    <option value="students">Student Community</option>
+                    <option value="class">My Class Only</option>
+                  </>
+                )}
+              </select>
+            </div>
           </div>
 
-          {/* Post Description / Content */}
-          <div className="space-y-1.5">
-            <label className="font-medium text-zinc-300">
-              Content & Details
-            </label>
+          {/* Description & Content */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="font-medium text-zinc-700 dark:text-zinc-300">
+                Notice Content & Details
+              </label>
+              <span className="text-[10px] text-zinc-400 font-mono">
+                {content.length}/5000
+              </span>
+            </div>
             <textarea
               required
               minLength={10}
               maxLength={5000}
-              rows={4}
+              rows={3}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Provide complete event details, dates, venues, guidelines, or links..."
-              className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors resize-none leading-relaxed"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors resize-none leading-relaxed"
             />
-            <div className="flex justify-end text-[10px] text-zinc-500 font-mono">
-              {content.length}/5000
-            </div>
           </div>
 
-          {/* Optional Attachment Dropzone */}
-          <div className="space-y-1.5">
-            <label className="font-medium text-zinc-300">
+          {/* Attachment Dropzone */}
+          <div className="space-y-1">
+            <label className="font-medium text-zinc-700 dark:text-zinc-300">
               Attach Circular / Poster (Optional)
             </label>
             <div
               onClick={() => fileInputRef.current?.click()}
               className={cn(
-                "p-3.5 rounded-xl border border-dashed text-center cursor-pointer transition-colors space-y-1",
+                "p-3 rounded-xl border border-dashed text-center cursor-pointer transition-colors space-y-1",
                 file
-                  ? "border-emerald-800/80 bg-emerald-950/20"
-                  : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
+                  ? "border-emerald-500/80 bg-emerald-50 dark:bg-emerald-950/20"
+                  : "border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-900"
               )}
             >
               <input
@@ -285,54 +301,54 @@ export function CreatePostDialog({
               />
 
               {file ? (
-                <div className="flex items-center justify-center gap-2 text-emerald-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="font-mono text-xs">
+                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span className="font-mono text-xs truncate max-w-xs">
                     {file.name} ({(file.size / 1024).toFixed(1)} KB)
                   </span>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  <Upload className="w-4 h-4 text-zinc-500 mx-auto" />
-                  <p className="text-zinc-300 font-medium">Click to attach file</p>
-                  <p className="text-[10px] text-zinc-500 font-mono">PDF, PNG, JPG &lt; 10MB</p>
+                <div className="flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span className="text-xs">Click to attach PDF, PNG, JPG (&lt;10MB)</span>
                 </div>
               )}
             </div>
             {fileError && (
-              <p className="text-[11px] text-red-400 font-mono">{fileError}</p>
+              <p className="text-[11px] text-red-500 font-mono">{fileError}</p>
             )}
           </div>
-
-          {/* Form Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-800">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="px-3 py-1.5 rounded-lg text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || !title.trim() || !content.trim()}
-              className="px-4 py-1.5 rounded-lg font-medium text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Publishing...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Publish Post</span>
-                </>
-              )}
-            </button>
-          </div>
         </form>
+
+        {/* Fixed Sticky Footer (Always visible at 1st glance) */}
+        <div className="p-3.5 sm:p-4 border-t border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur flex items-center justify-end gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="apple-press px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white bg-zinc-200/70 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-300 dark:border-zinc-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="create-post-form"
+            disabled={submitting || !title.trim() || !content.trim()}
+            className="apple-press px-4 py-1.5 rounded-lg text-xs font-semibold text-white dark:text-zinc-950 bg-zinc-900 dark:bg-zinc-100 hover:bg-black dark:hover:bg-white transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Publishing...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" />
+                <span>Publish Notice</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

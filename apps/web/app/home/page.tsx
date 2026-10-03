@@ -17,7 +17,7 @@ import {
   ExternalLink,
   X,
   GraduationCap,
-  Sparkles,
+  Radio,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@smart-campus/utils";
@@ -344,7 +344,7 @@ export default function HomePage() {
               </>
             ) : filter === "non-academic" ? (
               <>
-                <Sparkles className="w-8 h-8 text-zinc-600 mx-auto" />
+                <Radio className="w-8 h-8 text-zinc-600 mx-auto" />
                 <h4 className="text-sm font-medium text-zinc-200">No campus activities</h4>
                 <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                   There are no student activities, hackathons, or club events published for your audience scope.

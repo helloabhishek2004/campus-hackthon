@@ -21,7 +21,7 @@ import {
   RefreshCw,
   MapPin,
   ExternalLink,
-  Sparkles,
+  ScanSearch,
 } from "lucide-react";
 import { cn } from "@smart-campus/utils";
 
@@ -51,11 +51,11 @@ export default function MyReportsPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-800 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4">
           <div>
             <Link
               href="/lost-and-found"
-              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium mb-1.5"
+              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center gap-1 font-medium mb-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
             </Link>
@@ -164,7 +164,7 @@ export default function MyReportsPage() {
 
                   <Link
                     href={`/lost-and-found/items/${item.id}`}
-                    className="flex items-center gap-1 text-purple-400 hover:text-purple-300 font-medium"
+                    className="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white font-medium transition-colors"
                   >
                     <span>View Matches</span>
                     <ExternalLink className="w-3 h-3" />

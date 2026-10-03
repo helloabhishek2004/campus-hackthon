@@ -16,20 +16,20 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 const STORAGE_KEY = "campusgram_sidebar_collapsed";
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [isCommandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
-
-  // Restore collapsed state from localStorage on client mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null) {
-        setIsCollapsed(saved === "true");
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved !== null) {
+          return saved === "true";
+        }
+      } catch {
+        // Fallback if storage access is restricted
       }
-    } catch {
-      // Fallback if storage access is restricted
     }
-  }, []);
+    return false;
+  });
+  const [isCommandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => {

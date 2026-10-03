@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useCampusAuth } from "@/components/auth/auth-guard";
+import { useTheme } from "@/components/theme/theme-context";
 import { resetOnboarding } from "@/lib/auth/client-session";
 import { useRouter } from "next/navigation";
 import {
   Moon,
+  Sun,
   Bell,
   ShieldCheck,
   RotateCcw,
@@ -15,9 +17,11 @@ import {
   Sliders,
   FileCheck,
 } from "lucide-react";
+import { cn } from "@smart-campus/utils";
 
 export default function SettingsPage() {
   const { user, logout, switchDemoUser } = useCampusAuth();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
 
   const [announcements, setAnnouncements] = useState(true);
@@ -47,23 +51,80 @@ export default function SettingsPage() {
         </header>
 
         {/* Section 1: Appearance */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
-          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
-            <Moon className="w-4 h-4 text-zinc-400" />
-            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
-              Appearance
+        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-5 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-zinc-200 dark:border-zinc-800/80">
+            {theme === "dark" ? (
+              <Moon className="w-4 h-4 text-zinc-400" />
+            ) : (
+              <Sun className="w-4 h-4 text-zinc-600" />
+            )}
+            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-medium">
+              Appearance & Theme
             </h2>
           </div>
 
-          <div className="flex items-center justify-between py-1 text-xs">
-            <div>
-              <p className="font-medium text-zinc-200">Interface Theme</p>
-              <p className="text-zinc-500">Dark monochrome palette optimized for focus and low eye strain.</p>
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div>
+                <p className="font-medium text-zinc-800 dark:text-zinc-200">Interface Appearance</p>
+                <p className="text-zinc-500">
+                  Switch between Apple-inspired Dark and Light monochrome modes.
+                </p>
+              </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono bg-zinc-950 text-zinc-300 px-2.5 py-1 rounded border border-zinc-800">
-              <Check className="w-3.5 h-3.5 text-zinc-400" />
-              Dark
-            </span>
+
+            {/* Segmented Theme Cards */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              {/* Dark Option */}
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                className={cn(
+                  "apple-press flex items-center justify-between p-3.5 rounded-xl border text-left transition-all",
+                  theme === "dark"
+                    ? "bg-zinc-950 text-white border-zinc-700 shadow-md ring-1 ring-zinc-500"
+                    : "bg-zinc-100 dark:bg-zinc-950/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-100">
+                    <Moon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-100">Dark Mode</p>
+                    <p className="text-[10px] text-zinc-400 font-mono">Zinc monochrome</p>
+                  </div>
+                </div>
+                {theme === "dark" && (
+                  <Check className="w-4 h-4 text-zinc-100" />
+                )}
+              </button>
+
+              {/* Light Option */}
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                className={cn(
+                  "apple-press flex items-center justify-between p-3.5 rounded-xl border text-left transition-all",
+                  theme === "light"
+                    ? "bg-white text-zinc-900 border-zinc-400 shadow-md ring-1 ring-zinc-400"
+                    : "bg-zinc-100 dark:bg-zinc-950/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-200 border border-zinc-300 flex items-center justify-center text-zinc-800">
+                    <Sun className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Light Mode</p>
+                    <p className="text-[10px] text-zinc-500 font-mono">Clean monochrome</p>
+                  </div>
+                </div>
+                {theme === "light" && (
+                  <Check className="w-4 h-4 text-zinc-900" />
+                )}
+              </button>
+            </div>
           </div>
         </section>
 

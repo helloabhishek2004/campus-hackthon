@@ -103,7 +103,7 @@ export default function BrowseItemsPage() {
           <div>
             <Link
               href="/lost-and-found"
-              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium mb-1.5"
+              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center gap-1 font-medium mb-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
             </Link>
@@ -231,7 +231,7 @@ export default function BrowseItemsPage() {
                     </div>
 
                     <CardHeader className="pb-2 pt-3 px-4">
-                      <CardTitle className="text-sm font-semibold text-zinc-100 line-clamp-1 group-hover:text-purple-400 transition-colors">
+                      <CardTitle className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 line-clamp-1 group-hover:text-black dark:group-hover:text-white transition-colors">
                         {item.title}
                       </CardTitle>
                     </CardHeader>

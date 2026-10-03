@@ -13,7 +13,7 @@ import {
   Mail,
   MapPin,
   ArrowRight,
-  Sparkles,
+  ScanSearch,
   Package,
   ShieldCheck,
   RefreshCw,
@@ -115,25 +115,25 @@ function SuccessContent() {
       {(status === "processing" || status === "scanning") && (
         <div className="text-center space-y-5">
           <div className="relative mx-auto w-20 h-20">
-            <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
-            <div className="relative w-20 h-20 bg-zinc-900 border border-purple-500/40 rounded-full flex items-center justify-center text-purple-400">
-              <Search className="w-8 h-8 animate-pulse" />
+            <div className="absolute inset-0 rounded-full bg-zinc-700/20 animate-ping" />
+            <div className="relative w-20 h-20 bg-zinc-900 border border-zinc-700 rounded-full flex items-center justify-center text-zinc-200">
+              <ScanSearch className="w-8 h-8 animate-pulse" />
             </div>
           </div>
           <div>
             <h1 className="text-xl font-bold text-zinc-100">Lost Report Submitted</h1>
-            <p className="text-purple-400 font-medium text-xs mt-1">
-              AI multimodal pipeline is scanning found items catalog...
+            <p className="text-zinc-400 font-medium text-xs mt-1">
+              Matching engine is scanning found items catalog...
             </p>
           </div>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-left space-y-2 text-xs text-zinc-400">
             <p className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse inline-block" />
+              <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse inline-block" />
               <span>Generating semantic description vector embedding</span>
             </p>
             <p className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block" />
-              <span>Matching against pgvector similarity catalog</span>
+              <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse inline-block" />
+              <span>Matching against similarity catalog</span>
             </p>
             <p className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
@@ -148,11 +148,11 @@ function SuccessContent() {
         <div className="space-y-5">
           <div className="text-center space-y-2">
             <div className="w-14 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400">
-              <Sparkles className="w-7 h-7" />
+              <ScanSearch className="w-7 h-7" />
             </div>
             <h1 className="text-xl font-bold text-emerald-400">Potential Match Located</h1>
             <p className="text-zinc-400 text-xs">
-              AI found an item matching your description in campus custody.
+              Found an item matching your description in campus custody.
             </p>
           </div>
 
@@ -175,7 +175,7 @@ function SuccessContent() {
           {/* Matched card */}
           <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl overflow-hidden">
             <div className="bg-zinc-950/60 px-4 py-2.5 border-b border-zinc-800 flex items-center gap-1.5 text-xs text-zinc-300 font-medium">
-              <Package className="w-3.5 h-3.5 text-purple-400" />
+              <Package className="w-3.5 h-3.5 text-zinc-400" />
               <span>Matched Item Preview</span>
             </div>
 
@@ -206,7 +206,7 @@ function SuccessContent() {
           {match.contact && (
             <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-3">
               <h3 className="font-semibold text-zinc-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-purple-400" /> Verified Custody Contact
+                <ShieldCheck className="w-4 h-4 text-zinc-400" /> Verified Custody Contact
               </h3>
               <p className="text-[11px] text-zinc-400">
                 Coordinated handovers must occur at the Campus Security Desk with student ID.
@@ -214,7 +214,7 @@ function SuccessContent() {
               <div className="space-y-2 pt-1 text-xs">
                 {match.contact.phone && (
                   <div className="flex items-center gap-2.5 bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
-                    <Phone className="w-4 h-4 text-purple-400 shrink-0" />
+                    <Phone className="w-4 h-4 text-zinc-400 shrink-0" />
                     <div>
                       <p className="text-[10px] text-zinc-500 uppercase">Phone</p>
                       <p className="font-mono text-zinc-200 font-semibold">{match.contact.phone}</p>
@@ -223,7 +223,7 @@ function SuccessContent() {
                 )}
                 {match.contact.email && (
                   <div className="flex items-center gap-2.5 bg-zinc-950 p-2.5 rounded-lg border border-zinc-800">
-                    <Mail className="w-4 h-4 text-purple-400 shrink-0" />
+                    <Mail className="w-4 h-4 text-zinc-400 shrink-0" />
                     <div>
                       <p className="text-[10px] text-zinc-500 uppercase">Email</p>
                       <p className="text-zinc-200">{match.contact.email}</p>
