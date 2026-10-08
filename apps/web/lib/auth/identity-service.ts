@@ -4,16 +4,19 @@ import {
   RequestOtpResponse,
   VerifyOtpResponse,
 } from "@smart-campus/contracts";
-import { createClient } from "../supabase/server";
-import { MOCK_INSTITUTIONAL_DIRECTORY, MockInstitutionalRecord } from "./mock-identities";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { createServiceClient } from "../supabase/server";
+import { MOCK_INSTITUTIONAL_DIRECTORY } from "./mock-identities";
 import { generateAndSendOtp, verifyOtpChallenge } from "./otp";
 import { maskPhoneNumber } from "./masking";
 
 /**
  * Institutional Identity Service
  *
- * Provides safe lookups and OTP authentication challenges without ever
- * exposing raw phone numbers to unauthenticated clients.
+ * Provides safe lookups and deterministic OTP authentication challenges
+ * without ever exposing raw phone numbers to unauthenticated clients.
+ * Supabase remains the identity directory; the OTP implementation is still
+ * the existing replaceable mock until an external provider is requested.
  */
 
 export async function findInstitutionalRecord(
@@ -23,7 +26,7 @@ export async function findInstitutionalRecord(
 
   // 1. Try Supabase lookup if configured
   try {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     const { data, error } = await supabase.rpc("lookup_institutional_identity", {
       p_institutional_id: normId,
     });
@@ -51,7 +54,6 @@ export async function findInstitutionalRecord(
       if (parsed.success) {
         return {
           profile: parsed.data,
-          rawPhone: row.phone, // Internal only, never sent to client
         };
       }
     }
@@ -59,7 +61,17 @@ export async function findInstitutionalRecord(
     // Supabase not reachable or offline; fall back to deterministic mock directory
   }
 
-  // 2. Mock directory lookup fallback
+  // 2. Deterministic directory fallback is explicitly test/offline-only. A
+  // configured database outage must not silently turn into a mock identity.
+  const mockMode = process.env.AUTH_MODE === "mock" || process.env.NODE_ENV === "test";
+  const hasServerDatabase = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder") &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("placeholder"),
+  );
+  if (!mockMode || hasServerDatabase) return null;
+
   const mockMatch = MOCK_INSTITUTIONAL_DIRECTORY.find(
     (u) => u.institutionalId.toUpperCase() === normId
   );
@@ -101,10 +113,10 @@ export async function requestLoginOtp(
     throw new Error("This institutional account is inactive. Please contact administration.");
   }
 
-  const otpResult = await generateAndSendOtp(
-    record.profile.institutionalId,
-    record.rawPhone || ""
-  );
+  // OTP remains deterministic for the hackathon. Hosted deployments persist
+  // the challenge in Supabase; tests/offline mode use the in-memory store.
+  // No external SMS/Auth provider is contacted.
+  const otpResult = await generateAndSendOtp(record.profile.institutionalId, "");
 
   return {
     success: true,
@@ -148,15 +160,108 @@ export async function verifyLoginOtp(
     };
   }
 
-  // Generate simulated session token for subsequent authenticated requests
-  const simulatedToken = `inst_sess_${Buffer.from(
-    `${record.profile.id}:${Date.now()}:${record.profile.institutionalId}`
-  ).toString("base64")}`;
+  const applicationProfileId = await ensureApplicationProfile(record.profile);
 
   return {
     success: true,
     message: "Identity verified successfully.",
     profile: record.profile,
-    sessionToken: simulatedToken,
+    sessionToken: createMockSessionToken(record.profile, applicationProfileId),
   };
+}
+
+function applicationRole(role: InstitutionalLookupResponse["role"], tags: string[]) {
+  if (role === "admin") return "admin" as const;
+  if (tags.includes("HOD")) return "department_head" as const;
+  if (role === "faculty") return "faculty" as const;
+  if (role === "staff") return "maintenance_officer" as const;
+  return "student" as const;
+}
+
+/**
+ * Dummy OTP does not create a Supabase Auth session, but application tables
+ * still reference public.profiles. Provision the matching service-side
+ * profile once so the mock session can use the same canonical profile ID as
+ * feed, complaints, Lost & Found, and Emergency persistence.
+ */
+async function ensureApplicationProfile(profile: InstitutionalLookupResponse): Promise<string> {
+  if (process.env.NODE_ENV === "test") return profile.id;
+
+  const admin = createServiceClient();
+  const { data: directory, error: directoryError } = await admin
+    .from("institutional_users")
+    .select("id,email,full_name,primary_role,linked_profile_id")
+    .eq("institutional_id", profile.institutionalId)
+    .maybeSingle();
+  if (directoryError || !directory) {
+    throw new Error(`Unable to provision the institutional application profile: ${directoryError?.message || "directory record not found"}`);
+  }
+  if (directory.linked_profile_id) return directory.linked_profile_id;
+
+  const { data: users, error: usersError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (usersError) throw new Error(`Unable to inspect application auth users: ${usersError.message}`);
+  let authUser = users.users.find((user) => user.email?.toLowerCase() === directory.email.toLowerCase());
+  if (!authUser) {
+    const created = await admin.auth.admin.createUser({
+      email: directory.email,
+      email_confirm: true,
+      user_metadata: { institutional_id: profile.institutionalId },
+    });
+    if (created.error || !created.data.user) throw new Error(`Unable to provision application auth user: ${created.error?.message || "no user returned"}`);
+    authUser = created.data.user;
+  }
+
+  const { error: profileError } = await admin.from("profiles").upsert({
+    id: authUser.id,
+    email: directory.email,
+    full_name: directory.full_name,
+    role: applicationRole(profile.role, profile.tags),
+    department: profile.departmentCode || null,
+    student_id: profile.institutionalId,
+  });
+  if (profileError) throw new Error(`Unable to persist application profile: ${profileError.message}`);
+
+  const { error: linkError } = await admin
+    .from("institutional_users")
+    .update({ linked_profile_id: authUser.id })
+    .eq("id", directory.id);
+  if (linkError) throw new Error(`Unable to link institutional profile: ${linkError.message}`);
+  return authUser.id;
+}
+
+const mockSessionSecret = () =>
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "campusgram-mock-session-key";
+
+/**
+ * Signs the intentionally mock application session. This is not a Supabase
+ * Auth token; it only lets server routes resolve the identity selected by the
+ * dummy OTP flow without trusting localStorage or request-body IDs.
+ */
+export function createMockSessionToken(profile: InstitutionalLookupResponse, profileId?: string): string {
+  const payload = Buffer.from(JSON.stringify({
+    institutionalId: profile.institutionalId,
+    profileId,
+    issuedAt: Date.now(),
+  })).toString("base64url");
+  const signature = createHmac("sha256", mockSessionSecret()).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+export function verifyMockSessionToken(token: string): { institutionalId: string; profileId?: string } | null {
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+  const expected = createHmac("sha256", mockSessionSecret()).update(payload).digest("base64url");
+  const actualBytes = Buffer.from(signature);
+  const expectedBytes = Buffer.from(expected);
+  if (actualBytes.length !== expectedBytes.length || !timingSafeEqual(actualBytes, expectedBytes)) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (typeof parsed.institutionalId !== "string" || typeof parsed.issuedAt !== "number") return null;
+    if (Date.now() - parsed.issuedAt > 24 * 60 * 60 * 1000) return null;
+    return { institutionalId: parsed.institutionalId, profileId: typeof parsed.profileId === "string" ? parsed.profileId : undefined };
+  } catch {
+    return null;
+  }
 }

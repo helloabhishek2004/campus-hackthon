@@ -1,13 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getComplaints } from "../../../../lib/complaints/complaint-repository";
+import { resolveServerIdentity } from "../../../../lib/auth/server-identity";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const identity = await resolveServerIdentity({ allowDemo: true, request: req });
+    if (!identity) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "UNAUTHENTICATED",
+            message: "Sign in with your institutional account to view this complaint.",
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const canViewAll = Boolean(
+      identity.profile &&
+        (["admin", "faculty", "staff"].includes(identity.profile.role) ||
+          identity.profile.tags.some((tag) => ["HOD", "DEPARTMENT_COORDINATOR"].includes(tag))),
+    );
     const { id } = await params;
-    const { complaints } = await getComplaints("all");
+    const { complaints } = await getComplaints("all", {
+      userId: identity.userId,
+      canViewAll,
+    });
 
     const complaint = complaints.find((c) => c.id === id);
     if (!complaint) {

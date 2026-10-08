@@ -5,7 +5,7 @@ import {
   CreateEmergencyReportInput,
   SafetyCheckIn,
 } from "@smart-campus/contracts";
-import { EmergencyContact } from "../emergency/emergency-service";
+import type { EmergencyContact } from "../emergency/emergency-service";
 
 export interface EmergencyDataResponse {
   success: boolean;

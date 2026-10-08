@@ -9,6 +9,8 @@ import {
   clearMockSession,
   isOnboardingCompleted,
 } from "../../lib/auth/client-session";
+import { isMockAuthMode } from "../../lib/auth/client-session";
+import { createClient as createSupabaseBrowserClient } from "../../lib/supabase/client";
 import { mockIdentityService } from "../../lib/services/identity-service";
 import { Loader2 } from "lucide-react";
 import { CampusGramLogo } from "../layout/logo";
@@ -26,35 +28,60 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<InstitutionalLookupResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<"mock" | "supabase" | null>(null);
   const router = useRouter();
 
   // Load session from storage on mount
   useEffect(() => {
-    const session = getMockSession();
-    setUser(session);
-    setLoading(false);
+    let cancelled = false;
+    async function loadSession() {
+      if (authMode === "mock" || (authMode === null && isMockAuthMode())) {
+        if (!cancelled) setUser(getMockSession());
+      } else {
+        try {
+          const response = await fetch("/api/auth/session", { cache: "no-store" });
+          const data = await response.json();
+          if (data.mode === "mock" || data.mode === "supabase") setAuthMode(data.mode);
+          if (!cancelled) setUser(data.profile || null);
+        } catch {
+          if (!cancelled) setUser(null);
+        }
+      }
+      if (!cancelled) setLoading(false);
+    }
+    void loadSession();
 
     const handleSessionChanged = () => {
-      setUser(getMockSession());
+      if (authMode === "mock" || (authMode === null && isMockAuthMode())) setUser(getMockSession());
     };
 
     window.addEventListener("campusgram:session_changed", handleSessionChanged);
     window.addEventListener("storage", handleSessionChanged);
+    const supabase = createSupabaseBrowserClient();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      if (!isMockAuthMode()) void loadSession();
+    });
 
     return () => {
       window.removeEventListener("campusgram:session_changed", handleSessionChanged);
       window.removeEventListener("storage", handleSessionChanged);
+      listener.subscription.unsubscribe();
+      cancelled = true;
     };
-  }, []);
+  }, [authMode]);
 
   const login = (profile: InstitutionalLookupResponse) => {
-    setMockSession(profile);
+    if (authMode === "mock" || (authMode === null && isMockAuthMode())) setMockSession(profile);
     setUser(profile);
     router.push("/home");
   };
 
   const logout = () => {
-    clearMockSession();
+    if (authMode === "mock" || (authMode === null && isMockAuthMode())) {
+      clearMockSession();
+      void fetch("/api/auth/logout", { method: "POST" });
+    }
+    else void createSupabaseBrowserClient().auth.signOut();
     setUser(null);
     router.push("/login");
   };
@@ -62,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchDemoUser = async (institutionalId: string) => {
     const profile = await mockIdentityService.lookupByInstitutionalId(institutionalId);
     if (profile) {
-      setMockSession(profile);
+      if (authMode === "mock" || (authMode === null && isMockAuthMode())) setMockSession(profile);
       setUser(profile);
       router.push("/home");
     }

@@ -106,10 +106,10 @@ export default function MatchReviewPage({ params }: { params: Promise<{ id: stri
             <div>
               <CardTitle className="text-zinc-100 text-base flex items-center gap-2">
                 <ScanSearch className="w-5 h-5 text-zinc-300" />
-                <span>AI Multimodal Match Review</span>
+                <span>Match Review</span>
               </CardTitle>
               <p className="text-xs text-zinc-400 mt-1">
-                Our semantic model matched this found item against your lost report.
+                The CampusGram matching pipeline identified this candidate from the available item signals. This score is not a probability or ownership confirmation.
               </p>
             </div>
             <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-zinc-900 border border-zinc-800 text-zinc-200">

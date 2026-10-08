@@ -129,7 +129,7 @@ function SuccessContent() {
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 text-left space-y-2 text-xs text-zinc-400">
             <p className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse inline-block" />
-              <span>Generating semantic description vector embedding</span>
+              <span>Preparing text and image similarity signals</span>
             </p>
             <p className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-zinc-400 animate-pulse inline-block" />

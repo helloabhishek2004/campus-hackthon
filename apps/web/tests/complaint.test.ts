@@ -10,9 +10,21 @@ import {
   _resetStoreForTesting,
 } from "../lib/complaints/complaint-repository";
 import { POST as createComplaintRoute, GET as listComplaintsRoute } from "../app/api/complaints/route";
+import { GET as getComplaintRoute } from "../app/api/complaints/[id]/route";
 import { POST as uploadRoute } from "../app/api/complaints/upload/route";
 import { NextRequest } from "next/server";
 import { COMPLAINT_EMERGENCY_THRESHOLD } from "@smart-campus/contracts";
+import { createMockSessionToken } from "../lib/auth/identity-service";
+import { MOCK_INSTITUTIONAL_DIRECTORY } from "../lib/auth/mock-identities";
+
+const testProfile = MOCK_INSTITUTIONAL_DIRECTORY[0];
+const otherProfile = MOCK_INSTITUTIONAL_DIRECTORY[1];
+const testCookie = `campusgram_mock_session=${createMockSessionToken(testProfile, testProfile.id)}`;
+const otherCookie = `campusgram_mock_session=${createMockSessionToken(otherProfile, otherProfile.id)}`;
+const authenticatedHeaders = {
+  "Content-Type": "application/json",
+  Cookie: testCookie,
+};
 
 describe("CampusGram Complaint System Module", () => {
   beforeEach(() => {
@@ -142,7 +154,7 @@ describe("CampusGram Complaint System Module", () => {
     it("POST /api/complaints: creates complaint with valid payload", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           text: "Library air conditioning unit stopped working on floor 3",
           category: "infrastructure",
@@ -161,7 +173,7 @@ describe("CampusGram Complaint System Module", () => {
     it("POST /api/complaints: rejects complaint with text shorter than 5 chars", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           text: "Help", // < 5 characters
         }),
@@ -177,7 +189,7 @@ describe("CampusGram Complaint System Module", () => {
     it("POST /api/complaints: accepts optional image attachment", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           text: "Leaking pipe behind the water dispenser",
           attachments: [
@@ -202,7 +214,7 @@ describe("CampusGram Complaint System Module", () => {
     it("POST /api/complaints: accepts root-relative image attachment URLs produced by upload endpoint", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           text: "Hostel corridor light fitting fallen down",
           attachments: [
@@ -229,7 +241,7 @@ describe("CampusGram Complaint System Module", () => {
     it("POST /api/complaints: rejects invalid attachment URLs that are neither absolute nor root-relative", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authenticatedHeaders,
         body: JSON.stringify({
           text: "Hostel corridor light fitting fallen down",
           attachments: [
@@ -255,6 +267,7 @@ describe("CampusGram Complaint System Module", () => {
 
       const req = new NextRequest("http://localhost:3000/api/complaints/upload", {
         method: "POST",
+        headers: { Cookie: testCookie },
         body: formData,
       });
 
@@ -266,8 +279,13 @@ describe("CampusGram Complaint System Module", () => {
     });
 
     it("GET /api/complaints: supports normal and emergency view filtering", async () => {
+      const complaintOwnerId = testProfile.id;
+
       // Create 1 unique normal complaint
-      await createComplaint({ text: "Classroom 101 whiteboard is cracked" });
+      await createComplaint({
+        text: "Classroom 101 whiteboard is cracked",
+        complainant_id: complaintOwnerId,
+      });
 
       // Create 5 similar complaints to trigger an emergency cluster
       const emergencyTexts = [
@@ -279,11 +297,13 @@ describe("CampusGram Complaint System Module", () => {
       ];
 
       for (const t of emergencyTexts) {
-        await createComplaint({ text: t });
+        await createComplaint({ text: t, complainant_id: complaintOwnerId });
       }
 
       // Query view=all
-      const reqAll = new NextRequest("http://localhost:3000/api/complaints?view=all");
+      const reqAll = new NextRequest("http://localhost:3000/api/complaints?view=all", {
+        headers: { Cookie: testCookie },
+      });
       const resAll = await listComplaintsRoute(reqAll);
       const jsonAll = await resAll.json();
       expect(jsonAll.counts.total).toBe(6);
@@ -292,18 +312,51 @@ describe("CampusGram Complaint System Module", () => {
       expect(jsonAll.complaints).toHaveLength(6);
 
       // Query view=normal
-      const reqNormal = new NextRequest("http://localhost:3000/api/complaints?view=normal");
+      const reqNormal = new NextRequest("http://localhost:3000/api/complaints?view=normal", {
+        headers: { Cookie: testCookie },
+      });
       const resNormal = await listComplaintsRoute(reqNormal);
       const jsonNormal = await resNormal.json();
       expect(jsonNormal.complaints).toHaveLength(1);
       expect(jsonNormal.complaints[0].text).toContain("whiteboard is cracked");
 
       // Query view=emergency
-      const reqEmergency = new NextRequest("http://localhost:3000/api/complaints?view=emergency");
+      const reqEmergency = new NextRequest("http://localhost:3000/api/complaints?view=emergency", {
+        headers: { Cookie: testCookie },
+      });
       const resEmergency = await listComplaintsRoute(reqEmergency);
       const jsonEmergency = await resEmergency.json();
       expect(jsonEmergency.complaints).toHaveLength(5);
       expect(jsonEmergency.complaints.every((c: any) => c.is_emergency === true)).toBe(true);
+    });
+
+    it("GET /api/complaints/:id requires authentication and hides another student's complaint", async () => {
+      const created = await createComplaint({
+        text: "Private complaint owned by Student B",
+        complainant_id: otherProfile.id,
+      });
+
+      const unauthenticated = await getComplaintRoute(
+        new NextRequest(`http://localhost:3000/api/complaints/${created.complaint.id}`),
+        { params: Promise.resolve({ id: created.complaint.id }) },
+      );
+      expect(unauthenticated.status).toBe(401);
+
+      const studentA = await getComplaintRoute(
+        new NextRequest(`http://localhost:3000/api/complaints/${created.complaint.id}`, {
+          headers: { Cookie: testCookie },
+        }),
+        { params: Promise.resolve({ id: created.complaint.id }) },
+      );
+      expect(studentA.status).toBe(404);
+
+      const studentB = await getComplaintRoute(
+        new NextRequest(`http://localhost:3000/api/complaints/${created.complaint.id}`, {
+          headers: { Cookie: otherCookie },
+        }),
+        { params: Promise.resolve({ id: created.complaint.id }) },
+      );
+      expect(studentB.status).toBe(200);
     });
   });
 

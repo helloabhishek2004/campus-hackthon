@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDb } from "@smart-campus/lost-and-found";
+import { getClaim } from "@/lib/lost-found/repository";
+import { canAccessClaim, isIdentity, publicItem, requireLostFoundIdentity } from "../../../_auth";
 
 export async function GET(
   req: NextRequest,
@@ -7,18 +8,21 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const db = readDb();
-    
-    const claim = db.lost_found_claims.find((c: any) => c.id === id);
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
+    const loaded = await getClaim(id); const claim = loaded?.claim as any;
     if (!claim) return NextResponse.json({ success: false, error: { message: "Claim not found" } }, { status: 404 });
     
-    const item = db.lost_found_items.find((i: any) => i.id === claim.item_id);
+    const item = loaded?.item as any;
+    if (!item || (claim.claimant_id !== identity.userId && item.reporter_id !== identity.userId && identity.profile?.role !== "admin")) {
+      return NextResponse.json({ success: false, error: { message: "Forbidden" } }, { status: 403 });
+    }
 
     return NextResponse.json({ 
         success: true, 
         claim: {
             ...claim,
-            item
+            item: publicItem(item, item.lost_found_item_images || [])
         }
     }, { status: 200 });
   } catch (error) {

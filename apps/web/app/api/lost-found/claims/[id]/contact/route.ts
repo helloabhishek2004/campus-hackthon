@@ -1,38 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDb, writeDb } from "@smart-campus/lost-and-found";
-import { randomUUID } from "crypto";
+import { getClaim, revealContact } from "@/lib/lost-found/repository";
+import { canReleaseContactInfo } from "@smart-campus/lost-and-found";
+import { isIdentity, requireLostFoundIdentity } from "../../../_auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
     const { id } = await params;
-    const db = readDb();
+     const loaded = await getClaim(id); const claim = loaded?.claim as any;
+     if (!claim) return NextResponse.json({ success: false, error: { message: "Claim not found" } }, { status: 404 });
+     const expiry = claim.contact_window_expires_at ? new Date(claim.contact_window_expires_at) : null;
+     const authorization = canReleaseContactInfo({ userId: identity.userId, role: identity.profile?.role === "admin" ? "admin" : "student" }, claim, expiry);
+     if (!authorization.isAuthorized) return NextResponse.json({ success: false, error: { message: authorization.reason } }, { status: 403 });
     
-    const claim = db.lost_found_claims.find((c: any) => c.id === id);
-    if (!claim || claim.status !== 'approved') return NextResponse.json({ success: false, error: { message: "Not authorized" } }, { status: 403 });
-    
-    const reporterId = "33333333-3333-3333-3333-333333330001"; 
-    
-    db.lost_found_contact_reveals.push({
-        id: randomUUID(),
-        claim_id: claim.id,
-        revealed_to: reporterId,
-        revealed_party_id: "other-party-id",
-        reason: "Handover facilitation",
-        created_at: new Date().toISOString()
-    });
-    writeDb(db);
+     await revealContact(id, identity.userId);
 
     return NextResponse.json({ 
         success: true, mode: "in_person", 
-        contact: {
-            name: "Test User",
-            phone: "+919876543210",
-            email: "test@campus.edu",
-            instructions: "Meet at security desk."
-        }
+         contact: null,
+         instructions: "Contact details are not stored in the local demo. Arrange handover through Campus Security."
     }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });

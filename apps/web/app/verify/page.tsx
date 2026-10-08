@@ -19,6 +19,9 @@ function VerifyContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpMessage, setOtpMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRecord() {
@@ -46,10 +49,37 @@ function VerifyContent() {
     fetchRecord();
   }, [idParam]);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!profile) return;
     setVerifying(true);
-    login(profile);
+    setError(null);
+    try {
+      if (!otpSent) {
+        const response = await fetch("/api/auth/otp/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ institutionalId: profile.institutionalId }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || "Unable to send OTP");
+        setOtpSent(true);
+         setOtpMessage(data.mockOtp ? `Demo OTP: ${data.mockOtp}` : data.message);
+        return;
+      }
+
+      const response = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ institutionalId: profile.institutionalId, otp }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || data.message || "Invalid OTP");
+      login(data.profile || profile);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
@@ -97,10 +127,24 @@ function VerifyContent() {
             variant="verification"
             footerAction={
               <div className="space-y-3 pt-2">
+                {otpSent && (
+                  <input
+                    value={otp}
+                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="Enter 6-digit OTP"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-center font-mono tracking-[0.35em] text-zinc-100 outline-none focus:border-zinc-400"
+                    aria-label="One-time password"
+                  />
+                )}
+                {otpMessage && otpSent && (
+                  <p className="text-center text-xs text-emerald-300">{otpMessage}</p>
+                )}
                 <button
                   type="button"
                   onClick={handleVerify}
-                  disabled={verifying}
+                  disabled={verifying || (otpSent && otp.length !== 6)}
                   className="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:opacity-50"
                 >
                   {verifying ? (
@@ -111,7 +155,7 @@ function VerifyContent() {
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      <span>Verify & Continue</span>
+                      <span>{otpSent ? "Verify OTP & Continue" : "Send OTP"}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
                   )}

@@ -5,29 +5,20 @@ import {
 } from "@/lib/documents/document-service";
 import { createDocumentSignedUrl } from "@/lib/documents/document-storage";
 import { canViewDocument } from "@/lib/documents/document-permissions";
-import { findInstitutionalRecord } from "@/lib/auth/identity-service";
+import { resolveServerIdentity } from "@/lib/auth/server-identity";
 
-async function resolveUserContext(req: NextRequest) {
-  const userIdHeader = req.headers.get("x-campus-user-id") || "STU2026001";
-  const record = await findInstitutionalRecord(userIdHeader);
-
-  if (record) {
+async function resolveUserContext(_req: NextRequest) {
+  const identity = await resolveServerIdentity({ allowDemo: true });
+  if (identity?.profile) {
     return {
-      userId: record.profile.id,
-      role: record.profile.role,
-      fullName: record.profile.fullName,
-      departmentCode: record.profile.departmentCode,
-      tags: record.profile.tags,
+      userId: identity.userId,
+      role: identity.profile.role,
+      fullName: identity.profile.fullName,
+      departmentCode: identity.profile.departmentCode,
+      tags: identity.profile.tags,
     };
   }
-
-  return {
-    userId: "33333333-3333-3333-3333-333333330001",
-    role: "student" as const,
-    fullName: "Aarav Sharma",
-    departmentCode: "CSE",
-    tags: ["CAS_COORDINATOR"],
-  };
+  throw new Error("Unauthenticated document request");
 }
 
 export async function GET(
@@ -80,9 +71,10 @@ export async function GET(
       isMock: signed.isMock,
     });
   } catch (error: any) {
+    const status = error?.message?.includes("Unauthenticated") ? 401 : 500;
     return NextResponse.json(
       { error: error?.message || "Failed to generate download URL." },
-      { status: 500 }
+      { status }
     );
   }
 }

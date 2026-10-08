@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDb } from "@smart-campus/lost-and-found";
+import { isIdentity, requireLostFoundIdentity } from "../../../_auth";
+import { getMatch, publicItem as projectItem } from "@/lib/lost-found/repository";
 
 export async function GET(
   req: NextRequest,
@@ -7,23 +8,22 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const db = readDb();
-    
-    const match = db.lost_found_matches.find((m: any) => m.id === id);
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
+    const match = await getMatch(id);
     if (!match) return NextResponse.json({ success: false, error: { message: "Not found" } }, { status: 404 });
-    
-    const lostItem = db.lost_found_items.find((i: any) => i.id === match.lost_item_id);
-    const foundItem = db.lost_found_items.find((i: any) => i.id === match.found_item_id);
+    if (!match.lost || !match.found || ![match.lost.reporter_id, match.found.reporter_id].includes(identity.userId) && identity.profile?.role !== "admin") return NextResponse.json({ success: false, error: { message: "Forbidden" } }, { status: 403 });
 
-    return NextResponse.json({ 
-        success: true, 
-        match: {
-            ...match,
-            lost_item: lostItem,
-            found_item: foundItem
-        } 
+    const { lost: _lost, found: _found, ...safeMatch } = match as any;
+    return NextResponse.json({
+      success: true,
+      match: {
+        ...safeMatch,
+        lost_item: projectItem(match.lost, match.lost.lost_found_item_images || []),
+        found_item: projectItem(match.found, match.found.lost_found_item_images || []),
+      },
     }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
+    return NextResponse.json({ success: false, error: { message: error instanceof Error ? error.message : "Match read failed" } }, { status: 500 });
   }
 }

@@ -40,4 +40,5 @@ Thumbs.db
 .idea/
 .freebuff/
 modules/lost-and-found/data/db.json
+apps/web/.data/
 *.tsbuildinfo

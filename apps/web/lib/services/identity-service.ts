@@ -1,5 +1,6 @@
 import { InstitutionalLookupResponse } from "@smart-campus/contracts";
-import { MOCK_INSTITUTIONAL_DIRECTORY } from "../auth/mock-identities";
+import { isMockAuthMode } from "../auth/client-session";
+import { MOCK_PUBLIC_DIRECTORY } from "./public-identities";
 
 /**
  * Interface for looking up institutional identity.
@@ -38,17 +39,16 @@ export class MockIdentityLookupService implements IdentityLookupService {
       }
     }
 
+    // The deterministic catalog is available only in explicit mock mode. A
+    // real deployment must never silently turn a backend failure into a demo identity.
+    if (!isMockAuthMode()) return null;
+
     // 2. Direct catalog lookup fallback using deterministic mock directory
-    const match = MOCK_INSTITUTIONAL_DIRECTORY.find(
+    const match = MOCK_PUBLIC_DIRECTORY.find(
       (u) => u.institutionalId.toUpperCase() === trimmedId
     );
 
-    if (match) {
-      const { rawPhone: _raw, email: _email, ...profileOnly } = match;
-      return profileOnly;
-    }
-
-    return null;
+    return match ?? null;
   }
 }
 

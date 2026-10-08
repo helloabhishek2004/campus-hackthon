@@ -4,9 +4,21 @@ import {
   ComplaintAnalysisRequestSchema,
   ComplaintAnalysisResponse,
 } from "@smart-campus/contracts";
+import { resolveServerIdentity } from "../../../../lib/auth/server-identity";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!(await resolveServerIdentity({ allowDemo: true, request: req }))) {
+      return NextResponse.json(
+        {
+          success: false,
+          complaint_id: "unknown",
+          processing: { status: "failed", processed_at: new Date().toISOString() },
+          error: { code: "UNAUTHENTICATED", message: "Sign in with your institutional account to analyze a complaint." },
+        } satisfies ComplaintAnalysisResponse,
+        { status: 401 },
+      );
+    }
     const body = await req.json();
 
     // Validate payload against contract schema

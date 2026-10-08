@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDb } from "@smart-campus/lost-and-found";
+import { listLogs } from "@/lib/lost-found/repository";
+import { isIdentity, requireLostFoundIdentity } from "../../_auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const db = readDb();
-    const logs: any[] = [];
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
+    if (identity.profile?.role !== "admin" && !identity.profile?.tags?.some((tag: string) => ["HOD", "DEPARTMENT_COORDINATOR", "CAS_COORDINATOR"].includes(tag))) {
+      return NextResponse.json({ success: false, error: { message: "Forbidden" } }, { status: 403 });
+    }
+    const logs = await listLogs();
     
-    // 1. Contact Reveals
+    /* 1. Contact Reveals
     db.lost_found_contact_reveals?.forEach((r: any) => logs.push({
         id: r.id,
         type: 'contact_reveal',
@@ -51,7 +56,7 @@ export async function GET(req: NextRequest) {
         });
     }
     
-    logs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    logs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); */
 
     return NextResponse.json({ success: true, logs }, { status: 200 });
   } catch (error) {

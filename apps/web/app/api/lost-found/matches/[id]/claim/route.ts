@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDb, writeDb } from "@smart-campus/lost-and-found";
-import { randomUUID } from "crypto";
+import { getMatch, createClaim } from "@/lib/lost-found/repository";
+import { isIdentity, requireLostFoundIdentity } from "../../../_auth";
 
 export async function POST(
   req: NextRequest,
@@ -8,35 +8,28 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const db = readDb();
-    
-    const match = db.lost_found_matches.find((m: any) => m.id === id);
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
+    const body = await req.json().catch(() => ({}));
+    const match = await getMatch(id);
     if (!match) return NextResponse.json({ success: false, error: { message: "Match not found" } }, { status: 404 });
     
-    const reporterId = "33333333-3333-3333-3333-333333330001"; 
-    const claim = {
-        id: randomUUID(),
-        item_id: match.found_item_id,
-        claimant_id: reporterId,
-        match_id: match.id,
-        status: "pending",
-        handover_mode: "campus_security",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    };
-    
-    db.lost_found_claims.push(claim);
-    
-    // update items to in_claim
-    const lostItem = db.lost_found_items.find((i: any) => i.id === match.lost_item_id);
-    const foundItem = db.lost_found_items.find((i: any) => i.id === match.found_item_id);
-    if (lostItem) lostItem.status = "in_claim";
-    if (foundItem) foundItem.status = "in_claim";
-    
-    writeDb(db);
+    const lostItem = (match as any).lost; const foundItem = (match as any).found;
+    if (!lostItem || !foundItem) return NextResponse.json({ success: false, error: { message: "Matched items not found" } }, { status: 404 });
+    if (lostItem.reporter_id !== identity.userId) {
+      return NextResponse.json({ success: false, error: { message: "Only the lost-item reporter can initiate this claim" } }, { status: 403 });
+    }
+    const claim = await createClaim({ matchId: id, claimantId: identity.userId, claimText: typeof body?.claimText === "string" && body.claimText.trim().length >= 5
+          ? body.claimText.trim()
+           : "Claim initiated through the authenticated CampusGram flow." });
+    if (!claim) return NextResponse.json({ success: false, error: { message: "Unable to create claim" } }, { status: 404 });
 
     return NextResponse.json({ success: true, claim }, { status: 201 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    if (message.includes("claim already exists")) {
+      return NextResponse.json({ success: false, error: { message } }, { status: 409 });
+    }
     return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
   }
 }

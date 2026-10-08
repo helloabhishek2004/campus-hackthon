@@ -11,35 +11,24 @@ import {
   uploadDocumentToStorage,
   validateDocumentFile,
 } from "@/lib/documents/document-storage";
-import { findInstitutionalRecord } from "@/lib/auth/identity-service";
+import { resolveServerIdentity } from "@/lib/auth/server-identity";
 
 /**
  * Resolves current user context from session header or default demo student.
  */
-async function resolveUserContext(req: NextRequest) {
-  const userIdHeader = req.headers.get("x-campus-user-id") || "STU2026001";
-  const record = await findInstitutionalRecord(userIdHeader);
-
-  if (record) {
+async function resolveUserContext(_req: NextRequest) {
+  const identity = await resolveServerIdentity({ allowDemo: true });
+  if (identity?.profile) {
     return {
-      id: record.profile.id,
-      role: record.profile.role,
-      fullName: record.profile.fullName,
-      institutionalId: record.profile.institutionalId,
-      departmentCode: record.profile.departmentCode,
-      tags: record.profile.tags,
+      id: identity.userId,
+      role: identity.profile.role,
+      fullName: identity.profile.fullName,
+      institutionalId: identity.profile.institutionalId,
+      departmentCode: identity.profile.departmentCode,
+      tags: identity.profile.tags,
     };
   }
-
-  // Fallback demo user
-  return {
-    id: "33333333-3333-3333-3333-333333330001",
-    role: "student" as const,
-    fullName: "Aarav Sharma",
-    institutionalId: "STU2026001",
-    departmentCode: "CSE",
-    tags: ["CAS_COORDINATOR"],
-  };
+  throw new Error("Unauthenticated document request");
 }
 
 export async function GET(req: NextRequest) {
@@ -57,9 +46,10 @@ export async function GET(req: NextRequest) {
       documents,
     });
   } catch (error: any) {
+    const status = error?.message?.includes("Unauthenticated") ? 401 : 500;
     return NextResponse.json(
       { error: error?.message || "Failed to retrieve documents." },
-      { status: 500 }
+      { status }
     );
   }
 }
@@ -162,9 +152,10 @@ export async function POST(req: NextRequest) {
       message: "Document registered successfully.",
     });
   } catch (error: any) {
+    const status = error?.message?.includes("Unauthenticated") ? 401 : 500;
     return NextResponse.json(
       { error: error?.message || "Failed to create document." },
-      { status: 500 }
+      { status }
     );
   }
 }

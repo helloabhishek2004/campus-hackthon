@@ -3,12 +3,19 @@ import crypto from "crypto";
 import path from "path";
 import fs from "fs/promises";
 import { ComplaintAttachment } from "@smart-campus/contracts";
+import { resolveServerIdentity } from "../../../../lib/auth/server-identity";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export async function POST(req: NextRequest) {
   try {
+    if (!(await resolveServerIdentity({ allowDemo: true, request: req }))) {
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHENTICATED", message: "Sign in with your institutional account to upload complaint evidence." } },
+        { status: 401 },
+      );
+    }
     const formData = await req.formData();
     const file = formData.get("file");
 

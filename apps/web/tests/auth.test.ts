@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { maskPhoneNumber } from "../lib/auth/masking";
 import {
   generateAndSendOtp,
@@ -104,6 +104,37 @@ describe("Institutional Auth & Identity Foundation", () => {
       const result = await verifyOtpChallenge("STU2026002", "999999");
       expect(result.valid).toBe(false);
       expect(result.error).toContain("Invalid OTP");
+    });
+  });
+
+  describe("Identity Service End-to-End Flow", () => {
+    it("rejects verification without an active challenge", async () => {
+      const result = await verifyOtpChallenge("STU2026003", "123456");
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("No active OTP challenge");
+    });
+
+    it("rejects the dummy OTP after the challenge expires", async () => {
+      vi.useFakeTimers();
+      try {
+        await generateAndSendOtp("STU2026004", "+919876500004");
+        vi.advanceTimersByTime(300_001);
+        const result = await verifyOtpChallenge("STU2026004", "123456");
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain("expired");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("rejects the challenge after too many incorrect attempts", async () => {
+      await generateAndSendOtp("STU2026005", "+919876500005");
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        await verifyOtpChallenge("STU2026005", "999999");
+      }
+      const result = await verifyOtpChallenge("STU2026005", "123456");
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("Too many incorrect attempts");
     });
   });
 

@@ -6,7 +6,7 @@ import {
   ComplaintAttachment,
 } from "@smart-campus/contracts";
 import { findMatchingCluster, ExistingComplaintCandidate } from "./similarity-service";
-import { createClient as createServerSupabase } from "../supabase/server";
+import { createApplicationClient, createServiceClient } from "../supabase/server";
 
 // Fallback in-memory store for offline/local hackathon mock mode
 const inMemoryComplaints: ComplaintRecord[] = [
@@ -55,6 +55,7 @@ const inMemoryComplaints: ComplaintRecord[] = [
 ];
 
 function isSupabaseConfigured(): boolean {
+  if (process.env.NODE_ENV === "test") return false;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return Boolean(
@@ -92,7 +93,10 @@ function recalculateClusterCounts(records: ComplaintRecord[]): ComplaintRecord[]
 /**
  * Fetches all complaints and recalculates real-time group counts & emergency status.
  */
-export async function getComplaints(view: "all" | "normal" | "emergency" = "all"): Promise<{
+export async function getComplaints(
+  view: "all" | "normal" | "emergency" = "all",
+  viewer?: { userId: string; canViewAll: boolean },
+): Promise<{
   complaints: ComplaintRecord[];
   counts: { total: number; normal: number; emergency: number };
 }> {
@@ -100,13 +104,15 @@ export async function getComplaints(view: "all" | "normal" | "emergency" = "all"
 
   if (isSupabaseConfigured()) {
     try {
-      const supabase = await createServerSupabase();
-      const { data, error } = await supabase
-        .from("complaints")
-        .select("*")
-        .order("created_at", { ascending: false });
+       const supabase = await createApplicationClient();
+      let query = supabase.from("complaints").select("*");
+      if (viewer && !viewer.canViewAll) query = query.eq("complainant_id", viewer.userId);
+      const { data, error } = await query.order("created_at", { ascending: false });
 
-      if (!error && data) {
+      if (error) {
+        throw new Error(`Complaint read failed: ${error.message}`);
+      }
+      if (data) {
         records = data.map((d: any) => ({
           id: d.id,
           complainant_id: d.complainant_id,
@@ -123,16 +129,14 @@ export async function getComplaints(view: "all" | "normal" | "emergency" = "all"
           created_at: d.created_at,
           updated_at: d.updated_at,
         }));
-      } else {
-        console.warn("Supabase query error, using local store:", error);
-        records = [...inMemoryComplaints];
       }
     } catch (err) {
-      console.warn("Failed to connect to Supabase, falling back to local store:", err);
-      records = [...inMemoryComplaints];
+      throw err instanceof Error ? err : new Error("Complaint read failed");
     }
   } else {
-    records = [...inMemoryComplaints];
+    records = viewer && !viewer.canViewAll
+      ? inMemoryComplaints.filter((record) => record.complainant_id === viewer.userId)
+      : [...inMemoryComplaints];
   }
 
   // Calculate real-time counts from cluster_id
@@ -214,20 +218,18 @@ export async function createComplaint(data: CreateComplaintRequest): Promise<{
   // 4. Persistence
   if (isSupabaseConfigured()) {
     try {
-      const supabase = await createServerSupabase();
+       const supabase = await createApplicationClient();
 
       // If threshold reached, invoke safe SECURITY DEFINER function to cascade emergency state
       if (isEmergency) {
-        const { error: rpcError } = await supabase.rpc("cascade_complaint_emergency", {
+        const { error: rpcError } = await createServiceClient().rpc("cascade_complaint_emergency", {
           target_cluster_id: targetClusterId,
         });
 
-        if (rpcError) {
-          console.warn("RPC cascade_complaint_emergency error, falling back to local memory update:", rpcError);
-        }
+        if (rpcError) throw new Error(`Complaint emergency cascade failed: ${rpcError.message}`);
       }
 
-      await supabase.from("complaints").insert({
+      const { error: insertError } = await supabase.from("complaints").insert({
         id: newRecord.id,
         complainant_id: newRecord.complainant_id,
         text: newRecord.text,
@@ -241,9 +243,14 @@ export async function createComplaint(data: CreateComplaintRequest): Promise<{
         created_at: newRecord.created_at,
         updated_at: newRecord.updated_at,
       });
+      if (insertError) {
+        throw new Error(`Complaint persistence failed: ${insertError.message}`);
+      }
     } catch (err) {
-      console.warn("Supabase insert failed, saving to local in-memory store:", err);
-      persistToMemory(newRecord, targetClusterId, isEmergency);
+      // Do not report success or silently diverge from the database when a
+      // configured backend rejects the write. Similarity was computed above,
+      // but persistence must remain truthful.
+      throw err instanceof Error ? err : new Error("Complaint persistence failed");
     }
   } else {
     persistToMemory(newRecord, targetClusterId, isEmergency);

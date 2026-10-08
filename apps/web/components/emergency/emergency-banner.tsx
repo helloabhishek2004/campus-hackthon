@@ -77,9 +77,10 @@ export function EmergencyBanner() {
           </span>
           <p className="font-medium truncate text-[11px] sm:text-xs">{activeAlert.title}</p>
           <span className="hidden md:inline text-zinc-400">|</span>
-          <span className="hidden md:inline text-zinc-300 truncate max-w-sm">
-            {activeAlert.action_required || activeAlert.body}
-          </span>
+           <span className="hidden md:inline text-zinc-300 truncate max-w-sm">
+             {activeAlert.action_required || activeAlert.body}
+           </span>
+           <span className="text-[9px] uppercase tracking-wide opacity-70">CampusGram notice</span>
         </div>
       </div>
 

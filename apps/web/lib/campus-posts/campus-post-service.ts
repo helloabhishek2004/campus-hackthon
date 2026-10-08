@@ -5,7 +5,7 @@ import {
   CreateCampusPostRequest,
   VerifyCampusPostRequest,
 } from "@smart-campus/contracts";
-import { createClient } from "../supabase/server";
+import { createApplicationClient, createServiceClient } from "../supabase/server";
 import {
   UserAuthContext,
   resolveUserRoleCategory,
@@ -82,6 +82,66 @@ export interface FeedPageResult {
   count: number;
 }
 
+/** The in-memory store is reserved for explicit mock mode or a genuinely absent Supabase setup. */
+function isInMemoryStore(): boolean {
+  if (process.env.NODE_ENV === "test") return true;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  return !url || !key || url.includes("placeholder") || key.includes("placeholder");
+}
+
+function mapPost(d: any): CampusPost {
+  return {
+    id: d.id,
+    authorProfileId: d.author_profile_id,
+    authorName: d.author_name,
+    authorRole: d.author_role,
+    authorRoleCategory: d.author_role_category,
+    authorDepartment: d.author_department,
+    title: d.title,
+    content: d.content,
+    category: d.category,
+    status: d.status,
+    verificationStatus: d.verification_status,
+    verificationInfo: d.verifier_name ? {
+      verifiedByProfileId: d.verified_by_profile_id,
+      verifierName: d.verifier_name,
+      verifierRole: d.verifier_role,
+      verifierDepartment: d.verifier_department,
+      verifiedAt: d.verified_at,
+      scope: d.verification_scope,
+      note: d.verification_note,
+    } : undefined,
+    audience: {
+      scope: d.audience_scope,
+      departmentCode: d.audience_department_code,
+      departmentId: d.audience_department_id,
+      programCode: d.audience_program_code,
+      programId: d.audience_program_id,
+      academicYear: d.audience_academic_year,
+      semester: d.audience_semester,
+      section: d.audience_section,
+      displayName: d.audience_display_name,
+    },
+    attachments: (d.campus_post_attachments || []).map((att: any) => ({
+      id: att.id, storagePath: att.storage_path, originalFilename: att.original_filename,
+      mimeType: att.mime_type, fileSize: Number(att.file_size),
+    })),
+    likesCount: Number(d.likes_count || 0), dislikesCount: Number(d.dislikes_count || 0),
+    commentsCount: Number(d.comments_count || 0), publishedAt: d.published_at,
+    createdAt: d.created_at, updatedAt: d.updated_at,
+  };
+}
+
+function mapComment(d: any): CampusPostComment {
+  return {
+    id: d.id, postId: d.post_id, authorProfileId: d.author_profile_id,
+    authorName: d.author_name, authorRole: d.author_role,
+    authorRoleCategory: d.author_role_category, authorDepartment: d.author_department,
+    content: d.content, status: d.status, createdAt: d.created_at, updatedAt: d.updated_at,
+  };
+}
+
 // ==============================================================================
 // Service Operations
 // ==============================================================================
@@ -100,8 +160,8 @@ export async function getFeedPosts(
   let posts: CampusPost[] = [];
   let isDbSuccess = false;
 
-  try {
-    const supabase = await createClient();
+  if (!isInMemoryStore()) try {
+    const supabase = await createApplicationClient();
     let query = supabase
       .from("campus_posts")
       .select("*, campus_post_attachments(*)")
@@ -131,7 +191,8 @@ export async function getFeedPosts(
 
     const { data, error } = await query;
 
-    if (!error && data) {
+    if (error) throw new Error(`Unable to read campus feed: ${error.message}`);
+    if (data) {
       isDbSuccess = true;
       posts = data.map((d: any) => ({
         id: d.id,
@@ -181,12 +242,12 @@ export async function getFeedPosts(
         updatedAt: d.updated_at,
       }));
     }
-  } catch (_err) {
-    // Supabase unavailable / offline mode
+  } catch (err) {
+    throw err instanceof Error ? err : new Error("Unable to read campus feed.");
   }
 
   // If DB returned rows, process DB results
-  if (isDbSuccess && posts.length > 0) {
+  if (isDbSuccess) {
     // Enforce server-side audience visibility
     const visiblePosts = posts.filter((p) => isPostVisibleToUser(p, userContext));
     const hasMore = visiblePosts.length > limit;
@@ -204,7 +265,7 @@ export async function getFeedPosts(
     const postIds = pageItems.map((p) => p.id);
     if (postIds.length > 0 && userContext.id) {
       try {
-        const supabase = await createClient();
+        const supabase = await createApplicationClient();
         const { data: userRxns } = await supabase
           .from("campus_post_reactions")
           .select("post_id, reaction_type")
@@ -219,16 +280,8 @@ export async function getFeedPosts(
             p.userReaction = rxnMap.get(p.id) || null;
           });
         }
-      } catch {
-        // Fallback to in-memory reactions if Supabase lookup fails
-        const rxnMap = new Map(
-          IN_MEMORY_REACTIONS
-            .filter((r) => r.userId === userContext.id && postIds.includes(r.postId))
-            .map((r) => [r.postId, r.reaction])
-        );
-        pageItems.forEach((p) => {
-          p.userReaction = rxnMap.get(p.id) || null;
-        });
+      } catch (err) {
+        throw err instanceof Error ? err : new Error("Unable to read post reactions.");
       }
     }
 
@@ -240,7 +293,9 @@ export async function getFeedPosts(
     };
   }
 
-  // In-Memory deterministic engine (offline mode / test mode)
+  if (!isInMemoryStore()) throw new Error("Unable to read campus feed.");
+
+  // In-Memory deterministic engine (explicit mock/unconfigured mode)
   let memoryPosts = [...IN_MEMORY_POSTS];
 
   // 1. Enforce audience visibility
@@ -323,6 +378,21 @@ export async function getPostById(
   postId: string,
   userContext: UserAuthContext
 ): Promise<CampusPost | null> {
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
+    const { data, error } = await supabase
+      .from("campus_posts").select("*, campus_post_attachments(*)").eq("id", postId).maybeSingle();
+    if (error) throw new Error(`Unable to read campus post: ${error.message}`);
+    if (!data) return null;
+    const post = mapPost(data);
+    if (!isPostVisibleToUser(post, userContext)) return null;
+    const { data: reaction, error: reactionError } = await supabase
+      .from("campus_post_reactions").select("reaction_type").eq("post_id", postId)
+      .eq("user_profile_id", userContext.id).maybeSingle();
+    if (reactionError) throw new Error(`Unable to read post reaction: ${reactionError.message}`);
+    post.userReaction = reaction?.reaction_type || null;
+    return post;
+  }
   const post = IN_MEMORY_POSTS.find((p) => p.id === postId);
   if (!post) return null;
 
@@ -435,9 +505,8 @@ export async function createCampusPost(
     updatedAt: now,
   };
 
-  // Try saving to Supabase if configured
-  try {
-    const supabase = await createClient();
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
     const { data, error } = await supabase
       .from("campus_posts")
       .insert({
@@ -464,11 +533,14 @@ export async function createCampusPost(
       .select()
       .single();
 
-    if (!error && data) {
-      newPost.id = data.id;
+    if (error || !data) throw new Error(`Unable to create campus post: ${error?.message || "No row returned"}`);
+    newPost.id = data.id;
+    newPost.createdAt = data.created_at || newPost.createdAt;
+    newPost.updatedAt = data.updated_at || newPost.updatedAt;
+    newPost.publishedAt = data.published_at || newPost.publishedAt;
 
-      if (attachments.length > 0) {
-        await supabase.from("campus_post_attachments").insert(
+    if (attachments.length > 0) {
+      const { error: attachmentError } = await supabase.from("campus_post_attachments").insert(
           attachments.map((att) => ({
             post_id: data.id,
             storage_path: att.storagePath,
@@ -476,14 +548,13 @@ export async function createCampusPost(
             mime_type: att.mimeType,
             file_size: att.fileSize,
           }))
-        );
-      }
+      );
+      if (attachmentError) throw new Error(`Unable to save post attachments: ${attachmentError.message}`);
     }
-  } catch (_err) {
-    // Offline mode
+    return newPost;
   }
 
-  // Prepend to in-memory store for immediate consistency
+  // Explicit mock/unconfigured mode only.
   IN_MEMORY_POSTS.unshift(newPost);
   return newPost;
 }
@@ -496,6 +567,41 @@ export async function verifyCampusPost(
   userContext: UserAuthContext,
   request: VerifyCampusPostRequest
 ): Promise<CampusPost> {
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
+    const { data, error } = await supabase.from("campus_posts")
+      .select("*").eq("id", postId).maybeSingle();
+    if (error) throw new Error(`Unable to read campus post for verification: ${error.message}`);
+    if (!data) throw new Error(`Post with ID '${postId}' not found.`);
+    const dbPost = mapPost(data);
+    if (!canVerifyPost(userContext, dbPost)) {
+      throw new Error("Forbidden: You are not authorized to verify this post (self-verification is blocked, or post is outside your scope).");
+    }
+    const roleCategory = resolveUserRoleCategory(userContext.role, userContext.tags);
+    const verifierRole = roleCategory === "department_coordinator" ? "Department Coordinator" :
+      roleCategory === "student_coordinator" ? "Student Coordinator" :
+      userContext.role === "admin" ? "Administrator" : "Faculty Verifier";
+    const verifiedAt = new Date().toISOString();
+    const scope = `${userContext.departmentCode || "Campus"} Authority`;
+    const { error: updateError } = await supabase.from("campus_posts").update({
+      verification_status: request.status, verified_by_profile_id: userContext.id,
+      verifier_name: userContext.fullName, verifier_role: verifierRole,
+      verifier_department: userContext.departmentCode, verified_at: verifiedAt,
+      verification_scope: scope, verification_note: request.note,
+    }).eq("id", postId);
+    if (updateError) throw new Error(`Unable to verify campus post: ${updateError.message}`);
+    const { error: auditError } = await supabase.from("campus_post_verifications").insert({
+      post_id: postId, verified_by_profile_id: userContext.id, verifier_name: userContext.fullName,
+      verifier_role: verifierRole, verifier_department: userContext.departmentCode,
+      status: request.status, scope, note: request.note,
+    });
+    if (auditError) throw new Error(`Unable to record post verification: ${auditError.message}`);
+    return { ...dbPost, verificationStatus: request.status, verificationInfo: {
+      verifiedByProfileId: userContext.id, verifierName: userContext.fullName,
+      verifierRole, verifierRoleCategory: roleCategory, verifierDepartment: userContext.departmentCode || undefined,
+      verifiedAt, scope, note: request.note,
+    }};
+  }
   const post = IN_MEMORY_POSTS.find((p) => p.id === postId);
   if (!post) {
     throw new Error(`Post with ID '${postId}' not found.`);
@@ -534,37 +640,6 @@ export async function verifyCampusPost(
   };
   post.updatedAt = new Date().toISOString();
 
-  // Try persisting to Supabase
-  try {
-    const supabase = await createClient();
-    await supabase
-      .from("campus_posts")
-      .update({
-        verification_status: request.status,
-        verified_by_profile_id: userContext.id,
-        verifier_name: userContext.fullName,
-        verifier_role: verifierRole,
-        verifier_department: userContext.departmentCode,
-        verified_at: post.verificationInfo.verifiedAt,
-        verification_scope: post.verificationInfo.scope,
-        verification_note: request.note,
-      })
-      .eq("id", postId);
-
-    await supabase.from("campus_post_verifications").insert({
-      post_id: postId,
-      verified_by_profile_id: userContext.id,
-      verifier_name: userContext.fullName,
-      verifier_role: verifierRole,
-      verifier_department: userContext.departmentCode,
-      status: request.status,
-      scope: post.verificationInfo.scope,
-      note: request.note,
-    });
-  } catch (_err) {
-    // Offline mode
-  }
-
   return post;
 }
 
@@ -577,6 +652,41 @@ export async function reactToCampusPost(
   userContext: UserAuthContext,
   reaction: CampusPostReactionType
 ): Promise<{ likesCount: number; dislikesCount: number; userReaction: CampusPostReactionType | null }> {
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
+    const { data: postRow, error: postError } = await supabase.from("campus_posts")
+      .select("id, likes_count, dislikes_count").eq("id", postId).maybeSingle();
+    if (postError) throw new Error(`Unable to read campus post: ${postError.message}`);
+    if (!postRow) throw new Error(`Post with ID '${postId}' not found.`);
+    const { data: existing, error: existingError } = await supabase.from("campus_post_reactions")
+      .select("reaction_type").eq("post_id", postId).eq("user_profile_id", userContext.id).maybeSingle();
+    if (existingError) throw new Error(`Unable to read post reaction: ${existingError.message}`);
+    const previous = existing?.reaction_type as CampusPostReactionType | undefined;
+    const next = previous === reaction ? null : reaction;
+    if (next === null) {
+      const { error } = await supabase.from("campus_post_reactions").delete()
+        .eq("post_id", postId).eq("user_profile_id", userContext.id);
+      if (error) throw new Error(`Unable to remove post reaction: ${error.message}`);
+    } else {
+      const { error } = await supabase.from("campus_post_reactions").upsert({
+        post_id: postId, user_profile_id: userContext.id, reaction_type: next,
+      }, { onConflict: "post_id,user_profile_id" });
+      if (error) throw new Error(`Unable to save post reaction: ${error.message}`);
+    }
+    const counterClient = createServiceClient();
+    if (previous && previous !== next) {
+      const { error } = await counterClient.rpc(previous === "like" ? "increment_post_likes" : "increment_post_dislikes", { target_post_id: postId, delta: -1 });
+      if (error) throw new Error(`Unable to update post reaction count: ${error.message}`);
+    }
+    if (next && previous !== next) {
+      const { error } = await counterClient.rpc(next === "like" ? "increment_post_likes" : "increment_post_dislikes", { target_post_id: postId, delta: 1 });
+      if (error) throw new Error(`Unable to update post reaction count: ${error.message}`);
+    }
+    const { data: updated, error: updatedError } = await supabase.from("campus_posts")
+      .select("likes_count, dislikes_count").eq("id", postId).single();
+    if (updatedError || !updated) throw new Error(`Unable to read updated reaction counts: ${updatedError?.message || "No row returned"}`);
+    return { likesCount: Number(updated.likes_count), dislikesCount: Number(updated.dislikes_count), userReaction: next };
+  }
   const post = IN_MEMORY_POSTS.find((p) => p.id === postId);
   if (!post) {
     throw new Error(`Post with ID '${postId}' not found.`);
@@ -628,6 +738,15 @@ export async function getCampusPostComments(
   postId: string,
   userContext: UserAuthContext
 ): Promise<CampusPostComment[]> {
+  if (!isInMemoryStore()) {
+    const post = await getPostById(postId, userContext);
+    if (!post) throw new Error("Post not found or inaccessible.");
+    const supabase = await createApplicationClient();
+    const { data, error } = await supabase.from("campus_post_comments").select("*")
+      .eq("post_id", postId).eq("status", "active").order("created_at", { ascending: true });
+    if (error) throw new Error(`Unable to read post comments: ${error.message}`);
+    return (data || []).map(mapComment);
+  }
   const post = IN_MEMORY_POSTS.find((p) => p.id === postId);
   if (!post || !isPostVisibleToUser(post, userContext)) {
     throw new Error("Post not found or inaccessible.");
@@ -654,10 +773,8 @@ export async function addCampusPostComment(
     throw new Error("Comment cannot exceed 1000 characters.");
   }
 
-  const post = IN_MEMORY_POSTS.find((p) => p.id === postId);
-  if (!post || !isPostVisibleToUser(post, userContext)) {
-    throw new Error("Post not found or inaccessible.");
-  }
+  const post = isInMemoryStore() ? IN_MEMORY_POSTS.find((p) => p.id === postId) : await getPostById(postId, userContext);
+  if (!post || !isPostVisibleToUser(post, userContext)) throw new Error("Post not found or inaccessible.");
 
   const roleCategory = resolveUserRoleCategory(
     userContext.role,
@@ -678,6 +795,18 @@ export async function addCampusPostComment(
     updatedAt: new Date().toISOString(),
   };
 
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
+    const { data, error } = await supabase.from("campus_post_comments").insert({
+      post_id: postId, author_profile_id: userContext.id, author_name: userContext.fullName,
+      author_role: userContext.role, author_role_category: roleCategory,
+      author_department: userContext.departmentCode, content: trimmed, status: "active",
+    }).select().single();
+    if (error || !data) throw new Error(`Unable to create post comment: ${error?.message || "No row returned"}`);
+    const { error: countError } = await createServiceClient().rpc("increment_post_comments", { target_post_id: postId, delta: 1 });
+    if (countError) throw new Error(`Unable to update comment count: ${countError.message}`);
+    return mapComment(data);
+  }
   IN_MEMORY_COMMENTS.push(comment);
   post.commentsCount += 1;
 
@@ -691,6 +820,23 @@ export async function deleteCampusPostComment(
   commentId: string,
   userContext: UserAuthContext
 ): Promise<boolean> {
+  if (!isInMemoryStore()) {
+    const supabase = await createApplicationClient();
+    const { data: comment, error: readError } = await supabase.from("campus_post_comments")
+      .select("*").eq("id", commentId).maybeSingle();
+    if (readError) throw new Error(`Unable to read comment: ${readError.message}`);
+    if (!comment) throw new Error("Comment not found.");
+    if (comment.author_profile_id !== userContext.id && userContext.role !== "admin") {
+      throw new Error("Forbidden: You can only delete your own comments.");
+    }
+    const { error } = await supabase.from("campus_post_comments").update({
+      status: "removed", updated_at: new Date().toISOString(),
+    }).eq("id", commentId);
+    if (error) throw new Error(`Unable to delete comment: ${error.message}`);
+    const { error: countError } = await createServiceClient().rpc("increment_post_comments", { target_post_id: comment.post_id, delta: -1 });
+    if (countError) throw new Error(`Unable to update comment count: ${countError.message}`);
+    return true;
+  }
   const comment = IN_MEMORY_COMMENTS.find((c) => c.id === commentId);
   if (!comment) {
     throw new Error("Comment not found.");

@@ -1,3 +1,6 @@
+// Development/test-only compatibility store. Production Lost & Found routes
+// use the Supabase repository in apps/web/lib/lost-found/repository.ts and
+// must never silently fall back here when Supabase is configured.
 import fs from 'fs';
 import path from 'path';
 

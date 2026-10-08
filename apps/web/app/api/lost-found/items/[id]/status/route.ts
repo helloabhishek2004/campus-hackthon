@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LostFoundItemStatusSchema } from "@smart-campus/contracts";
-import { canTransition } from "@smart-campus/lost-and-found";
+import { getItem, updateItemStatus } from "@/lib/lost-found/repository";
+import { canOperate, isIdentity, requireLostFoundIdentity } from "../../../_auth";
 
 export async function PATCH(
   req: NextRequest,
@@ -8,6 +9,8 @@ export async function PATCH(
 ) {
   const { id } = await params;
   try {
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
     const body = await req.json();
     const nextStatus = LostFoundItemStatusSchema.safeParse(body?.status);
 
@@ -18,21 +21,21 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: `Status transition boundary for item ${id} established.`,
-        requestedStatus: nextStatus.data,
-      },
-      { status: 200 },
-    );
+    const item = await getItem(id);
+    if (!item) return NextResponse.json({ success: false, error: "Item not found" }, { status: 404 });
+    if (!canOperate(identity, item.row)) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    const previousStatus = item.row.status;
+    const updated = await updateItemStatus(id, identity.userId, nextStatus.data);
+    return NextResponse.json({ success: true, message: "Item status updated.", previousStatus, status: (updated as any).status }, { status: 200 });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Error";
+    const status = message.includes("Illegal state transition") || message.includes("changed concurrently") ? 409 : 500;
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Error",
+        error: message,
       },
-      { status: 500 },
+      { status },
     );
   }
 }

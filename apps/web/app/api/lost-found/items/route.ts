@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CreateLostItemRequestSchema, CreateFoundItemRequestSchema } from "@smart-campus/contracts";
 import { getQueue } from "@/lib/queue";
-import { readDb, writeDb } from "@smart-campus/lost-and-found";
-import { randomUUID } from "crypto";
+import { isIdentity, requireLostFoundIdentity } from "../_auth";
+import { createItem, listItems } from "@/lib/lost-found/repository";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -10,60 +10,25 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category");
 
   try {
-    const db = readDb();
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
     const statusParam = searchParams.get("status");
     const q = searchParams.get("q")?.toLowerCase().trim();
-
-    let items = db.lost_found_items || [];
-
-    if (statusParam && statusParam !== "all") {
-      items = items.filter((i: any) => i.status === statusParam);
-    } else if (!statusParam) {
-      // Default to active visible items
-      items = items.filter((i: any) => i.status === "open" || i.status === "processing");
-    }
-
-    if (type && (type === "lost" || type === "found")) {
-      items = items.filter((i: any) => i.type === type);
-    }
-    if (category) {
-      items = items.filter((i: any) => i.category === category);
-    }
-    if (q) {
-      items = items.filter((i: any) =>
-        i.title?.toLowerCase().includes(q) ||
-        i.public_description?.toLowerCase().includes(q) ||
-        i.location_description?.toLowerCase().includes(q)
-      );
-    }
-
-    items.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    // Attach images using O(N+M) Map index
-    const imageMap = new Map<string, any[]>();
-    for (const img of (db.lost_found_item_images || [])) {
-      const arr = imageMap.get(img.item_id);
-      if (arr) {
-        arr.push(img);
-      } else {
-        imageMap.set(img.item_id, [img]);
-      }
-    }
-
-    const itemsWithImages = items.map((i: any) => ({
-      ...i,
-      images: imageMap.get(i.id) || []
-    }));
-
-    return NextResponse.json({ success: true, items: itemsWithImages, pagination: { total: itemsWithImages.length } }, { status: 200 });
+    const page = Number(searchParams.get("page") || 1);
+    const limit = Number(searchParams.get("limit") || 20);
+    const result = await listItems({ type, category, status: statusParam, q, page, limit });
+    return NextResponse.json({ success: true, items: result.items, pagination: { total: result.total, page: result.page, limit: result.limit } }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Lost & Found read failed";
+    return NextResponse.json({ success: false, error: { message } }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const reporterId = "33333333-3333-3333-3333-333333330001"; 
+    const identity = await requireLostFoundIdentity();
+    if (!isIdentity(identity)) return identity;
+    const reporterId = identity.userId;
     const body = await req.json();
     const type = body?.type || "lost";
     const images = body?.images || []; // Array of base64 strings
@@ -76,11 +41,8 @@ export async function POST(req: NextRequest) {
     const sensitiveCategories = ["id_cards_docs", "wallets_purses", "keys"];
     const isSensitive = sensitiveCategories.includes(validation.data.category);
 
-    const db = readDb();
-    const newItemId = randomUUID();
-    const newItem = {
-        id: newItemId,
-        type,
+    const result = await createItem({
+        type: type as "lost" | "found",
         reporter_id: reporterId,
         category: validation.data.category,
         subcategory: validation.data.subcategory,
@@ -91,47 +53,28 @@ export async function POST(req: NextRequest) {
         location_id: validation.data.location_id,
         location_description: validation.data.location_description,
         event_date: validation.data.event_date,
-        status: "processing",
         is_sensitive: isSensitive,
-        created_at: new Date().toISOString()
-    };
-
-    db.lost_found_items.push(newItem);
-    
-    // Save images to local DB
-    if (!db.lost_found_item_images) db.lost_found_item_images = [];
-    images.forEach((imgObj: any, index: number) => {
-        db.lost_found_item_images.push({
-            id: randomUUID(),
-            item_id: newItemId,
-            public_url: imgObj.public_url,
-            is_primary: index === 0,
-            created_at: new Date().toISOString()
-        });
+        images,
     });
-
-    db.lost_found_item_events.push({
-        item_id: newItemId,
-        event_type: "created",
-        actor_id: reporterId,
-        created_at: new Date().toISOString()
-    });
-    
-    writeDb(db);
 
     try {
         const queue = await getQueue();
         await queue.send('process-item', {
-            itemId: newItemId,
-            type: newItem.type,
-            title: newItem.title,
-            description: newItem.private_description || newItem.public_description,
+            itemId: result.row.id,
+            type: result.row.type,
+            title: result.row.title,
+            description: result.row.private_description || result.row.public_description,
             imageUrls: images.map((i: any) => i.public_url) // passing base64 strings
         });
-    } catch(e) {}
+    } catch (error) {
+        // The item is already durably recorded. Keep it in `processing` and
+        // surface the processing limitation rather than falling back to JSON.
+        console.error("Lost & Found processing could not be queued:", error);
+    }
 
-    return NextResponse.json({ success: true, item: newItem }, { status: 201 });
+     return NextResponse.json({ success: true, item: result.public }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Lost & Found create failed";
+    return NextResponse.json({ success: false, error: { message } }, { status: 500 });
   }
 }

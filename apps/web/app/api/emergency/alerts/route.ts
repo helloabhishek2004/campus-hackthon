@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emergencyService } from "@/lib/emergency/emergency-service";
 import { CreateEmergencyAlertInputSchema } from "@smart-campus/contracts";
+import { resolveServerIdentity } from "@/lib/auth/server-identity";
+import { canCreateEmergencyBroadcast } from "@/lib/emergency/emergency-permissions";
 
 export async function GET() {
   try {
-    const alerts = emergencyService.getAllAlerts();
-    const active = emergencyService.getActiveAlerts();
+    if (!await resolveServerIdentity({ allowDemo: true })) return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
+    const { alerts, active } = await emergencyService.getAlertData();
     const hotlines = emergencyService.getHotlines();
 
     return NextResponse.json({
@@ -24,6 +26,10 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const identity = await resolveServerIdentity({ allowDemo: true });
+    if (!identity) return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
+    const authorized = canCreateEmergencyBroadcast(identity.profile);
+    if (!authorized) return NextResponse.json({ success: false, error: "Broadcast authorization required" }, { status: 403 });
     const json = await req.json();
     const parsed = CreateEmergencyAlertInputSchema.safeParse(json);
 
@@ -34,11 +40,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const alert = emergencyService.broadcastAlert(parsed.data);
+    const alert = await emergencyService.broadcastAlert(parsed.data, {
+      userId: identity.userId,
+      fullName: identity.profile?.fullName || "Authorized Campus Responder",
+      profileId: identity.userId,
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Broadcast dispatched across channels: ${parsed.data.channels.join(", ").toUpperCase()}`,
+      message: `Broadcast recorded in CampusGram. External delivery is simulated; channels requested: ${parsed.data.channels.join(", ").toUpperCase()}.`,
       alert,
     });
   } catch (error) {

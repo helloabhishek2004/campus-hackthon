@@ -16,7 +16,7 @@ import {
   emergencyClientService,
   EmergencyDataResponse,
 } from "@/lib/services/emergency-client-service";
-import { EmergencyContact } from "@/lib/emergency/emergency-service";
+import type { EmergencyContact } from "@/lib/emergency/emergency-service";
 import {
   ShieldAlert,
   AlertTriangle,
@@ -235,8 +235,7 @@ export default function EmergencyControlPage() {
               <ShieldAlert className="w-5 h-5 text-red-400" />
             </h1>
             <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Real-time campus broadcast monitoring, 1-tap SOS rapid reporting, priority dispatch rules, 
-              and multi-channel emergency communication network.
+              Campus broadcast monitoring, SOS request recording, and priority triage rules. External responder dispatch and notification delivery are not connected in this prototype.
             </p>
           </div>
 
@@ -345,7 +344,7 @@ export default function EmergencyControlPage() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
                 <p className="text-sm font-semibold text-zinc-200">No active emergency alerts</p>
                 <p className="text-xs text-zinc-500">
-                  Campus operations are normal. All life-safety systems monitored 24/7.
+                   No active CampusGram emergency alerts are currently recorded.
                 </p>
               </div>
             ) : (
@@ -498,12 +497,12 @@ export default function EmergencyControlPage() {
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-red-400" />
                 <h2 className="text-xs font-bold uppercase tracking-wider text-red-300">
-                  Priority 1 Emergency Dispatch
+                  Priority 1 Emergency Report
                 </h2>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed">
                 Use this channel exclusively for active threats, fires, medical trauma, or structural hazards. 
-                Reports automatically notify campus security rapid response units within seconds.
+                 Reports are recorded for the campus demo. This interface does not dispatch real responders; call a listed hotline for immediate help.
               </p>
             </div>
 
@@ -594,12 +593,12 @@ export default function EmergencyControlPage() {
                 {sosSubmitting ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Transmitting SOS Alert...</span>
+                   <span>Recording SOS...</span>
                   </>
                 ) : (
                   <>
                     <Flame className="w-4 h-4" />
-                    <span>DISPATCH IMMEDIATE SOS</span>
+                       <span>RECORD SOS REPORT</span>
                   </>
                 )}
               </button>
@@ -680,7 +679,7 @@ export default function EmergencyControlPage() {
                   <span>Campus-Wide Alert Dispatch Console</span>
                 </h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Draft and simulate multi-channel notification fan-out (SMS, In-App, Push Notifications, Siren).
+                   Record a campus broadcast and simulate the selected notification channels. No external SMS, push, or siren delivery is performed.
                 </p>
               </div>
 
@@ -820,12 +819,12 @@ export default function EmergencyControlPage() {
                   {broadcastSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Broadcasting to Community...</span>
+                       <span>Recording Broadcast...</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>TRANSMIT CAMPUS BROADCAST</span>
+                       <span>RECORD CAMPUS BROADCAST</span>
                     </>
                   )}
                 </button>

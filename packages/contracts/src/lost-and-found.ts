@@ -39,6 +39,7 @@ export const ClaimStatusSchema = z.enum([
   "pending",
   "questions_pending",
   "approved",
+  "handover",
   "rejected",
   "withdrawn",
 ]);

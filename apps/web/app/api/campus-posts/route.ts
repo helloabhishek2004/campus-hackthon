@@ -44,9 +44,10 @@ export async function GET(req: NextRequest) {
       count: feedResult.count,
     });
   } catch (error: any) {
+    const status = error?.message?.includes("Unauthenticated") ? 401 : 500;
     return NextResponse.json(
       { error: error?.message || "Failed to retrieve campus posts." },
-      { status: 500 }
+      { status }
     );
   }
 }
@@ -146,9 +147,10 @@ export async function POST(req: NextRequest) {
       message: "Post published successfully.",
     });
   } catch (error: any) {
+    const status = error?.message?.includes("Unauthenticated") ? 401 : 400;
     return NextResponse.json(
       { error: error?.message || "Failed to publish post." },
-      { status: 400 }
+      { status }
     );
   }
 }

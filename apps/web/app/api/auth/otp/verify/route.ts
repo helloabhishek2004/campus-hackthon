@@ -29,7 +29,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(response);
+    const { sessionToken, ...clientResponse } = response;
+    const result = NextResponse.json(clientResponse);
+    if (sessionToken) {
+      result.cookies.set("campusgram_mock_session", sessionToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 24 * 60 * 60,
+      });
+    }
+    return result;
   } catch (error: any) {
     return NextResponse.json(
       {
