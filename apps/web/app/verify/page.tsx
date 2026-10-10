@@ -84,13 +84,22 @@ function VerifyContent() {
 
   return (
     <div className="m-auto w-full max-w-md space-y-6 py-8 animate-apple-in">
-      <div className="space-y-1.5 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">
-          Verify your identity
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Please confirm the institutional record associated with your ID.
-        </p>
+      <div className="flex flex-col items-center space-y-3 text-center">
+        <div className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-md">
+          <img
+            src="/assets/campus_gram_icon.svg"
+            alt="CampusGram"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">
+            Verify your identity
+          </h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Please confirm the institutional record associated with your ID.
+          </p>
+        </div>
       </div>
 
       {/* Loading state */}

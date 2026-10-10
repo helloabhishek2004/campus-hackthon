@@ -42,12 +42,23 @@ export default function SettingsPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <header className="border-b border-zinc-800 pb-5">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
-            Settings & Preferences
-          </h1>
-          <p className="text-xs text-zinc-400 mt-1">
-            Manage application appearance, alerts, and institutional data preferences.
-          </p>
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-sm shrink-0">
+              <img
+                src="/assets/campus_gram_icon.svg"
+                alt="CampusGram"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+                Settings & Preferences
+              </h1>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Manage application appearance, alerts, and institutional data preferences.
+              </p>
+            </div>
+          </div>
         </header>
 
         {/* Section 1: Appearance */}

@@ -8,6 +8,16 @@ export const metadata: Metadata = {
   title: "CampusGram — Smart Campus",
   description:
     "Next-generation Smart Campus Information, Services & Student Platform",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/assets/campus_gram.ico", sizes: "any" },
+      { url: "/assets/campus_gram_icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/assets/campus_gram_icon.png",
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

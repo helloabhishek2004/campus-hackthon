@@ -32,8 +32,15 @@ export function DesktopTopBar() {
   return (
     <header className="hidden md:flex min-h-14 items-center justify-between gap-4 px-4 sm:px-6 py-2.5 bg-white/90 dark:bg-zinc-950/85 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-20 select-none transition-colors duration-200">
       {/* Left: Breadcrumb / Section context */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <span className="w-2 h-2 rounded-full bg-zinc-400 dark:bg-zinc-600" />
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-4 h-4 rounded-sm overflow-hidden bg-zinc-950 border border-zinc-800 shrink-0 shadow-xs">
+          <img
+            src="/assets/campus_gram_icon.svg"
+            alt="CampusGram"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <span className="text-zinc-300 dark:text-zinc-700 text-xs font-mono">/</span>
         <span className="text-xs font-mono text-zinc-600 dark:text-zinc-400 uppercase tracking-wider truncate font-medium">
           {getPageTitle()}
         </span>

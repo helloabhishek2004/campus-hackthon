@@ -276,6 +276,9 @@ export default function ComplaintsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-zinc-800 gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-4 h-4 rounded-sm overflow-hidden bg-zinc-950 border border-zinc-700 shrink-0">
+                <img src="/assets/campus_gram_icon.svg" alt="CampusGram" className="w-full h-full object-cover" />
+              </div>
               <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold tracking-wider">
                 Module 2
               </span>

@@ -139,13 +139,22 @@ export default function HomePage() {
         {/* Top Header */}
         <header className="border-b border-zinc-800/80 pb-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
-                {getGreeting()}, {firstName}
-              </h1>
-              <p className="text-xs text-zinc-400 mt-1">
-                Here is your targeted campus feed and student updates.
-              </p>
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-sm shrink-0">
+                <img
+                  src="/assets/campus_gram_icon.svg"
+                  alt="CampusGram"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+                  {getGreeting()}, {firstName}
+                </h1>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Here is your targeted campus feed and student updates.
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center gap-2.5 self-start sm:self-auto">

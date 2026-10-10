@@ -71,8 +71,10 @@ export default function AdminDashboardPage() {
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
             </Link>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-100 flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 text-zinc-200" />
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-100 flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-md overflow-hidden bg-zinc-950 border border-zinc-700 shrink-0">
+                <img src="/assets/campus_gram_icon.svg" alt="CampusGram" className="w-full h-full object-cover" />
+              </div>
               <span>Custody & Audit Desk</span>
             </h1>
             <p className="text-xs text-zinc-400">

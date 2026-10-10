@@ -101,6 +101,9 @@ export default function FacultyDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
+                <div className="w-4 h-4 rounded-sm overflow-hidden bg-zinc-950 border border-neutral-700 shrink-0">
+                  <img src="/assets/campus_gram_icon.svg" alt="CampusGram" className="w-full h-full object-cover" />
+                </div>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-neutral-800 text-neutral-300 border border-neutral-700">
                   Academic Governance
                 </span>
