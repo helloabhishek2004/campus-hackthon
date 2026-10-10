@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { resolveServerIdentity, type ServerIdentity } from "../../../lib/auth/server-identity";
+import { ClaimSchema } from "@smart-campus/contracts";
+import { canReleaseContactInfo, isClaimReviewable, validateClaimAnswers } from "@smart-campus/lost-and-found";
 
 export async function requireLostFoundIdentity(): Promise<ServerIdentity | NextResponse> {
   const identity = await resolveServerIdentity({ allowDemo: true });
@@ -25,6 +27,58 @@ export function publicItem(item: any, images: any[] = []) {
 export function canOperate(identity: ServerIdentity, item: any) {
   return item.reporter_id === identity.userId || identity.profile?.role === "admin" ||
     ["HOD", "DEPARTMENT_COORDINATOR", "CAS_COORDINATOR"].some((tag) => identity.profile?.tags?.includes(tag as any));
+}
+
+/** Capability flags convey ownership without adding reporter identity to public items. */
+export function itemViewerCapabilities(identity: ServerIdentity, item: any) {
+  return {
+    isReporter: item.reporter_id === identity.userId,
+    canManage: canOperate(identity, item),
+    canViewMatches: item.reporter_id === identity.userId || identity.profile?.role === "admin",
+  };
+}
+
+export function canViewClaim(identity: ServerIdentity, claim: any, item: any) {
+  return Boolean(item && (claim.claimant_id === identity.userId || canOperate(identity, item)));
+}
+
+export function claimViewerCapabilities(identity: ServerIdentity, claim: any, item: any) {
+  const isClaimant = claim.claimant_id === identity.userId;
+  const reviewable = isClaimReviewable(claim.status) && item?.status === "in_claim";
+  const canDecide = Boolean(item && !isClaimant && canOperate(identity, item) && reviewable);
+  const contact = canReleaseContactInfo(
+    { userId: identity.userId, role: identity.profile?.role === "admin" ? "admin" : "student" },
+    { ...claim, finder_id: item?.reporter_id },
+    claim.contact_window_expires_at ? new Date(claim.contact_window_expires_at) : null,
+  );
+  return {
+    isClaimant,
+    isFinder: item?.reporter_id === identity.userId,
+    canAnswer: isClaimant && reviewable,
+    canDecide,
+    canApprove: canDecide && validateClaimAnswers(claim.verification_answers).isValid,
+    canHandover: isClaimant && claim.status === "approved" && item?.status === "handover",
+    canRevealContact: contact.isAuthorized,
+  };
+}
+
+/** Explicit projection prevents joined match/item records leaking concealed evidence. */
+export function publicClaim(claim: any, item: any) {
+  const answers = ClaimSchema.shape.verification_answers.safeParse(claim.verification_answers);
+  return {
+    id: claim.id,
+    item_id: claim.item_id,
+    match_id: claim.match_id ?? null,
+    status: claim.status,
+    claim_text: claim.claim_text,
+    verification_answers: answers.success ? answers.data : [],
+    decision_notes: claim.decision_notes ?? null,
+    decided_at: claim.decided_at ?? null,
+    handover_mode: claim.handover_mode ?? null,
+    created_at: claim.created_at,
+    updated_at: claim.updated_at,
+    item: publicItem(item, item.lost_found_item_images ?? []),
+  };
 }
 
 export function canAdministerLostFound(identity: ServerIdentity) {

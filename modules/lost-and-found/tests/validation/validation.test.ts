@@ -3,6 +3,8 @@ import {
   validateCreateLostItem,
   validateCreateFoundItem,
   validateClaimDecision,
+  validateClaimAnswers,
+  isClaimReviewable,
 } from "../../src/validation/index";
 
 describe("Module 3: Zod Contract Validations", () => {
@@ -40,5 +42,24 @@ describe("Module 3: Zod Contract Validations", () => {
 
     const result = validateClaimDecision(decision);
     expect(result.isValid).toBe(true);
+  });
+
+  it("normalizes verification evidence and removes untrusted extra fields", () => {
+    const result = validateClaimAnswers([{ question: " Describe the mark ", answer: " Blue initials ", contact: "private" }]);
+    expect(result).toEqual({ isValid: true, data: [{ question: "Describe the mark", answer: "Blue initials" }] });
+  });
+
+  it.each([undefined, null, [], {}, "evidence", [{ question: "Mark?", answer: " " }], [{ question: " ", answer: "Blue initials" }], [{ question: "Mark?", answer: 4 }]])(
+    "requires complete verification answers (%j)", (input) => {
+      expect(validateClaimAnswers(input).isValid).toBe(false);
+    },
+  );
+
+  it("only permits review of pending and questions-pending claims", () => {
+    expect(isClaimReviewable("pending")).toBe(true);
+    expect(isClaimReviewable("questions_pending")).toBe(true);
+    for (const status of ["approved", "handover", "rejected", "withdrawn", "unknown"]) {
+      expect(isClaimReviewable(status)).toBe(false);
+    }
   });
 });

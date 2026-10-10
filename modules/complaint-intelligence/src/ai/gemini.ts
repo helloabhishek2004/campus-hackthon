@@ -118,26 +118,22 @@ export async function runGeminiAnalysis(
   let parsed: unknown;
   try {
     parsed = JSON.parse(cleanJson);
-  } catch (err) {
-    throw new Error(
-      `Failed to parse Gemini response as JSON: ${err instanceof Error ? err.message : String(err)}. Raw output: ${responseText.slice(0, 200)}`,
-    );
+  } catch {
+    throw new Error("Gemini response was not valid JSON.");
   }
 
   // Validate with Zod
   const validation = RawGeminiAnalysisSchema.safeParse(parsed);
   if (!validation.success) {
-    throw new Error(
-      `Gemini output did not conform to ComplaintAnalysis schema: ${validation.error.message}`,
-    );
+    throw new Error("Gemini response did not match the analysis schema.");
   }
 
-  const analysis = validation.data;
-
-  // Augment with cluster match if not already evaluated
-  if (!analysis.cluster_match) {
-    analysis.cluster_match = findSimilarCandidates(request.text, candidates);
-  }
+  // Cluster membership is application-owned. Ignore any model-supplied value and
+  // reconcile only against candidates explicitly supplied by the caller.
+  const analysis = {
+    ...validation.data,
+    cluster_match: findSimilarCandidates(request.text, candidates),
+  };
 
   // Return fully validated schema
   return ComplaintAnalysisSchema.parse(analysis);

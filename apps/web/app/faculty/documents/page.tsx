@@ -125,21 +125,21 @@ function FacultyDocumentsContent() {
     <AppShell>
       <div className="space-y-6 pb-12">
         {/* Header */}
-        <header className="border-b border-neutral-800 pb-5">
+        <header className="border-b border-border pb-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-neutral-800 text-neutral-300 border border-neutral-700">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-secondary text-secondary-foreground border border-border">
                   Document Records
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   Official Academic Communications
                 </span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Academic Documents & Notices
               </h1>
-              <p className="text-xs text-neutral-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Search, filter, review, and issue academic communications with audited delivery and read receipts.
               </p>
             </div>
@@ -148,7 +148,7 @@ function FacultyDocumentsContent() {
               <button
                 onClick={() => fetchDocuments()}
                 disabled={loading}
-                className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800 transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
                 title="Refresh"
               >
                 <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -156,7 +156,7 @@ function FacultyDocumentsContent() {
 
               <button
                 onClick={() => setComposeOpen(true)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
               >
                 <Plus className="w-4 h-4" />
                 Compose Document
@@ -166,21 +166,21 @@ function FacultyDocumentsContent() {
         </header>
 
         {/* Tab Selector & Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800/80 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleTabChange("received")}
               className={cn(
                 "px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
                 tab === "received"
-                  ? "bg-neutral-800 text-white border border-neutral-700 shadow-sm"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
+                  ? "bg-card text-foreground border border-border shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
               )}
             >
-              <Inbox className="w-4 h-4 text-blue-400" />
+              <Inbox className="w-4 h-4 text-blue-500" />
               Received Notices
               {unreadCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white">
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
                   {unreadCount}
                 </span>
               )}
@@ -191,31 +191,31 @@ function FacultyDocumentsContent() {
               className={cn(
                 "px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
                 tab === "sent"
-                  ? "bg-neutral-800 text-white border border-neutral-700 shadow-sm"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent"
+                  ? "bg-card text-foreground border border-border shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
               )}
             >
-              <Send className="w-4 h-4 text-emerald-400" />
+              <Send className="w-4 h-4 text-emerald-500" />
               Sent Communications
             </button>
           </div>
 
           {/* Search Box */}
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search documents..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
             />
           </div>
         </div>
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-xs text-neutral-500 flex items-center gap-1 mr-1 shrink-0">
+          <span className="text-xs text-muted-foreground flex items-center gap-1 mr-1 shrink-0">
             <Filter className="w-3 h-3" />
             Filter:
           </span>
@@ -226,8 +226,8 @@ function FacultyDocumentsContent() {
               className={cn(
                 "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border",
                 filter === pill.value
-                  ? "bg-neutral-200 text-neutral-950 border-white font-semibold"
-                  : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white hover:border-neutral-700"
+                  ? "bg-card text-foreground border-border font-semibold shadow-xs"
+                  : "bg-secondary text-muted-foreground border-border hover:text-foreground hover:bg-muted"
               )}
             >
               {pill.label}
@@ -237,8 +237,8 @@ function FacultyDocumentsContent() {
 
         {/* Documents Grid / Empty State */}
         {loading && documents.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-neutral-500 text-xs">
-            <Loader2 className="w-8 h-8 animate-spin mb-3 text-neutral-400" />
+          <div className="py-20 flex flex-col items-center justify-center text-muted-foreground text-xs">
+            <Loader2 className="w-8 h-8 animate-spin mb-3 text-muted-foreground" />
             Loading academic documents...
           </div>
         ) : documents.length > 0 ? (
@@ -260,7 +260,7 @@ function FacultyDocumentsContent() {
                 <button
                   onClick={() => fetchDocuments(nextCursor, true)}
                   disabled={loading}
-                  className="px-4 py-2 rounded-lg text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 rounded-lg text-xs font-medium bg-card hover:bg-muted text-foreground border border-border transition-colors flex items-center gap-2"
                 >
                   {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Load more documents
@@ -269,12 +269,12 @@ function FacultyDocumentsContent() {
             )}
           </div>
         ) : (
-          <div className="py-16 rounded-2xl border border-dashed border-neutral-800 text-center max-w-md mx-auto">
-            <FileText className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-white mb-1">
+          <div className="py-16 rounded-2xl border border-dashed border-border text-center max-w-md mx-auto">
+            <FileText className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground mb-1">
               No academic documents found
             </h3>
-            <p className="text-xs text-neutral-400 mb-4 px-4 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-4 px-4 leading-relaxed">
               {tab === "received"
                 ? "No notices or circulars match your current filter."
                 : "You have not published any academic documents matching this criteria."}
@@ -282,7 +282,7 @@ function FacultyDocumentsContent() {
             {tab === "sent" && (
               <button
                 onClick={() => setComposeOpen(true)}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors inline-flex items-center gap-1.5 shadow-sm"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Compose New Document
@@ -316,8 +316,8 @@ export default function FacultyDocumentsPage() {
     <Suspense
       fallback={
         <AppShell>
-          <div className="py-20 flex flex-col items-center justify-center text-neutral-500 text-xs">
-            <Loader2 className="w-8 h-8 animate-spin mb-3 text-neutral-400" />
+          <div className="py-20 flex flex-col items-center justify-center text-muted-foreground text-xs">
+            <Loader2 className="w-8 h-8 animate-spin mb-3 text-muted-foreground" />
             Loading academic documents...
           </div>
         </AppShell>

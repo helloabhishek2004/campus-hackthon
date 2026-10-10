@@ -37,4 +37,25 @@ describe("Module 2: Input Validation", () => {
     expect(response.processing.status).toBe("failed");
     expect(response.error?.code).toBe("INVALID_REQUEST_PAYLOAD");
   });
+
+  it("handles nullish runtime input with a structured error", async () => {
+    const response = await analyzeComplaint(null);
+
+    expect(response).toMatchObject({
+      success: false,
+      complaint_id: "unknown",
+      processing: { status: "failed" },
+      error: { code: "INVALID_REQUEST_PAYLOAD" },
+    });
+  });
+
+  it("rejects an empty complaint ID even when the shared schema accepts it", async () => {
+    const response = await analyzeComplaint({
+      complaint_id: "   ",
+      text: "A valid amount of complaint text",
+    });
+
+    expect(response.success).toBe(false);
+    expect(response.error?.code).toBe("INVALID_REQUEST_PAYLOAD");
+  });
 });

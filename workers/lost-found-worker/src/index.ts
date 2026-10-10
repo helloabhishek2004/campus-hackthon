@@ -1,5 +1,4 @@
-// @ts-ignore
-import PgBoss from 'pg-boss';
+import { PgBoss } from 'pg-boss';
 import { logger } from './logger';
 import { handleProcessItem } from './handlers';
 

@@ -8,108 +8,121 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
   CardFooter,
-  Badge,
 } from "@smart-campus/ui";
 import {
   ArrowLeft,
-  Clock,
   PackageSearch,
-  CheckCircle2,
   RefreshCw,
   MapPin,
   ExternalLink,
-  ScanSearch,
 } from "lucide-react";
 import { cn } from "@smart-campus/utils";
+import { useCurrentUser } from "../_lib/use-current-user";
+import { myReportsUrl, readMyReports, readWorkflowResponse, type ReportSummary } from "../_lib/workflow-client";
 
 export default function MyReportsPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<ReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20 });
+  const [refresh, setRefresh] = useState(0);
+  const { userId, loading: sessionLoading, error: sessionError } = useCurrentUser();
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/lost-found/items");
-      const data = await res.json();
-      if (data.success) {
-        setItems(data.items || []);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => { setPage(1); }, [userId]);
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    if (sessionLoading) return;
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    setItems([]);
+    async function fetchItems() {
+      try {
+        if (!userId) throw new Error(sessionError || "Sign in to view your lost and found reports.");
+        const data = readMyReports(await readWorkflowResponse(await fetch(myReportsUrl(page), { cache: "no-store", signal: controller.signal })));
+        if (data.pagination.page !== page) throw new Error("The server returned an unexpected report page. Please refresh.");
+        if (!controller.signal.aborted) {
+          setItems(data.items);
+          setPagination(data.pagination);
+        }
+      } catch (e) {
+        if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Unable to load your reports.");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void fetchItems();
+    return () => controller.abort();
+  }, [page, refresh, userId, sessionLoading, sessionError]);
 
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border gap-4">
           <div>
             <Link
               href="/lost-and-found"
-              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center gap-1 font-medium mb-1.5 transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium mb-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
             </Link>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               My Reports & Claims
             </h1>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Track status of items you reported, AI match alerts, and active custody handovers.
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Your lost and found reports in every lifecycle state. Open an item to review matches and incoming claims.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
               href="/lost-and-found/report/lost"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-zinc-200 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               + Report Lost
             </Link>
+            <Link href="/lost-and-found/report/found" className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted transition-colors">+ Report Found</Link>
             <button
-              onClick={fetchItems}
-              disabled={loading}
-              className="p-2 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
+              onClick={() => setRefresh((value) => value + 1)}
+              disabled={loading || sessionLoading}
+              className="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
               title="Refresh"
             >
-              <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4", (loading || sessionLoading) && "animate-spin")} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        {loading ? (
-          <div className="py-16 flex flex-col items-center justify-center gap-2 text-zinc-500">
-            <RefreshCw className="w-5 h-5 animate-spin text-zinc-400" />
+        {loading || sessionLoading ? (
+          <div className="py-16 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground" />
             <span className="text-xs">Loading reported items...</span>
           </div>
+        ) : error ? (
+          <div role="alert" className="rounded-xl border border-destructive/20 bg-destructive/10 p-5 text-xs text-destructive">{error}</div>
         ) : items.length === 0 ? (
-          <div className="text-center py-16 bg-zinc-900/40 rounded-xl border border-dashed border-zinc-800 text-zinc-500 space-y-3">
-            <PackageSearch className="w-10 h-10 text-zinc-700 mx-auto" />
+          <div className="text-center py-16 bg-muted/30 rounded-xl border border-dashed border-border text-muted-foreground space-y-3">
+            <PackageSearch className="w-10 h-10 text-muted-foreground/60 mx-auto" />
             <div>
-              <p className="text-sm font-semibold text-zinc-300">No active reports filed</p>
-              <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+              <p className="text-sm font-semibold text-foreground">{page === 1 ? "No reports filed yet" : "No reports on this page"}</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                 Items you report as lost or found will appear here alongside potential matches.
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
               <Link
                 href="/lost-and-found/report/lost"
-                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-foreground hover:bg-muted"
               >
                 I Lost Something
               </Link>
               <Link
                 href="/lost-and-found/report/found"
-                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-foreground hover:bg-muted"
               >
                 I Found Something
               </Link>
@@ -120,7 +133,7 @@ export default function MyReportsPage() {
             {items.map((item) => (
               <Card
                 key={item.id}
-                className="border-zinc-800 bg-zinc-900/60 rounded-xl overflow-hidden hover:border-zinc-700/80 transition-all flex flex-col justify-between"
+                className="border-border bg-card rounded-xl overflow-hidden hover:border-primary/40 transition-all flex flex-col justify-between"
               >
                 <div>
                   <CardHeader className="pb-2 pt-4 px-4">
@@ -129,49 +142,56 @@ export default function MyReportsPage() {
                         className={cn(
                           "text-[10px] font-mono px-2 py-0.5 rounded font-bold border",
                           item.type === "lost"
-                            ? "bg-red-950/80 text-red-300 border-red-800"
-                            : "bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                            ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                         )}
                       >
                         {item.type === "lost" ? "LOST REPORT" : "FOUND REPORT"}
                       </span>
 
-                      <span className="text-[10px] font-mono text-zinc-500">
-                        {item.status?.toUpperCase() || "OPEN"}
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {item.status.replaceAll("_", " ").toUpperCase()}
                       </span>
                     </div>
 
-                    <CardTitle className="text-sm font-semibold text-zinc-100 line-clamp-1">
+                    <CardTitle className="text-sm font-semibold text-foreground line-clamp-1">
                       {item.title}
                     </CardTitle>
                   </CardHeader>
 
                   <CardContent className="px-4 pb-3 space-y-2">
-                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {item.public_description}
                     </p>
-                    <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono">
-                      <MapPin className="w-3 h-3 text-zinc-500" />
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+                      <MapPin className="w-3 h-3 text-muted-foreground" />
                       <span>{item.location_description}</span>
                     </div>
                   </CardContent>
                 </div>
 
-                <CardFooter className="pt-2 pb-3 px-4 border-t border-zinc-800/80 flex items-center justify-between text-[11px]">
-                  <span className="text-zinc-500 font-mono">
-                    {format(new Date(item.event_date || item.created_at), "MMM d, yyyy")}
+                <CardFooter className="pt-2 pb-3 px-4 border-t border-border flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground font-mono">
+                    {Number.isNaN(new Date(item.event_date || item.created_at).getTime()) ? "Date unavailable" : format(new Date(item.event_date || item.created_at), "MMM d, yyyy")}
                   </span>
 
                   <Link
                     href={`/lost-and-found/items/${item.id}`}
-                    className="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white font-medium transition-colors"
+                    className="flex items-center gap-1 text-foreground hover:text-primary font-medium transition-colors"
                   >
-                    <span>View Matches</span>
+                    <span>Details & Claims</span>
                     <ExternalLink className="w-3 h-3" />
                   </Link>
                 </CardFooter>
               </Card>
             ))}
+          </div>
+        )}
+        {!loading && !sessionLoading && !error && (pagination.total > pagination.limit || page > 1) && (
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <button disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-border bg-card px-3 py-2 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Previous</button>
+            <span>Page {page} of {Math.max(1, Math.ceil(pagination.total / pagination.limit))} · {pagination.total} reports</span>
+            <button disabled={page * pagination.limit >= pagination.total} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-border bg-card px-3 py-2 text-foreground hover:bg-muted disabled:opacity-40 transition-colors">Next</button>
           </div>
         )}
       </div>

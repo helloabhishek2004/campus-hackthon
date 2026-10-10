@@ -228,6 +228,9 @@ export const ComplaintRecordSchema = z.object({
   cluster_id: z.string(),
   is_emergency: z.boolean().default(false),
   similar_count: z.number().int().nonnegative().default(1),
+  assigned_to: z.string().nullable().optional(),
+  response_note: z.string().nullable().optional(),
+  last_updated_by: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string().optional(),
 });
@@ -292,3 +295,48 @@ export type ComplaintListResponse = z.infer<
   typeof ComplaintListResponseSchema
 >;
 
+export const ComplaintLifecycleUpdateSchema = z
+  .object({
+    status: ComplaintStatusSchema.optional(),
+    response_note: z.string().trim().min(1).max(2000).optional(),
+    take_ownership: z.boolean().optional(),
+  })
+  .refine(
+    (value) =>
+      value.status !== undefined ||
+      value.response_note !== undefined ||
+      value.take_ownership === true,
+    {
+      message: "Provide a status, response note, or take_ownership=true.",
+    },
+  );
+export type ComplaintLifecycleUpdate = z.infer<
+  typeof ComplaintLifecycleUpdateSchema
+>;
+
+export const ComplaintStatusHistoryEntrySchema = z.object({
+  from_status: ComplaintStatusSchema,
+  to_status: ComplaintStatusSchema,
+  note: z.string().nullable().optional(),
+  created_at: z.string(),
+});
+export type ComplaintStatusHistoryEntry = z.infer<
+  typeof ComplaintStatusHistoryEntrySchema
+>;
+
+export const ComplaintDetailResponseSchema = z.object({
+  success: z.boolean(),
+  complaint: ComplaintRecordSchema.optional(),
+  peer_complaints: z.array(ComplaintRecordSchema).optional(),
+  status_history: z.array(ComplaintStatusHistoryEntrySchema).optional(),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+      details: z.any().optional(),
+    })
+    .optional(),
+});
+export type ComplaintDetailResponse = z.infer<
+  typeof ComplaintDetailResponseSchema
+>;

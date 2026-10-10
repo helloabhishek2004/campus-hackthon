@@ -32,11 +32,8 @@ export function buildAnalysisUserPrompt(
 ): string {
   return JSON.stringify(
     {
-      complaint_id: request.complaint_id,
       text: request.text,
-      complainant_context: request.complainant,
       requested_recipient: request.requested_recipient,
-      metadata: request.metadata,
       has_images: (request.images?.length ?? 0) > 0,
       has_documents: (request.documents?.length ?? 0) > 0,
     },

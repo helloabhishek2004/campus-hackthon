@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isIdentity, requireLostFoundIdentity } from "../../../_auth";
-import { getMatchesForItem, publicItem as projectItem } from "@/lib/lost-found/repository";
+import { getMatchesForItem, publicItem as projectItem } from "../../../../../../lib/lost-found/repository";
 
 export async function GET(
   req: NextRequest,
@@ -16,9 +16,11 @@ export async function GET(
     const enrichedMatches = matches
       .filter((m: any) => Boolean(m.lost && m.found && (m.lost.reporter_id === identity.userId || m.found.reporter_id === identity.userId || identity.profile?.role === "admin")))
       .map((m: any) => {
-        const { lost: _lost, found: _found, ...safeMatch } = m;
         return {
-          ...safeMatch,
+          id: m.id, lost_item_id: m.lost_item_id, found_item_id: m.found_item_id,
+          overall_score: m.overall_score, match_band: m.match_band,
+          score_breakdown: m.score_breakdown, is_dismissed: m.is_dismissed,
+          created_at: m.created_at,
           lost_item: projectItem(m.lost, m.lost.lost_found_item_images || []),
           found_item: projectItem(m.found, m.found.lost_found_item_images || []),
         };

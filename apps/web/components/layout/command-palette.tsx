@@ -379,7 +379,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         {/* Results List */}
         <div
           ref={listRef}
-          className="max-h-[380px] overflow-y-auto p-2 space-y-1 divide-y divide-zinc-800/40"
+          role="listbox"
+          aria-label="Search suggestions"
+          className="max-h-[380px] overflow-y-auto custom-scrollbar p-2 space-y-1 divide-y divide-zinc-800/40"
         >
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center text-zinc-500 text-xs font-normal">
@@ -393,7 +395,10 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               return (
                 <div
                   key={item.id}
+                  id={`command-item-${idx}`}
                   data-index={idx}
+                  role="option"
+                  aria-selected={isSelected}
                   onClick={() => executeCommand(item)}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-100 ${

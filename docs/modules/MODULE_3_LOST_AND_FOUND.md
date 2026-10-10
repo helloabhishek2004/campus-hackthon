@@ -140,17 +140,17 @@ flowchart TD
 
 Baseline weights from build guide (empirical index, not probability):
 
-- **Image Similarity**: 45% (`0.45`)
-- **Text Semantic Similarity**: 25% (`0.25`)
-- **Category Match**: 10% (`0.10`)
+- **Image Similarity**: 20% (`0.20`)
+- **Text Semantic Similarity**: 45% (`0.45`)
+- **Category Match**: 15% (`0.15`)
 - **Location Proximity**: 10% (`0.10`)
 - **Time Proximity**: 10% (`0.10`)
 
 **Classification Bands**:
 
-- `overall_score >= 0.80`: **High** (Strong Match surfaced prominently).
-- `0.65 <= overall_score < 0.80`: **Medium** (Possible Match surfaced for user review).
-- `overall_score < 0.65`: **Low** (Hidden from student feeds).
+- `overall_score >= 0.75`: **High** (Strong Match surfaced prominently).
+- `0.50 <= overall_score < 0.75`: **Medium** (Possible Match surfaced for user review).
+- `overall_score < 0.50`: **Low** (Unlikely candidate).
 
 ---
 
@@ -191,7 +191,7 @@ Baseline weights from build guide (empirical index, not probability):
 - **No Direct Release on Match**: A similarity score of 0.99 DOES NOT reveal the finder's or loser's phone number or email.
 - **Sanitization**: `private_description` and `identifying_marks` are set to `null` for unverified viewers.
 - **Sensitive Item Handling**: Photos of wallets, passports, keys, or IDs are blurred or hidden from public browsing.
-- **Contact Release Constraints**: Allowed only if claim is approved, parties have opted in, handover mode is `in_person`, and the contact window is active.
+- **Contact Release Constraints**: Authorization is allowed only for an approved claim, an authorized party, and an active contact window. Security-mediated handovers remain directed to Campus Security, and the current demo never fabricates direct phone/email details.
 - **Audit Logging**: Every single contact reveal event writes to `lost_found_contact_reveals`.
 
 ---
@@ -221,3 +221,37 @@ The module foundation is complete when:
 - Pure domain logic in `modules/lost-and-found` passes all unit tests.
 - Background worker and Python AI service have operational skeletons with deterministic offline fallbacks.
 - Next.js UI routes and API route skeletons compile cleanly in `pnpm build`.
+
+---
+
+## 17. Current Implementation Update — 2026-10-09
+
+The original specification describes the intended asynchronous architecture. The
+current web implementation also has an inline processing path in
+`apps/web/lib/queue.ts`, used when hosted Supabase is configured. It calls the
+existing FastAPI service, stores embeddings and match events, and keeps canonical
+data in hosted Supabase. The standalone pg-boss worker remains an optional
+deployment process and is not required for the hosted web flow.
+
+The claim workflow is now connected end to end:
+
+```text
+session-derived owner capability
+  → candidate match
+  → claim initiation
+  → normalized verification answers
+  → authorized finder review
+  → approve/reject
+  → claimant-confirmed handover
+  → both linked reports resolved
+```
+
+Public projections remain privacy-safe. The UI receives minimal server-derived
+capability booleans rather than raw ownership IDs. Approval requires valid
+verification evidence; stale or unauthorized mutations return semantic conflicts.
+Direct contact data is not fabricated when no approved institutional directory
+source is available; the demo directs users through Campus Security.
+
+The current local AI service runs deterministic mock models by default. Full
+YOLO/CLIP/MiniLM inference remains replaceable behind the same `/analyze` contract.
+Full browser acceptance for the two-party workflow is still pending.

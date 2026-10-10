@@ -63,8 +63,14 @@ Images submitted by users are strictly used for storage, retrieval, and UI rende
 | **Supabase Database Integration** | `IMPLEMENTED` | Dual-mode support: Supabase PostgreSQL when credentials exist, in-memory mock fallback when offline. |
 | **Campus-Wide RLS Visibility** | `IMPLEMENTED` | Migration `005_complaint_rls_and_cascade.sql` implements `TO authenticated USING (true)` on `public.complaints`. |
 | **Safe Emergency Cascade RPC** | `IMPLEMENTED` | `cascade_complaint_emergency` `SECURITY DEFINER` Postgres function deployed via migration `005`. |
-| **Authentication Integration** | `PARTIALLY IMPLEMENTED` | Supports authenticated `complainant_id` linking; accepts anonymous/unauthenticated submissions for local demo mode. |
-| **Automated Test Suite** | `IMPLEMENTED` | 15 comprehensive unit & integration tests in `apps/web/tests/complaint.test.ts` covering text similarity, emergency cascade, APIs, attachments, and cluster aggregation. |
+| **Authentication Integration** | `IMPLEMENTED FOR MOCK FLOW` | Requires the signed HTTP-only application session; server derives ownership and rejects anonymous/unauthenticated complaint operations. Mock authentication remains demo-only. |
+| **Automated Test Suite** | `IMPLEMENTED` | 19 complaint tests in `apps/web/tests/complaint.test.ts`, plus focused attachment-security, lifecycle, and auth-hardening suites covering the Phase 2 boundaries. |
+
+### Phase 2 implementation update (2026-10-09)
+
+The current implementation also includes server-enforced complaint lifecycle updates, global cluster aggregation before owner-only row projection, owner-bound local attachment references with server-side image signature checks, sanitized API projections, and signed mock-session hardening. Authorized staff use `PATCH /api/complaints/[id]` with the existing statuses (`submitted`, `under_review`, `in_progress`, `resolved`, `rejected`); students remain owner-scoped and cannot perform staff mutations. The core submission path remains deterministic lexical clustering and does not claim to run Gemini.
+
+The additive migration `20261009182617_complaint_lifecycle.sql` adds response notes, status history, and service-role-only atomic persistence functions. It must be applied through the normal Supabase migration workflow before configured persistence can use those functions. Live Supabase, RLS, browser two-user, and deployment verification remain outstanding.
 
 ---
 
@@ -542,6 +548,42 @@ Emergency status is strictly derived from **CLUSTER VOLUME**. It is **NOT** deri
 * **Read Permissions:** All authenticated users can SELECT campus complaints via `005_complaint_rls_and_cascade.sql`.
 * **Write Permissions:** Authenticated users can INSERT complaints. General UPDATE/DELETE is blocked.
 * **Emergency Updates:** Performed strictly through `SECURITY DEFINER` RPC `cascade_complaint_emergency(target_cluster_id)`.
+
+### Application Session Integration (verified locally 2026-10-10)
+
+The hackathon OTP path intentionally uses a signed HTTP-only application session;
+it does not create a Supabase Auth JWT or contact an SMS provider. OTP verification
+sets `campusgram_mock_session` with `SameSite=Lax`, `Path=/`, a production-only
+`Secure` flag, and the shared 24-hour expiration policy. The token is HMAC-signed
+with the server-only `AUTH_SESSION_SECRET` when configured, falling back to the
+server-only service-role key for existing deployments; the deterministic signing
+fallback is restricted to tests or an unconfigured local mock runtime and never
+uses the public anon key.
+
+`resolveServerIdentity({ allowDemo: true })` validates the signed application
+session when `AUTH_MODE=mock`, including when Supabase is configured for the
+hackathon persistence path. In non-mock mode it requires the canonical Supabase
+Auth session and linked institutional profile. The application-session path
+resolves the institutional profile and canonical linked profile server-side and
+rejects missing, malformed, tampered, future-dated, inactive, and expired
+tokens. Complaint and Lost & Found routes continue to use this shared resolver;
+complaint ownership is still derived from the resolved identity rather than
+request fields or headers.
+
+Local regression coverage is in `apps/web/tests/auth-hardening.test.ts` and
+`apps/web/tests/auth.test.ts`. Live
+Supabase directory lookup, RLS, persistence, and browser cookie behavior remain
+deployment checks and were not exercised by the local tests.
+
+Verification receipts for this session:
+
+* `pnpm --filter @smart-campus/web exec vitest run tests/auth-hardening.test.ts tests/auth.test.ts tests/complaint.test.ts tests/complaint-attachment-security.test.ts` — 48 passed.
+* `pnpm --filter @smart-campus/web test` — 220 passed, including 34 Lost & Found workflow tests.
+* `pnpm test` — 297 passed across the monorepo.
+* `pnpm typecheck` — passed.
+* `pnpm lint` — passed with existing warnings only.
+* `pnpm --filter @smart-campus/web build` — passed with existing image optimization warnings.
+* `git diff --check` — passed.
 
 ---
 

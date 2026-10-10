@@ -69,7 +69,6 @@ const MODULE_NAV_ITEMS: NavItem[] = [
 ];
 
 const ACCOUNT_NAV_ITEMS: NavItem[] = [
-  { name: "Profile", href: "/profile", icon: User, shortcut: "G P" },
   { name: "Settings", href: "/settings", icon: Settings, shortcut: "G S" },
 ];
 
@@ -90,197 +89,207 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col fixed inset-y-0 left-0 border-r border-zinc-200 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-xl h-screen h-dvh justify-between select-none shrink-0 overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] z-30",
-        isCollapsed ? "w-16 p-2.5 items-center" : "w-64 p-3.5"
+        "hidden md:flex flex-col h-full shrink-0 border-r border-border bg-card/95 backdrop-blur-xl select-none z-30 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        isCollapsed ? "w-16 items-center" : "w-64"
       )}
       aria-label="Application Sidebar"
     >
-      <div className={cn("w-full space-y-2", isCollapsed && "flex flex-col items-center")}>
-        {/* Sidebar Header: Single CampusGram Logo that morphs into collapse/expand switch on hover */}
-        <div className="w-full flex items-center justify-start pt-0.5">
-          <button
-            onClick={toggleSidebar}
-            className={cn(
-              "apple-press group relative flex min-h-11 items-center rounded-xl p-1.5 transition-all text-left border border-transparent hover:border-zinc-300 dark:hover:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-950",
-              isCollapsed ? "justify-center w-full mx-auto" : "w-full gap-2.5"
-            )}
-            title={isCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {/* Logo Mark with Hover Switch Transformation */}
-            <div className="relative w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-900 border border-zinc-700/80 dark:border-zinc-800 flex items-center justify-center font-mono font-bold text-xs text-zinc-100 shadow-sm shrink-0 overflow-hidden group-hover:border-zinc-500 dark:group-hover:border-zinc-600 transition-colors">
-              {/* Normal State: CampusGram Mark */}
-              <span className="transition-all duration-200 group-hover:opacity-0 group-hover:scale-50">
-                CG
-              </span>
-
-              {/* Hovered State: macOS Switch */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 text-zinc-100">
-                {isCollapsed ? (
-                  <PanelLeftOpen className="w-4 h-4" />
-                ) : (
-                  <PanelLeftClose className="w-4 h-4" />
-                )}
-              </div>
-            </div>
-
-            {!isCollapsed && (
-              <div className="flex flex-col leading-none min-w-0 pr-1">
-                <span className="font-semibold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 truncate group-hover:text-black dark:group-hover:text-white transition-colors">
-                  CampusGram
-                </span>
-                <span className="text-[10px] text-zinc-500 font-mono tracking-wider uppercase mt-0.5">
-                  Smart Campus
-                </span>
-              </div>
-            )}
-          </button>
-        </div>
-
-        {/* Global Spotlight Search Trigger */}
-        <div className="w-full">
-          {!isCollapsed ? (
-            <button
-              onClick={toggleCommandPalette}
-               className="apple-press w-full min-h-9 flex items-center justify-between px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900/70 hover:bg-zinc-200/80 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all text-xs font-normal shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-              title="Search campus modules and actions"
-            >
-              <div className="flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300" />
-                <span className="text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-300 text-[11px]">
-                  Spotlight Search...
-                </span>
-              </div>
-              <span className="apple-kbd">⌘K</span>
-            </button>
-          ) : (
-            <button
-              onClick={toggleCommandPalette}
-               className="apple-press w-10 h-10 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-              title="Spotlight Search (⌘K)"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+      {/* Pinned Sidebar Header: CampusGram Logo that morphs into collapse/expand switch on hover */}
+      <div className={cn("shrink-0 w-full pt-3 pb-2", isCollapsed ? "px-2.5 flex justify-center" : "px-3.5")}>
+        <button
+          onClick={toggleSidebar}
+          className={cn(
+            "apple-press group relative flex min-h-11 items-center rounded-xl p-1.5 transition-all text-left border border-transparent hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            isCollapsed ? "justify-center w-full mx-auto" : "w-full gap-2.5"
           )}
-        </div>
+          title={isCollapsed ? "Expand sidebar (⌘B)" : "Collapse sidebar (⌘B)"}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {/* Logo Mark with Hover Switch Transformation */}
+          <div className="relative w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-900 border border-zinc-700/80 dark:border-zinc-800 flex items-center justify-center font-mono font-bold text-xs text-zinc-100 shadow-sm shrink-0 overflow-hidden group-hover:border-zinc-500 dark:group-hover:border-zinc-600 transition-colors">
+            {/* Normal State: CampusGram Mark */}
+            <span className="transition-all duration-200 group-hover:opacity-0 group-hover:scale-50">
+              CG
+            </span>
 
-        {/* Main Navigation List */}
-        <nav className="w-full space-y-0.5" aria-label="Main Navigation">
-          {/* Section: Campus Life */}
+            {/* Hovered State: macOS Switch */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 text-zinc-100">
+              {isCollapsed ? (
+                <PanelLeftOpen className="w-4 h-4" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4" />
+              )}
+            </div>
+          </div>
+
           {!isCollapsed && (
-            <div className="px-2 pt-1 pb-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
-                Campus Life
+            <div className="flex flex-col leading-none min-w-0 pr-1">
+              <span className="font-semibold text-sm tracking-tight text-zinc-900 dark:text-zinc-100 truncate group-hover:text-black dark:group-hover:text-white transition-colors">
+                CampusGram
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono tracking-wider uppercase mt-0.5">
+                Smart Campus
               </span>
             </div>
           )}
+        </button>
+      </div>
 
-          {MAIN_NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
-                className={cn(
-                  "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1",
-                  isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
-                  isActive
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300/80 dark:border-zinc-800/90 shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent"
-                )}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon
-                    className={cn(
-                      "w-4 h-4 shrink-0 transition-colors",
-                      isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-300"
-                    )}
-                  />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
-                </div>
-
-                {!isCollapsed && (
-                  <span className="apple-kbd opacity-70 group-hover:opacity-100 transition-opacity">
-                    {item.shortcut}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-
-          {/* Section: Campus Systems (Modules 2, 3, 4) */}
-          {!isCollapsed ? (
-             <div className="pt-1.5 pb-0.5 px-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
-                Campus Systems
+      {/* Pinned Global Spotlight Search Trigger */}
+      <div className={cn("shrink-0 w-full pb-2", isCollapsed ? "px-2.5 flex justify-center" : "px-3.5")}>
+        {!isCollapsed ? (
+          <button
+            onClick={toggleCommandPalette}
+            className="apple-press w-full min-h-9 flex items-center justify-between px-2.5 py-1 rounded-lg bg-secondary hover:bg-accent border border-border hover:border-ring/40 text-muted-foreground hover:text-foreground transition-all text-xs font-normal shadow-xs group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Search campus modules and actions (⌘K)"
+          >
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground" />
+              <span className="text-muted-foreground group-hover:text-foreground text-[11px]">
+                Spotlight Search...
               </span>
             </div>
-          ) : (
-            <div className="w-8 h-px bg-zinc-200 dark:bg-zinc-800/80 my-1 mx-auto" />
-          )}
+            <span className="apple-kbd">⌘K</span>
+          </button>
+        ) : (
+          <button
+            onClick={toggleCommandPalette}
+            className="apple-press w-10 h-10 flex items-center justify-center rounded-lg bg-secondary hover:bg-accent border border-border hover:border-ring/40 text-muted-foreground hover:text-foreground transition-all shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Spotlight Search (⌘K)"
+            aria-label="Spotlight Search (⌘K)"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
-          {MODULE_NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+      {/* Independent Scrollable Navigation Area */}
+      <div
+        className={cn(
+          "flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar py-1 space-y-3",
+          isCollapsed ? "px-2 flex flex-col items-center" : "px-3.5"
+        )}
+      >
+        <nav className="w-full space-y-3" aria-label="Main Navigation">
+          {/* Section: Campus Life */}
+          <div className="space-y-0.5">
+            {!isCollapsed && (
+              <div className="px-2 pt-0.5 pb-1">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-medium">
+                  Campus Life
+                </span>
+              </div>
+            )}
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
-                className={cn(
-                  "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1",
-                  isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
-                  isActive
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300/80 dark:border-zinc-800/90 shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent"
-                )}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon
-                    className={cn(
-                      "w-4 h-4 shrink-0 transition-colors",
-                      isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-300"
-                    )}
-                  />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
-                </div>
+            {MAIN_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
 
-                {!isCollapsed && (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {item.badge && (
-                      <span
-                        className={cn(
-                          "text-[9px] font-mono px-1.5 py-0.5 rounded border font-semibold tracking-wide",
-                          item.badgeColor
-                        )}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                    <span className="apple-kbd opacity-60 group-hover:opacity-100 transition-opacity">
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
+                  className={cn(
+                    "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
+                    isActive
+                      ? "bg-accent text-accent-foreground border border-border shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60 border border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon
+                      className={cn(
+                        "w-4 h-4 shrink-0 transition-colors",
+                        isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    {!isCollapsed && <span className="truncate">{item.name}</span>}
+                  </div>
+
+                  {!isCollapsed && (
+                    <span className="apple-kbd opacity-70 group-hover:opacity-100 transition-opacity">
                       {item.shortcut}
                     </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Section: Campus Systems (Modules 2, 3, 4) */}
+          <div className="space-y-0.5">
+            {!isCollapsed ? (
+              <div className="pt-1.5 pb-1 px-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-medium">
+                  Campus Systems
+                </span>
+              </div>
+            ) : (
+              <div className="w-8 h-px bg-border my-1.5 mx-auto" />
+            )}
+
+            {MODULE_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
+                  className={cn(
+                    "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
+                    isActive
+                      ? "bg-accent text-accent-foreground border border-border shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60 border border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon
+                      className={cn(
+                        "w-4 h-4 shrink-0 transition-colors",
+                        isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    {!isCollapsed && <span className="truncate">{item.name}</span>}
                   </div>
-                )}
-              </Link>
-            );
-          })}
+
+                  {!isCollapsed && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.badge && (
+                        <span
+                          className={cn(
+                            "text-[9px] font-mono px-1.5 py-0.5 rounded border font-semibold tracking-wide",
+                            item.badgeColor
+                          )}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                      <span className="apple-kbd opacity-60 group-hover:opacity-100 transition-opacity">
+                        {item.shortcut}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Section: Faculty & Academic Portal */}
           {isFacultyOrAdmin && (
-            <>
+            <div className="space-y-0.5">
               {!isCollapsed ? (
-                 <div className="pt-1.5 pb-0.5 px-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
+                <div className="pt-1.5 pb-1 px-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-medium">
                     Faculty & Academic
                   </span>
                 </div>
               ) : (
-                <div className="w-8 h-px bg-zinc-200 dark:bg-zinc-800/80 my-1 mx-auto" />
+                <div className="w-8 h-px bg-border my-1.5 mx-auto" />
               )}
 
               {FACULTY_NAV_ITEMS.map((item) => {
@@ -293,18 +302,18 @@ export function Sidebar() {
                     href={item.href}
                     title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
                     className={cn(
-                      "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1",
+                      "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                       isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
                       isActive
-                        ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300/80 dark:border-zinc-800/90 shadow-xs"
-                        : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent"
+                        ? "bg-accent text-accent-foreground border border-border shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/60 border border-transparent"
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Icon
                         className={cn(
                           "w-4 h-4 shrink-0 transition-colors",
-                          isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-300"
+                          isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
                         )}
                       />
                       {!isCollapsed && <span className="truncate">{item.name}</span>}
@@ -318,91 +327,98 @@ export function Sidebar() {
                   </Link>
                 );
               })}
-            </>
+            </div>
           )}
 
           {/* Section: Account & Settings */}
-          {!isCollapsed ? (
-             <div className="pt-1.5 pb-0.5 px-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-medium">
-                Account
-              </span>
-            </div>
-          ) : (
-            <div className="w-8 h-px bg-zinc-200 dark:bg-zinc-800/80 my-1 mx-auto" />
-          )}
+          <div className="space-y-0.5">
+            {!isCollapsed ? (
+              <div className="pt-1.5 pb-1 px-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-medium">
+                  Account
+                </span>
+              </div>
+            ) : (
+              <div className="w-8 h-px bg-border my-1.5 mx-auto" />
+            )}
 
-          {ACCOUNT_NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
+            {ACCOUNT_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
-                className={cn(
-                  "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1",
-                  isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
-                  isActive
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 border border-zinc-300/80 dark:border-zinc-800/90 shadow-xs"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200 hover:bg-zinc-100/70 dark:hover:bg-zinc-900/60 border border-transparent"
-                )}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon
-                    className={cn(
-                      "w-4 h-4 shrink-0 transition-colors",
-                      isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-300"
-                    )}
-                  />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
-                </div>
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={isCollapsed ? `${item.name} (${item.shortcut})` : undefined}
+                  className={cn(
+                    "apple-press flex min-h-9 items-center rounded-lg text-xs font-medium transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    isCollapsed ? "justify-center p-2.5 w-10 h-10 mx-auto" : "justify-between px-2.5 py-2",
+                    isActive
+                      ? "bg-accent text-accent-foreground border border-border shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60 border border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon
+                      className={cn(
+                        "w-4 h-4 shrink-0 transition-colors",
+                        isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    {!isCollapsed && <span className="truncate">{item.name}</span>}
+                  </div>
 
-                {!isCollapsed && (
-                  <span className="apple-kbd opacity-60 group-hover:opacity-100 transition-opacity">
-                    {item.shortcut}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                  {!isCollapsed && (
+                    <span className="apple-kbd opacity-60 group-hover:opacity-100 transition-opacity">
+                      {item.shortcut}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       </div>
 
-      {/* Sidebar Footer: Theme Switch & User Session */}
-      <div className={cn("w-full pt-2 border-t border-zinc-200 dark:border-zinc-800/80 space-y-1.5", isCollapsed && "items-center flex flex-col")}>
+      {/* Pinned Sidebar Footer: Theme Switch & User Session */}
+      <div
+        className={cn(
+          "shrink-0 mt-auto w-full pt-2.5 pb-3 border-t border-border bg-card/95 backdrop-blur-xl space-y-1.5",
+          isCollapsed ? "px-2.5 flex flex-col items-center" : "px-3.5"
+        )}
+      >
         {/* Theme Toggle Button (Light / Dark) */}
         <div className="w-full">
           {!isCollapsed ? (
             <button
               onClick={toggleTheme}
-               className="apple-press w-full min-h-9 flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-800/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+              className="apple-press w-full min-h-9 flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
             >
               <div className="flex items-center gap-2">
                 {theme === "dark" ? (
-                  <Sun className="w-4 h-4 text-zinc-400" />
+                  <Sun className="w-4 h-4 text-muted-foreground" />
                 ) : (
-                  <Moon className="w-4 h-4 text-zinc-600" />
+                  <Moon className="w-4 h-4 text-muted-foreground" />
                 )}
                 <span>{theme === "dark" ? "Light Theme" : "Dark Theme"}</span>
               </div>
-              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
                 {theme}
               </span>
             </button>
           ) : (
             <button
               onClick={toggleTheme}
-               className="apple-press w-10 h-10 mx-auto flex items-center justify-center rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-800/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+              className="apple-press w-10 h-10 mx-auto flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
-                <Sun className="w-4 h-4 text-zinc-400" />
+                <Sun className="w-4 h-4 text-muted-foreground" />
               ) : (
-                <Moon className="w-4 h-4 text-zinc-600" />
+                <Moon className="w-4 h-4 text-muted-foreground" />
               )}
             </button>
           )}
@@ -410,22 +426,22 @@ export function Sidebar() {
 
         {/* User Session Profile & Sign Out */}
         {user && (
-          <>
+          <div className={cn("w-full flex items-center justify-between gap-1 pt-0.5", isCollapsed && "flex-col")}>
             <Link
               href="/profile"
               title={isCollapsed ? `${user.fullName} (${user.institutionalId})` : undefined}
               className={cn(
-                "apple-press flex min-h-10 items-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-800/80 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
-                isCollapsed ? "p-1 justify-center" : "gap-2.5 p-2"
+                "apple-press flex items-center rounded-lg hover:bg-accent border border-transparent hover:border-border transition-colors group min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isCollapsed ? "p-1 justify-center w-full" : "gap-2 p-1.5 flex-1"
               )}
             >
               <Avatar name={user.fullName} role={user.role} size="sm" />
               {!isCollapsed && (
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate group-hover:text-zinc-950 dark:group-hover:text-zinc-100">
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-xs font-medium text-foreground truncate group-hover:text-foreground">
                     {user.fullName}
                   </p>
-                  <p className="text-[10px] text-zinc-500 font-mono truncate">
+                  <p className="text-[10px] text-muted-foreground font-mono truncate">
                     {user.institutionalId}
                   </p>
                 </div>
@@ -435,22 +451,23 @@ export function Sidebar() {
             {!isCollapsed ? (
               <button
                 onClick={logout}
-                 className="apple-press w-full min-h-9 flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-300/80 dark:border-zinc-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                className="apple-press p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent hover:border-border transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 title="Sign out of CampusGram session"
+                aria-label="Sign out"
               >
-                <LogOut className="w-3.5 h-3.5 text-zinc-500" />
-                <span>Sign Out</span>
+                <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             ) : (
               <button
                 onClick={logout}
-                 className="apple-press w-10 h-10 flex items-center justify-center rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-300/80 dark:border-zinc-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                className="apple-press w-10 h-10 mx-auto flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 title="Sign Out"
+                aria-label="Sign Out"
               >
-                <LogOut className="w-3.5 h-3.5 text-zinc-500" />
+                <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
     </aside>

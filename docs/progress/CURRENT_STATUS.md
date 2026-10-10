@@ -38,3 +38,54 @@ Status: **Initial Contract Integration Operational**
 
 - Module 1 calls `analyzeComplaint(request)` through Next.js server route handler.
 - Requests and responses conform strictly to `@smart-campus/contracts`.
+
+---
+
+## Current Consolidated Status — 2026-10-09
+
+For the complete conversation handoff, read:
+
+```text
+docs/progress/LOST_FOUND_HANDOFF.md
+docs/progress/MODULE_3_STATUS.md
+```
+
+### Module 3 — Lost & Found
+
+Status: **Integrated Hackathon System; browser acceptance pending**
+
+- Session-derived identity replaced hardcoded UI identity assumptions.
+- Item detail and match detail use server-derived capability flags.
+- My Reports is session-scoped and includes both lost and found reports across
+  lifecycle states.
+- Claim answers are submitted through the existing API and validated before
+  approval.
+- Finder/staff decisions preserve authorization and state conflict behavior.
+- Approved claimants can confirm handover; linked reports become resolved.
+- Contact UX remains truthful and Campus Security-mediated when no direct contact
+  source is available.
+- Processing UX uses bounded cancellable polling for both report types.
+- Public projections remain free of ownership IDs and private item data.
+
+### AI/runtime
+
+- FastAPI AI service is running locally at `http://127.0.0.1:8000` in deterministic
+  mock mode and has passed health/analyze smoke checks.
+- The web app is running at `http://localhost:3000` and has passed login and mock
+  authentication API checks.
+- Hosted Supabase remains the active data authority for the current web environment.
+- Docker and the Supabase CLI are installed. Local Supabase requires the refreshed
+  shell to recognize the user's Docker group before `supabase start` can run.
+- The normal hosted web path uses the inline queue in `apps/web/lib/queue.ts`; the
+  separate pg-boss worker is optional for this setup.
+
+### Verification
+
+- Full monorepo tests: **276 passing**.
+- Lost & Found module tests: **31 passing**.
+- AI service tests: **2 passing**.
+- Lost & Found and worker typechecks: passing.
+- Prior full web build/typecheck/lint and diff checks: passing; lint has existing
+  warnings but no errors.
+- Full multi-user browser E2E remains unverified because browser sign-in/tab
+  handoff was not completed.

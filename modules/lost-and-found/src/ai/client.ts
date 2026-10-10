@@ -63,7 +63,9 @@ export class LostFoundAIServiceClient {
         imageEmbedding: data.imageEmbedding,
         detectedObjects: data.detectedObjects || [],
         suggestedCategory: data.suggestedCategory,
-        isMock: false,
+        // Only mark a response as mock when the service explicitly says so.
+        // Older/live service responses may omit this optional field.
+        isMock: data.isMock === true,
       };
     } catch {
       // Deterministic fallback stub if the Python ML service is offline

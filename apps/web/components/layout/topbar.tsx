@@ -30,11 +30,11 @@ export function DesktopTopBar() {
   };
 
   return (
-    <header className="hidden md:flex min-h-14 items-center justify-between gap-4 px-4 sm:px-6 py-2.5 bg-white/90 dark:bg-zinc-950/85 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/80 sticky top-0 z-20 select-none transition-colors duration-200">
+    <header className="hidden md:flex min-h-14 items-center justify-between gap-4 px-4 sm:px-6 py-2.5 bg-background/90 backdrop-blur-xl border-b border-border sticky top-0 z-20 select-none transition-colors duration-200">
       {/* Left: Breadcrumb / Section context */}
       <div className="flex items-center gap-2.5 min-w-0">
-        <span className="w-2 h-2 rounded-full bg-zinc-400 dark:bg-zinc-600" />
-        <span className="text-xs font-mono text-zinc-600 dark:text-zinc-400 uppercase tracking-wider truncate font-medium">
+        <span className="w-2 h-2 rounded-full bg-muted-foreground" />
+        <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider truncate font-medium">
           {getPageTitle()}
         </span>
       </div>
@@ -42,12 +42,12 @@ export function DesktopTopBar() {
       {/* Middle: Spotlight search pill */}
       <button
         onClick={toggleCommandPalette}
-         className="apple-press flex min-h-10 items-center gap-2.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900/60 hover:bg-zinc-200/80 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800/80 hover:border-zinc-400 dark:hover:border-zinc-700/80 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all text-xs font-normal shadow-xs w-44 sm:w-60 lg:w-72 justify-between group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+        className="apple-press flex min-h-10 items-center gap-2.5 px-3 py-1.5 rounded-full bg-secondary hover:bg-accent border border-border hover:border-ring/40 text-muted-foreground hover:text-foreground transition-all text-xs font-normal shadow-xs w-44 sm:w-60 lg:w-72 justify-between group shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         title="Spotlight Search (⌘K / Ctrl+K)"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-300 shrink-0" />
-          <span className="text-[11px] text-zinc-400 group-hover:text-zinc-200 truncate">
+          <Search className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+          <span className="text-[11px] text-muted-foreground group-hover:text-foreground truncate">
             Search campus, SOS...
           </span>
         </div>
@@ -60,20 +60,20 @@ export function DesktopTopBar() {
       <div className="flex items-center gap-2.5 shrink-0">
         <Link
           href="/emergency"
-          className="apple-press flex min-h-10 items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50 border border-red-200 dark:border-red-900/60 hover:border-red-300 dark:hover:border-red-800 text-red-700 dark:text-red-300 transition-all text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+          className="apple-press flex min-h-10 items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-200 dark:border-red-900/60 hover:border-red-300 dark:hover:border-red-800 text-red-700 dark:text-red-300 transition-all text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
           title="Campus Life-Safety Emergency Center"
         >
           <span className="relative flex h-2 w-2">
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
           </span>
-          <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+          <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
           <span className="text-[11px] font-mono tracking-wider font-semibold">SOS</span>
         </Link>
 
         {user && (
           <Link
             href="/profile"
-            className="apple-press p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            className="apple-press p-1.5 rounded-lg hover:bg-accent border border-transparent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title={`${user.fullName} (${user.institutionalId})`}
           >
             <Avatar name={user.fullName} role={user.role} size="sm" />

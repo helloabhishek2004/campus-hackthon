@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
@@ -13,12 +13,16 @@ import {
   CardContent,
 } from "@smart-campus/ui";
 import { ArrowLeft, Camera, Loader2, X, ShieldCheck, AlertTriangle } from "lucide-react";
+import { DEMO_IMAGE_TYPES, readDemoImage, serializeDemoReport, validateDemoImageFiles } from "../../_lib/demo-images";
+import { readWorkflowResponse } from "../../_lib/workflow-client";
 
 export default function ReportFoundItemPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [files, setFiles] = useState<{ file: File; preview: string }[]>([]);
+  const previews = useRef(new Set<string>());
+  useEffect(() => () => { previews.current.forEach((url) => URL.revokeObjectURL(url)); }, []);
   const [formData, setFormData] = useState({
     title: "",
     category: "electronics",
@@ -30,45 +34,28 @@ export default function ReportFoundItemPage() {
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFormError(null);
-      const rawFiles = Array.from(e.target.files);
-      const validFiles: { file: File; preview: string }[] = [];
-
-      for (const file of rawFiles) {
-        if (!file.type.startsWith("image/")) {
-          setFormError("Only image files (JPG, PNG, WebP) are allowed.");
-          return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          setFormError(`Image "${file.name}" exceeds the 5MB size limit.`);
-          return;
-        }
-        validFiles.push({
-          file,
-          preview: URL.createObjectURL(file),
-        });
-      }
-
-      setFiles((prev) => [...prev, ...validFiles].slice(0, 3));
+    const selected = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!selected.length || isSubmitting) return;
+    setFormError(null);
+    try {
+      validateDemoImageFiles([...files.map(({ file }) => file), ...selected]);
+      const additions = selected.map((file) => {
+        const preview = URL.createObjectURL(file);
+        previews.current.add(preview);
+        return { file, preview };
+      });
+      setFiles((previous) => [...previous, ...additions]);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Unable to select these photos.");
     }
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => {
-      const removed = prev[index];
-      if (removed?.preview) URL.revokeObjectURL(removed.preview);
-      return prev.filter((_, i) => i !== index);
-    });
+    const removed = files[index];
+    if (removed?.preview) { URL.revokeObjectURL(removed.preview); previews.current.delete(removed.preview); }
+    setFiles((previous) => previous.filter((_, i) => i !== index));
   };
-
-  const toBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,27 +65,20 @@ export default function ReportFoundItemPage() {
     setIsSubmitting(true);
 
     try {
-      const base64Images = await Promise.all(files.map((f) => toBase64(f.file)));
+      validateDemoImageFiles(files.map(({ file }) => file));
+      const base64Images = await Promise.all(files.map(({ file }) => readDemoImage(file)));
+      const body = serializeDemoReport("found", formData, base64Images);
 
       const res = await fetch("/api/lost-found/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "found",
-          ...formData,
-          images: base64Images.map((b64) => ({ public_url: b64, storage_path: "base64" })),
-        }),
+        body,
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message || "Failed to submit found report");
-      }
-
-      const data = await res.json();
+      const data = await readWorkflowResponse(res);
+      if (!data.item?.id) throw new Error("The server did not return a saved report reference.");
       router.push(`/lost-and-found/success?type=found&id=${data.item.id}`);
     } catch (err) {
-      console.error(err);
       setFormError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
@@ -110,22 +90,22 @@ export default function ReportFoundItemPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <Link
           href="/lost-and-found"
-          className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
+          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Lost & Found
         </Link>
 
-        <Card className="border-zinc-800 bg-zinc-900/70 shadow-sm rounded-xl">
-          <CardHeader className="border-b border-zinc-800/80 pb-4">
+        <Card className="border-border bg-card shadow-xs rounded-xl">
+          <CardHeader className="border-b border-border pb-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-semibold">
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
                 Module 3 Report
               </span>
             </div>
-            <CardTitle className="text-lg font-bold text-zinc-100">
+            <CardTitle className="text-lg font-bold text-foreground">
               Report a Found Item
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-400">
+            <CardDescription className="text-xs text-muted-foreground">
               Register an item found on campus. Sensitive identifying marks will be concealed to verify true ownership.
             </CardDescription>
           </CardHeader>
@@ -133,28 +113,34 @@ export default function ReportFoundItemPage() {
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               {/* Form Error Banner */}
               {formError && (
-                <div className="p-3 bg-red-950/40 border border-red-900/60 text-red-300 rounded-lg text-xs flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                <div role="alert" className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-destructive" />
                   <span>{formError}</span>
                 </div>
               )}
 
+              <fieldset disabled={isSubmitting} className="space-y-4">
               {/* Photos */}
               <div className="space-y-2">
-                <label className="font-semibold text-zinc-200">Photos (max 3)</label>
+                <label className="font-semibold text-foreground">Photos (max 3)</label>
 
                 {files.length > 0 && (
                   <div className="flex gap-3 overflow-x-auto pb-1">
                     {files.map((f, i) => (
                       <div
                         key={i}
-                        className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-zinc-700 bg-zinc-950"
+                        className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border border-border bg-muted"
                       >
-                        <img src={f.preview} alt="preview" className="w-full h-full object-cover" />
+                        <img
+                          src={f.preview}
+                          alt={f.file?.name ? `Found item photo preview: ${f.file.name}` : `Found item photo preview ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
                         <button
                           type="button"
+                          aria-label={`Remove photo ${i + 1}`}
                           onClick={() => removeFile(i)}
-                          className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 hover:bg-black"
+                          className="absolute top-1 right-1 bg-background/80 text-foreground border border-border rounded-full p-1 hover:bg-background"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -164,13 +150,14 @@ export default function ReportFoundItemPage() {
                 )}
 
                 {files.length < 3 && (
-                  <div className="border border-dashed border-zinc-800 hover:border-zinc-600 rounded-lg p-5 flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-950/40 transition cursor-pointer relative">
-                    <Camera className="w-6 h-6 mb-1 text-zinc-500" />
-                    <span className="text-xs font-medium text-zinc-300">Take a photo or browse</span>
-                    <span className="text-[10px] text-zinc-600">JPG, PNG, WebP up to 5MB</span>
+                  <div className="border border-dashed border-border hover:border-emerald-500/50 rounded-lg p-5 flex flex-col items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition cursor-pointer relative">
+                    <Camera className="w-6 h-6 mb-1 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">Take a photo or browse</span>
+                    <span className="text-[10px] text-muted-foreground">JPG, PNG, WebP up to 5MB</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      aria-label="Attach item photos"
+                      accept={DEMO_IMAGE_TYPES.join(",")}
                       capture="environment"
                       multiple
                       onChange={handleFileChange}
@@ -179,28 +166,31 @@ export default function ReportFoundItemPage() {
                   </div>
                 )}
               </div>
+              <p className="text-[11px] text-muted-foreground">Photos use inline base64 demo storage (not a production upload service). Add only item photos; private identifying details belong in the protected fields below.</p>
 
               {/* Title */}
               <div className="space-y-1.5">
-                <label className="font-semibold text-zinc-200">Item Title <span className="text-red-400">*</span></label>
+                <label className="font-semibold text-foreground">Item Title <span className="text-destructive">*</span></label>
                 <input
                   required
                   type="text"
+                  aria-label="Item title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Set of 3 silver keys on blue lanyard"
-                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-zinc-200">Category</label>
+                  <label className="font-semibold text-foreground">Category</label>
                   <select
                     required
+                    aria-label="Category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-950 text-zinc-200 focus:outline-none focus:border-zinc-600"
+                    className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                   >
                     <option value="electronics">Electronics</option>
                     <option value="id_cards_docs">ID Cards / Docs</option>
@@ -214,62 +204,66 @@ export default function ReportFoundItemPage() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-zinc-200">Date & Time Discovered</label>
+                  <label className="font-semibold text-foreground">Date & Time Discovered</label>
                   <input
                     required
                     type="datetime-local"
+                    aria-label="Date and time discovered"
                     value={formData.event_date}
                     onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-950 text-zinc-200 focus:outline-none focus:border-zinc-600"
+                    className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                   />
                 </div>
               </div>
 
               {/* Location */}
               <div className="space-y-1.5">
-                <label className="font-semibold text-zinc-200">Where was it found? <span className="text-red-400">*</span></label>
+                <label className="font-semibold text-foreground">Where was it found? <span className="text-destructive">*</span></label>
                 <input
                   required
                   type="text"
+                  aria-label="Found location"
                   value={formData.location_description}
                   onChange={(e) => setFormData({ ...formData, location_description: e.target.value })}
                   placeholder="e.g. Science Block C hallway bench, or Auditorium row G"
-                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                 />
               </div>
 
               {/* Public Description */}
               <div className="space-y-1.5">
-                <label className="font-semibold text-zinc-200">Public Description</label>
+                <label className="font-semibold text-foreground">Public Description</label>
                 <textarea
                   required
+                  aria-label="Public description"
                   rows={3}
                   value={formData.public_description}
                   onChange={(e) => setFormData({ ...formData, public_description: e.target.value })}
                   placeholder="Describe general features. Do not mention secret personal identifying marks."
-                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg resize-none bg-zinc-950 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+                  className="w-full px-3 py-2 border border-input rounded-lg resize-none bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                 />
               </div>
 
               {/* Identifying Marks (Hidden) */}
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <label className="font-semibold text-zinc-200">Private Verification Clues (Kept Confidential)</label>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <label className="font-semibold text-foreground">Private Verification Clues (Kept Confidential)</label>
                 </div>
                 <textarea
                   rows={2}
+                  aria-label="Private verification clues"
                   value={formData.identifying_marks}
                   onChange={(e) => setFormData({ ...formData, identifying_marks: e.target.value })}
                   placeholder="Any brand numbers, hidden contents, or unique marks that only the true owner would know."
-                  className="w-full px-3 py-2 border border-zinc-800 rounded-lg resize-none bg-zinc-950/80 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg resize-none bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-all"
                 />
               </div>
-
+              </fieldset>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-zinc-100 text-zinc-900 hover:bg-zinc-200 font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Register Found Item</span>

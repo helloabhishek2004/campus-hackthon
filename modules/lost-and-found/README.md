@@ -39,4 +39,36 @@ pnpm --filter @smart-campus/lost-and-found test
 - ✅ Multimodal scoring and matching configuration initialized.
 - ✅ State machine and transition validations tested.
 - ✅ Privacy rules and redaction logic implemented and verified.
-- ⏳ Real background processing worker and FastAPI AI service are established as skeletons.
+- ✅ Lost & Found UI/API workflow integrated: session-derived capabilities, owner
+  match discovery, claimant answers, finder decisions, handover, personal reports,
+  safe projections, and truthful processing/contact UX.
+- ✅ FastAPI AI service is runnable in deterministic mock mode; the TypeScript AI
+  client preserves the service's explicit mock/live provenance.
+- ✅ Hosted-Supabase web processing path is available through the existing inline
+  queue in `apps/web/lib/queue.ts`.
+- ⏳ Full two-party browser acceptance remains to be completed.
+- ⏳ Real model inference, durable external worker deployment, production image
+  storage, notification delivery, and transactional multi-record writes remain
+  production-hardening work.
+
+## Current matching configuration
+
+The values in `src/scoring/matching-config.json` are empirical similarity weights,
+not ownership probabilities:
+
+```text
+image 0.20 · text 0.45 · category 0.15 · location 0.10 · time 0.10
+high >= 0.75 · medium >= 0.50 · low < 0.50
+```
+
+## Current runtime notes
+
+```text
+Web:       http://localhost:3000
+AI API:    http://127.0.0.1:8000
+AI mode:   USE_MOCK_MODELS=true
+```
+
+For the complete architecture, setup, security, verification, and remaining-work
+record, see `docs/progress/LOST_FOUND_HANDOFF.md` and
+`docs/progress/MODULE_3_STATUS.md`.

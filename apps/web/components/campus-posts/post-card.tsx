@@ -192,28 +192,28 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
   };
 
   return (
-    <article className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4 hover:border-zinc-700 transition-colors shadow-sm select-none">
+    <article className="rounded-xl border border-border bg-card p-5 space-y-4 hover:border-border/80 transition-colors shadow-sm select-none text-card-foreground">
       {/* Header: Author Info, Role, Department & Audience Scope */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-800/80 pb-3">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/80 pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
+          <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold text-foreground">
             {post.authorName.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-zinc-200">
+              <span className="text-xs font-semibold text-foreground">
                 {post.authorName}
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded border bg-zinc-950 text-zinc-400 border-zinc-800">
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded border bg-muted text-muted-foreground border-border">
                 {getRoleLabel()}
               </span>
               {post.authorDepartment && (
-                <span className="text-[10px] font-mono text-zinc-500">
+                <span className="text-[10px] font-mono text-muted-foreground">
                   {post.authorDepartment}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
+            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
               Target: {post.audience.displayName || post.audience.scope}
             </p>
           </div>
@@ -224,8 +224,8 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
             className={cn(
               "text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border",
               post.category === "academic"
-                ? "bg-amber-950/40 text-amber-400 border-amber-900/60"
-                : "bg-zinc-800 text-zinc-300 border-zinc-700"
+                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                : "bg-secondary text-secondary-foreground border-border"
             )}
           >
             {post.category}
@@ -235,7 +235,7 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
             <button
               type="button"
               onClick={() => setShowVerificationDetails((p) => !p)}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-950/60 transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-500/20 transition-colors"
               title="Click to view verifier details"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -246,17 +246,17 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
               type="button"
               onClick={handleVerify}
               disabled={verifying}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2 py-0.5 rounded transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground bg-secondary hover:bg-muted border border-border px-2 py-0.5 rounded transition-colors disabled:opacity-50"
             >
               {verifying ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <ShieldCheck className="w-3 h-3 text-emerald-500" />
               )}
               <span>Verify Post</span>
             </button>
           ) : (
-            <span className="text-[10px] font-mono text-zinc-500 px-2 py-0.5 rounded border border-zinc-800/80 bg-zinc-950">
+            <span className="text-[10px] font-mono text-muted-foreground px-2 py-0.5 rounded border border-border bg-muted/40">
               Unverified
             </span>
           )}
@@ -265,15 +265,15 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
 
       {/* Verification details modal/accordion */}
       {showVerificationDetails && post.verificationInfo && (
-        <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 space-y-1 text-xs">
-          <div className="flex items-center gap-1.5 text-emerald-300 font-medium">
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-1 text-xs">
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
             <Info className="w-3.5 h-3.5 shrink-0" />
             <span>Official Institutional Verification</span>
           </div>
-          <div className="text-[11px] text-zinc-400 space-y-0.5 pl-5">
+          <div className="text-[11px] text-muted-foreground space-y-0.5 pl-5">
             <p>
               Verified by:{" "}
-              <strong className="text-zinc-200">
+              <strong className="text-foreground">
                 {post.verificationInfo.verifierName}
               </strong>{" "}
               ({post.verificationInfo.verifierRole} •{" "}
@@ -289,36 +289,36 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
 
       {/* Main Content */}
       <div className="space-y-2">
-        <h3 className="text-base font-semibold text-zinc-100 leading-snug">
+        <h3 className="text-base font-semibold text-foreground leading-snug">
           {post.title}
         </h3>
-        <p className="text-xs text-zinc-300 whitespace-pre-line leading-relaxed">
+        <p className="text-xs text-muted-foreground whitespace-pre-line leading-relaxed">
           {post.content}
         </p>
       </div>
 
       {/* Attachments Section */}
       {post.attachments && post.attachments.length > 0 && (
-        <div className="pt-2 border-t border-zinc-800/60">
-          <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">
+        <div className="pt-2 border-t border-border/60">
+          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider block mb-2">
             Attachments ({post.attachments.length})
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {post.attachments.map((att) => (
               <div
                 key={att.id}
-                className="flex items-center justify-between p-2.5 rounded-lg border border-zinc-800 bg-zinc-950/60 text-xs"
+                className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted/30 text-xs"
               >
                 <div className="flex items-center gap-2 truncate pr-2">
-                  <FileText className="w-4 h-4 text-zinc-400 shrink-0" />
-                  <span className="text-zinc-200 truncate font-mono text-[11px]">
+                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-foreground truncate font-mono text-[11px]">
                     {att.originalFilename}
                   </span>
                 </div>
                 <a
                   href={`/api/documents/mock-preview?ref=${encodeURIComponent(att.originalFilename)}`}
                   download={att.originalFilename}
-                  className="p-1 rounded text-zinc-400 hover:text-white transition-colors"
+                  className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
                   title="Download Attachment"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -330,8 +330,8 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
       )}
 
       {/* Interaction Controls: Like, Dislike, Comments */}
-      <footer className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400">
-        <div className="flex items-center gap-3">
+      <footer className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Like Button */}
           <button
             type="button"
@@ -340,8 +340,8 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors",
               userReaction === "like"
-                ? "bg-zinc-800 text-emerald-400 font-medium"
-                : "hover:bg-zinc-800/60 hover:text-zinc-200"
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
             aria-label="Like post"
           >
@@ -357,8 +357,8 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors",
               userReaction === "dislike"
-                ? "bg-zinc-800 text-rose-400 font-medium"
-                : "hover:bg-zinc-800/60 hover:text-zinc-200"
+                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 font-semibold"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
             aria-label="Dislike post"
           >
@@ -374,8 +374,8 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
           className={cn(
             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors",
             showComments
-              ? "bg-zinc-800 text-zinc-100"
-              : "hover:bg-zinc-800/60 hover:text-zinc-200"
+              ? "bg-muted text-foreground font-medium"
+              : "hover:bg-muted text-muted-foreground hover:text-foreground"
           )}
           aria-label="Toggle comments"
         >
@@ -389,9 +389,9 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
 
       {/* Comments Section */}
       {showComments && (
-        <section className="pt-3 border-t border-zinc-800 space-y-3">
+        <section className="pt-3 border-t border-border space-y-3">
           {loadingComments ? (
-            <div className="py-4 text-center text-zinc-500 flex items-center justify-center gap-2 text-xs">
+            <div className="py-4 text-center text-muted-foreground flex items-center justify-center gap-2 text-xs">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>Loading discussion...</span>
             </div>
@@ -400,14 +400,14 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
               {comments.map((c) => (
                 <div
                   key={c.id}
-                  className="p-3 rounded-lg border border-zinc-800/80 bg-zinc-950/50 space-y-1 text-xs"
+                  className="p-3 rounded-lg border border-border bg-muted/40 space-y-1 text-xs"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-zinc-200">
+                      <span className="font-medium text-foreground">
                         {c.authorName}
                       </span>
-                      <span className="text-[10px] font-mono text-zinc-500">
+                      <span className="text-[10px] font-mono text-muted-foreground">
                         {c.authorRole}
                       </span>
                     </div>
@@ -417,19 +417,19 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
                       <button
                         type="button"
                         onClick={() => handleDeleteComment(c.id)}
-                        className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
+                        className="text-muted-foreground hover:text-destructive p-1 transition-colors"
                         title="Delete comment"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     )}
                   </div>
-                  <p className="text-zinc-300 leading-relaxed">{c.content}</p>
+                  <p className="text-foreground/90 leading-relaxed">{c.content}</p>
                 </div>
               ))}
 
               {comments.length === 0 && (
-                <p className="text-xs text-zinc-500 text-center py-2">
+                <p className="text-xs text-muted-foreground text-center py-2">
                   No comments yet. Start the conversation.
                 </p>
               )}
@@ -445,12 +445,12 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Write a comment..."
-              className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 transition-colors"
+              className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
             />
             <button
               type="submit"
               disabled={postingComment || !newComment.trim()}
-              className="px-3 py-1.5 rounded-lg bg-zinc-100 text-zinc-950 hover:bg-white text-xs font-medium flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium flex items-center gap-1 transition-colors disabled:opacity-50"
             >
               {postingComment ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -461,7 +461,7 @@ export function PostCard({ post, onPostUpdated }: PostCardProps) {
             </button>
           </form>
           {commentError && (
-            <p className="text-[11px] text-red-400 font-mono">{commentError}</p>
+            <p className="text-[11px] text-destructive font-mono">{commentError}</p>
           )}
         </section>
       )}

@@ -9,30 +9,9 @@ export interface CandidateIssue {
     "submitted" | "under_review" | "in_progress" | "resolved" | "rejected";
 }
 
-const DEFAULT_CANDIDATES: CandidateIssue[] = [
-  {
-    complaint_id: "CMP-DEMO-001",
-    title: "Wi-Fi disconnecting continuously in Library 2nd Floor",
-    text: "Wi-Fi keeps dropping in the central library reading hall 2nd floor every 5 minutes.",
-    status: "in_progress",
-  },
-  {
-    complaint_id: "CMP-DEMO-002",
-    title: "Projector not powering on in Room 304 Block B",
-    text: "The ceiling projector in classroom 304 Block B has no power light and won't turn on.",
-    status: "submitted",
-  },
-  {
-    complaint_id: "CMP-DEMO-003",
-    title: "Water cooler leaking on Ground Floor Block A",
-    text: "Water leakage from the drinking water filter unit near ground floor lobby.",
-    status: "under_review",
-  },
-];
-
 export function findSimilarCandidates(
   text: string,
-  candidates: CandidateIssue[] = DEFAULT_CANDIDATES,
+  candidates: CandidateIssue[] = [],
   threshold: number = 0.25,
 ): IssueClusterMatch {
   const matches: SimilarIssueMatch[] = [];

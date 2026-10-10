@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { VerifyOtpRequestSchema } from "@smart-campus/contracts";
-import { verifyLoginOtp } from "@/lib/auth/identity-service";
+import {
+  MOCK_SESSION_COOKIE_NAME,
+  MOCK_SESSION_MAX_AGE_SECONDS,
+  verifyLoginOtp,
+} from "../../../../../lib/auth/identity-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,12 +36,12 @@ export async function POST(req: NextRequest) {
     const { sessionToken, ...clientResponse } = response;
     const result = NextResponse.json(clientResponse);
     if (sessionToken) {
-      result.cookies.set("campusgram_mock_session", sessionToken, {
+      result.cookies.set(MOCK_SESSION_COOKIE_NAME, sessionToken, {
         httpOnly: true,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
-        maxAge: 24 * 60 * 60,
+        maxAge: MOCK_SESSION_MAX_AGE_SECONDS,
       });
     }
     return result;

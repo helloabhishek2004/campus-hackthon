@@ -94,13 +94,13 @@ export default function DocumentsPage() {
     <AppShell>
       <div className="space-y-6">
         {/* Header */}
-        <header className="border-b border-zinc-800 pb-5">
+        <header className="border-b border-border pb-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Documents & Academic Records
               </h1>
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Access official university credentials, student certificates, and class notices.
               </p>
             </div>
@@ -113,17 +113,17 @@ export default function DocumentsPage() {
                   fetchNotices();
                 }}
                 title="Refresh Documents"
-                className="p-2 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 aria-label="Refresh documents list"
               >
-                <RefreshCw className={cn("w-3.5 h-3.5", (loading || loadingNotices) && "animate-spin text-zinc-300")} />
+                <RefreshCw className={cn("w-3.5 h-3.5", (loading || loadingNotices) && "animate-spin text-foreground")} />
               </button>
 
               {activeSection === "credentials" && (
                 <button
                   type="button"
                   onClick={() => setIsUploadOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-950 bg-zinc-100 hover:bg-white transition-colors flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-sm"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   <span>Upload Document</span>
@@ -134,18 +134,18 @@ export default function DocumentsPage() {
         </header>
 
         {/* Section Switcher: Personal Credentials vs Academic Notices */}
-        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
           <button
             type="button"
             onClick={() => setActiveSection("credentials")}
             className={cn(
               "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
               activeSection === "credentials"
-                ? "bg-zinc-800 text-white border border-zinc-700 shadow-sm"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent"
+                ? "bg-card text-foreground border border-border shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
             )}
           >
-            <UserCheck className="w-4 h-4 text-emerald-400" />
+            <UserCheck className="w-4 h-4 text-emerald-500" />
             My Credentials & Records ({documents.length})
           </button>
 
@@ -155,14 +155,14 @@ export default function DocumentsPage() {
             className={cn(
               "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
               activeSection === "notices"
-                ? "bg-zinc-800 text-white border border-zinc-700 shadow-sm"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent"
+                ? "bg-card text-foreground border border-border shadow-xs font-semibold"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent"
             )}
           >
-            <BookOpen className="w-4 h-4 text-blue-400" />
+            <BookOpen className="w-4 h-4 text-blue-500" />
             Official Academic Notices
             {unreadNoticesCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white">
+              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
                 {unreadNoticesCount}
               </span>
             )}
@@ -175,20 +175,20 @@ export default function DocumentsPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Search Input */}
               <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Filter by title, reference, or description..."
-                  className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-100 placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 transition-colors"
+                  className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors"
                 />
               </div>
 
               {/* Segmented Filter Control */}
               <div
                 role="tablist"
-                className="inline-flex p-1 rounded-lg bg-zinc-900 border border-zinc-800 self-start sm:self-auto select-none"
+                className="inline-flex p-1 rounded-lg bg-muted/60 border border-border self-start sm:self-auto select-none"
               >
                 <button
                   type="button"
@@ -196,8 +196,8 @@ export default function DocumentsPage() {
                   className={cn(
                     "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                     filter === "all"
-                      ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "bg-card text-foreground shadow-xs border border-border/40 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   All ({documents.length})
@@ -208,8 +208,8 @@ export default function DocumentsPage() {
                   className={cn(
                     "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                     filter === "academic"
-                      ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "bg-card text-foreground shadow-xs border border-border/40 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Academic ({academicCount})
@@ -220,8 +220,8 @@ export default function DocumentsPage() {
                   className={cn(
                     "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                     filter === "non-academic"
-                      ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                      : "text-zinc-400 hover:text-zinc-200"
+                      ? "bg-card text-foreground shadow-xs border border-border/40 font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Non-Academic ({nonAcademicCount})
@@ -231,9 +231,9 @@ export default function DocumentsPage() {
 
             {/* Documents Grid / States */}
             {loading && documents.length === 0 ? (
-              <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin text-zinc-500 mx-auto" />
-                <p className="text-xs text-zinc-400">Loading documents from institutional directory...</p>
+              <div className="py-16 text-center rounded-xl border border-border bg-card/40 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto" />
+                <p className="text-xs text-muted-foreground">Loading documents from institutional directory...</p>
               </div>
             ) : documents.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -242,10 +242,10 @@ export default function DocumentsPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
-                <FileText className="w-8 h-8 text-zinc-600 mx-auto" />
-                <h4 className="text-sm font-medium text-zinc-200">No documents found</h4>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+              <div className="py-16 text-center rounded-xl border border-border bg-card/40 space-y-2">
+                <FileText className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+                <h4 className="text-sm font-medium text-foreground">No documents found</h4>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                   No official documents matched your query. Try clearing your filter or uploading a new document.
                 </p>
               </div>
@@ -255,9 +255,9 @@ export default function DocumentsPage() {
           /* Official Academic Notices Section */
           <div className="space-y-4">
             {loadingNotices ? (
-              <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin text-zinc-500 mx-auto" />
-                <p className="text-xs text-zinc-400">Loading assigned academic notices & circulars...</p>
+              <div className="py-16 text-center rounded-xl border border-border bg-card/40 space-y-2">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto" />
+                <p className="text-xs text-muted-foreground">Loading assigned academic notices & circulars...</p>
               </div>
             ) : academicNotices.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -271,10 +271,10 @@ export default function DocumentsPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
-                <BookOpen className="w-8 h-8 text-zinc-600 mx-auto" />
-                <h4 className="text-sm font-medium text-zinc-200">No academic notices received</h4>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+              <div className="py-16 text-center rounded-xl border border-border bg-card/40 space-y-2">
+                <BookOpen className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+                <h4 className="text-sm font-medium text-foreground">No academic notices received</h4>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                   There are currently no circulars or notices published for your enrolled class or department.
                 </p>
               </div>

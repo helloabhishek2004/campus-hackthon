@@ -15,19 +15,22 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const { isCollapsed, isCommandPaletteOpen, setCommandPaletteOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen min-h-[100svh] overflow-x-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col md:flex-row antialiased selection:bg-zinc-800 selection:text-zinc-100 transition-colors duration-200">
+    <div className="h-screen h-[100dvh] w-full overflow-hidden bg-background text-foreground antialiased selection:bg-muted selection:text-foreground flex flex-col md:flex-row">
       <KeyboardShortcutsHandler />
 
-      {/* Desktop Application Sidebar */}
+      {/* Accessible skip link for keyboard navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring text-xs font-semibold"
+      >
+        Skip to main content
+      </a>
+
+      {/* Desktop Application Sidebar - Fixed in Screen Height */}
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div
-        className={cn(
-          "flex min-w-0 flex-1 flex-col transition-[padding] duration-300",
-          isCollapsed ? "md:pl-16" : "md:pl-64"
-        )}
-      >
+      {/* Main Content Area - Dedicated Viewport & Scroll Container */}
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
         {/* Desktop TopBar with Spotlight Search */}
         <DesktopTopBar />
 
@@ -37,9 +40,15 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         {/* Real-time Emergency Banner */}
         <EmergencyBanner />
 
-        {/* Page Body with fluid Apple entry animation */}
-        <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12 animate-apple-in">
-          {children}
+        {/* Page Body - Dedicated Scrollable Viewport */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar focus:outline-none"
+        >
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-12 animate-apple-in">
+            {children}
+          </div>
         </main>
 
         {/* Mobile Bottom Navigation */}

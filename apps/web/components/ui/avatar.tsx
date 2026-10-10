@@ -28,7 +28,7 @@ export function Avatar({ name, role, size = "md", className }: AvatarProps) {
   return (
     <div
       className={cn(
-        "relative inline-flex items-center justify-center font-mono font-medium bg-slate-100 border border-slate-300 text-slate-700 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-200 select-none shrink-0 transition-colors",
+        "relative inline-flex items-center justify-center font-mono font-medium bg-secondary border border-border text-foreground select-none shrink-0 transition-colors",
         sizeClasses,
         className
       )}
@@ -37,13 +37,13 @@ export function Avatar({ name, role, size = "md", className }: AvatarProps) {
       <span>{initials}</span>
       {role === "faculty" && (
         <span
-          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-zinc-400 border border-zinc-950"
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-muted-foreground border border-background"
           title="Faculty member"
         />
       )}
       {role === "student" && (
         <span
-          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500/80 border border-zinc-950"
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-background"
           title="Enrolled student"
         />
       )}

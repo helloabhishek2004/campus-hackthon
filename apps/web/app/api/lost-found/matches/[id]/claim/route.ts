@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMatch, createClaim } from "@/lib/lost-found/repository";
-import { isIdentity, requireLostFoundIdentity } from "../../../_auth";
+import { getMatch, createClaim } from "../../../../../../lib/lost-found/repository";
+import { isIdentity, publicClaim, requireLostFoundIdentity } from "../../../_auth";
+import { ClaimWorkflowError } from "@smart-campus/lost-and-found";
 
 export async function POST(
   req: NextRequest,
@@ -24,12 +25,8 @@ export async function POST(
            : "Claim initiated through the authenticated CampusGram flow." });
     if (!claim) return NextResponse.json({ success: false, error: { message: "Unable to create claim" } }, { status: 404 });
 
-    return NextResponse.json({ success: true, claim }, { status: 201 });
+    return NextResponse.json({ success: true, claim: publicClaim(claim, { ...foundItem, status: "in_claim" }) }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
-    if (message.includes("claim already exists")) {
-      return NextResponse.json({ success: false, error: { message } }, { status: 409 });
-    }
-    return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
+    return NextResponse.json({ success: false, error: { message: error instanceof ClaimWorkflowError ? error.message : "Internal error" } }, { status: error instanceof ClaimWorkflowError ? error.status : 500 });
   }
 }

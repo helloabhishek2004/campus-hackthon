@@ -4,12 +4,20 @@ import {
   ComplaintListQuerySchema,
   CreateComplaintResponse,
   ComplaintListResponse,
+  CreateComplaintResponseSchema,
+  ComplaintListResponseSchema,
 } from "@smart-campus/contracts";
 import {
   createComplaint,
   getComplaints,
 } from "../../../lib/complaints/complaint-repository";
 import { resolveServerIdentity } from "../../../lib/auth/server-identity";
+import { canManageComplaints } from "../../../lib/complaints/complaint-permissions";
+import { projectComplaintForApi } from "../../../lib/complaints/complaint-projection";
+import {
+  ComplaintAttachmentSecurityError,
+  validateComplaintAttachments,
+} from "../../../lib/complaints/attachment-security";
 
 /**
  * GET /api/complaints
@@ -29,13 +37,23 @@ export async function GET(req: NextRequest) {
     const viewParam = searchParams.get("view") || "all";
 
     const parsedQuery = ComplaintListQuerySchema.safeParse({ view: viewParam });
-    const view = parsedQuery.success ? parsedQuery.data.view : "all";
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          complaints: [],
+          counts: { total: 0, normal: 0, emergency: 0 },
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "view must be one of all, normal, or emergency.",
+          },
+        },
+        { status: 400 },
+      );
+    }
+    const view = parsedQuery.data.view;
 
-    const canViewAll = Boolean(
-      identity.profile &&
-        (["admin", "faculty", "staff"].includes(identity.profile.role) ||
-          identity.profile.tags.some((tag) => ["HOD", "DEPARTMENT_COORDINATOR"].includes(tag))),
-    );
+    const canViewAll = canManageComplaints(identity.profile);
     const { complaints, counts } = await getComplaints(view, {
       userId: identity.userId,
       canViewAll,
@@ -43,11 +61,11 @@ export async function GET(req: NextRequest) {
 
     const response: ComplaintListResponse = {
       success: true,
-      complaints,
+      complaints: complaints.map(projectComplaintForApi),
       counts,
     };
 
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(ComplaintListResponseSchema.parse(response), { status: 200 });
   } catch (error) {
     console.error("GET /api/complaints error:", error);
     const errorResponse: ComplaintListResponse = {
@@ -56,7 +74,7 @@ export async function GET(req: NextRequest) {
       counts: { total: 0, normal: 0, emergency: 0 },
       error: {
         code: "SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Failed to fetch complaints",
+        message: "Unable to load complaints right now.",
       },
     };
     return NextResponse.json(errorResponse, { status: 500 });
@@ -93,20 +111,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(errorResponse, { status: 400 });
     }
 
+    let attachments;
+    try {
+      attachments = await validateComplaintAttachments(
+        parsed.data.attachments,
+        identity.userId,
+      );
+    } catch (error) {
+      if (error instanceof ComplaintAttachmentSecurityError) {
+        return NextResponse.json(
+          { success: false, error: { code: error.code, message: error.message } },
+          { status: 400 },
+        );
+      }
+      throw error;
+    }
+
     // Ownership always comes from the resolved server identity. Ignore any
     // complainant_id supplied by the browser.
     const result = await createComplaint({
       ...parsed.data,
+      attachments,
       complainant_id: identity.userId,
     });
 
     const response: CreateComplaintResponse = {
       success: true,
-      complaint: result.complaint,
+      complaint: projectComplaintForApi(result.complaint),
       cluster: result.cluster,
     };
 
-    return NextResponse.json(response, { status: 201 });
+    return NextResponse.json(CreateComplaintResponseSchema.parse(response), { status: 201 });
   } catch (error) {
     console.error("POST /api/complaints error:", error);
     const errorResponse: CreateComplaintResponse = {
@@ -115,7 +150,9 @@ export async function POST(req: NextRequest) {
         code: error instanceof Error && error.message.startsWith("Complaint persistence failed")
           ? "PERSISTENCE_FAILED"
           : "SERVER_ERROR",
-        message: error instanceof Error ? error.message : "Failed to create complaint",
+        message: error instanceof Error && error.message.startsWith("Complaint persistence failed")
+          ? "Complaint could not be saved. No success was recorded."
+          : "Unable to create complaint right now.",
       },
     };
     return NextResponse.json(errorResponse, { status: 500 });

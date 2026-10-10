@@ -1838,3 +1838,98 @@ When working on this repository:
 
 **Smart Campus is one unified product with four major integrated modules (Module 1: Campus Portal, Module 2: Complaint Intelligence, Module 3: Lost & Found Intelligence, Module 4: Emergency Alert System), sharing a cohesive CampusGram UI and strong contract boundaries.**
 
+---
+
+# 61. Current Conversation Update — Lost & Found Workflow and Runtime
+
+This section records the current implementation state reached after the Lost &
+Found workflow integration pass. For the detailed handoff, changed-file inventory,
+verification receipts, and remaining work, read:
+
+```text
+docs/progress/LOST_FOUND_HANDOFF.md
+docs/progress/MODULE_3_STATUS.md
+```
+
+## Current implementation level
+
+Module 3 is now an **Integrated Hackathon System** rather than only a backend
+prototype. The important UI and server workflow capabilities are connected while
+preserving the existing architecture:
+
+```text
+Institutional lookup
+  → mock OTP (123456)
+  → signed HTTP-only application session
+  → server identity
+  → server-derived capability flags
+  → privacy-safe responses
+  → Supabase persistence
+  → inline Next.js processing queue
+  → AI-assisted matching
+  → verification claim
+  → authorized finder decision
+  → claimant-confirmed handover
+```
+
+### Preserved constraints
+
+- No duplicate identity system, client-controlled user ID, localStorage identity,
+  real phone auth, SMS, Redis, Kafka, or infrastructure rewrite.
+- No raw Lost & Found ownership IDs, private descriptions, identifying marks,
+  storage paths, raw joined rows, or private contacts in public responses.
+- Hosted Supabase remains the configured web persistence authority. JSON is only a
+  test/mock fallback.
+- Existing matching weights, state machine, RLS policies, migrations, and module
+  boundaries are preserved.
+- Base64 images and console/simulated notification behavior are clearly treated as
+  demo limitations rather than presented as production integrations.
+
+## Current Module 3 behavior
+
+- Item detail returns server-derived viewer capabilities and safe claim summaries.
+- Match detail returns claim eligibility and safe existing-claim continuation.
+- My Reports is server-scoped with `mine=true` and covers lost/found reports across
+  lifecycle states without accepting a client ownership ID.
+- Claim answers use the existing `ClaimSchema`, are normalized, and are required
+  before approval.
+- Finder/staff decisions are independently re-authorized and reject stale or
+  invalid transitions with semantic conflict responses.
+- Approved claimants can record handover; linked reports transition to `resolved`.
+- Direct contact details are never fabricated; Campus Security instructions are
+  shown when the demo has no directory contact source.
+- Lost and found report status pages use bounded, cancellable polling and truthful
+  retry/error messages.
+
+## AI and local runtime
+
+The stateless FastAPI service is at `services/lost-found-ai/` and exposes `/health`
+and `/analyze`. In the current local setup it runs with deterministic mock models
+using the Python environment at `services/lost-found-ai/.venv` and
+`USE_MOCK_MODELS=true`. The service returns 384-dimensional text embeddings and
+optional 512-dimensional image embeddings. The TypeScript client preserves the
+service's explicit `isMock` provenance and still has deterministic offline fallback.
+
+The normal hosted web path uses `apps/web/lib/queue.ts` as an inline processing
+queue. The separate pg-boss worker remains a deployable option, but is not needed
+for the current hosted-Supabase web flow.
+
+## Runtime status and verification
+
+- Web app: `http://localhost:3000` and login route verified with HTTP 200.
+- AI service: `http://127.0.0.1:8000`, health and analyze endpoints verified.
+- Mock authentication flow verified: lookup → OTP send → OTP verify → session →
+  personal report listing.
+- Docker and the Supabase CLI are installed. Local `supabase start` still requires
+  the refreshed shell/session to recognize the user's `docker` group; hosted
+  Supabase does not depend on this local stack.
+- Latest full test result: **276 tests passing**. Lost & Found module: **31 tests**.
+- AI service tests: **2 passing**. Worker and Lost & Found typechecks pass.
+- A full browser multi-user walkthrough remains an acceptance task, not a completed
+  verification receipt.
+
+## Next-agent guidance
+
+Before changing Module 3, read `docs/progress/LOST_FOUND_HANDOFF.md` first. Do not
+reintroduce any of the previously fixed privacy or identity shortcuts. Complete
+the browser acceptance walkthrough before calling the system production-ready.

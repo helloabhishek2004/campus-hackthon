@@ -4,6 +4,9 @@ import {
   CreateComplaintRequest,
   COMPLAINT_EMERGENCY_THRESHOLD,
   ComplaintAttachment,
+  ComplaintLifecycleUpdate,
+  ComplaintRecordSchema,
+  ComplaintStatusHistoryEntry as ComplaintStatusHistoryView,
 } from "@smart-campus/contracts";
 import { findMatchingCluster, ExistingComplaintCandidate } from "./similarity-service";
 import { createApplicationClient, createServiceClient } from "../supabase/server";
@@ -54,6 +57,27 @@ const inMemoryComplaints: ComplaintRecord[] = [
   },
 ];
 
+type StoredComplaintStatusHistoryEntry = {
+  complaint_id: string;
+  from_status: ComplaintRecord["status"];
+  to_status: ComplaintRecord["status"];
+  actor_id: string;
+  note: string | null;
+  created_at: string;
+};
+
+const inMemoryComplaintStatusHistory: StoredComplaintStatusHistoryEntry[] = [];
+
+export class ComplaintLifecycleError extends Error {
+  constructor(
+    message: string,
+    readonly code: "FORBIDDEN" | "NOT_FOUND" | "INVALID_TRANSITION" | "VALIDATION_FAILED" | "PERSISTENCE_FAILED",
+  ) {
+    super(message);
+    this.name = "ComplaintLifecycleError";
+  }
+}
+
 function isSupabaseConfigured(): boolean {
   if (process.env.NODE_ENV === "test") return false;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -90,6 +114,34 @@ function recalculateClusterCounts(records: ComplaintRecord[]): ComplaintRecord[]
   });
 }
 
+function mapComplaintRow(row: Record<string, unknown>): ComplaintRecord {
+  return {
+    id: String(row.id),
+    complainant_id: typeof row.complainant_id === "string" ? row.complainant_id : null,
+    text: String(row.text || ""),
+    status: (row.status || "submitted") as ComplaintRecord["status"],
+    category: typeof row.category === "string" ? row.category : null,
+    subcategory: typeof row.subcategory === "string" ? row.subcategory : null,
+    location_building:
+      typeof row.location_building === "string" ? row.location_building : null,
+    location_room: typeof row.location_room === "string" ? row.location_room : null,
+    attachments: Array.isArray(row.attachments)
+      ? (row.attachments as ComplaintAttachment[])
+      : [],
+    cluster_id: typeof row.cluster_id === "string" && row.cluster_id
+      ? row.cluster_id
+      : `cluster_${String(row.id)}`,
+    is_emergency: Boolean(row.is_emergency),
+    similar_count: 1,
+    assigned_to: typeof row.assigned_to === "string" ? row.assigned_to : null,
+    response_note: typeof row.response_note === "string" ? row.response_note : null,
+    last_updated_by:
+      typeof row.last_updated_by === "string" ? row.last_updated_by : null,
+    created_at: String(row.created_at),
+    updated_at: typeof row.updated_at === "string" ? row.updated_at : undefined,
+  };
+}
+
 /**
  * Fetches all complaints and recalculates real-time group counts & emergency status.
  */
@@ -105,54 +157,50 @@ export async function getComplaints(
   if (isSupabaseConfigured()) {
     try {
        const supabase = await createApplicationClient();
-      let query = supabase.from("complaints").select("*");
-      if (viewer && !viewer.canViewAll) query = query.eq("complainant_id", viewer.userId);
-      const { data, error } = await query.order("created_at", { ascending: false });
+      // Load the authoritative dataset before applying the application-level
+      // owner projection. Cluster volume is a campus-wide property, so an
+      // owner-scoped query here would under-count clusters for students.
+      const { data, error } = await supabase
+        .from("complaints")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) {
         throw new Error(`Complaint read failed: ${error.message}`);
       }
       if (data) {
-        records = data.map((d: any) => ({
-          id: d.id,
-          complainant_id: d.complainant_id,
-          text: d.text,
-          status: d.status || "submitted",
-          category: d.category,
-          subcategory: d.subcategory,
-          location_building: d.location_building,
-          location_room: d.location_room,
-          attachments: (d.attachments as ComplaintAttachment[]) || [],
-          cluster_id: d.cluster_id || `cluster_${d.id}`,
-          is_emergency: Boolean(d.is_emergency),
-          similar_count: 1, // Will be recalculated below
-          created_at: d.created_at,
-          updated_at: d.updated_at,
-        }));
+        records = data.map((d: Record<string, unknown>) =>
+          ComplaintRecordSchema.parse(mapComplaintRow(d)),
+        );
       }
     } catch (err) {
       throw err instanceof Error ? err : new Error("Complaint read failed");
     }
   } else {
-    records = viewer && !viewer.canViewAll
-      ? inMemoryComplaints.filter((record) => record.complainant_id === viewer.userId)
-      : [...inMemoryComplaints];
+    records = [...inMemoryComplaints];
   }
 
-  // Calculate real-time counts from cluster_id
+  // Calculate aggregate metadata from every authoritative record first. The
+  // viewer projection below must not change a cluster's count or emergency
+  // state merely because the viewer is a student.
   const calculated = recalculateClusterCounts(records);
 
-  // Compute summary stats
+  // Summary stats intentionally describe the global dataset, while complaint
+  // rows remain subject to the viewer's ownership projection.
   const total = calculated.length;
   const emergency = calculated.filter((c) => c.is_emergency).length;
   const normal = total - emergency;
 
+  const visibleRecords = viewer && !viewer.canViewAll
+    ? calculated.filter((record) => record.complainant_id === viewer.userId)
+    : calculated;
+
   // Filter based on requested view
-  let filtered = calculated;
+  let filtered = visibleRecords;
   if (view === "normal") {
-    filtered = calculated.filter((c) => !c.is_emergency);
+    filtered = visibleRecords.filter((c) => !c.is_emergency);
   } else if (view === "emergency") {
-    filtered = calculated.filter((c) => c.is_emergency);
+    filtered = visibleRecords.filter((c) => c.is_emergency);
   }
 
   // Sort newest first
@@ -217,35 +265,27 @@ export async function createComplaint(data: CreateComplaintRequest): Promise<{
 
   // 4. Persistence
   if (isSupabaseConfigured()) {
-    try {
-       const supabase = await createApplicationClient();
-
-      // If threshold reached, invoke safe SECURITY DEFINER function to cascade emergency state
-      if (isEmergency) {
-        const { error: rpcError } = await createServiceClient().rpc("cascade_complaint_emergency", {
-          target_cluster_id: targetClusterId,
-        });
-
-        if (rpcError) throw new Error(`Complaint emergency cascade failed: ${rpcError.message}`);
-      }
-
-      const { error: insertError } = await supabase.from("complaints").insert({
-        id: newRecord.id,
-        complainant_id: newRecord.complainant_id,
-        text: newRecord.text,
-        status: newRecord.status,
-        category: newRecord.category,
-        location_building: newRecord.location_building,
-        location_room: newRecord.location_room,
-        attachments: newRecord.attachments,
-        cluster_id: newRecord.cluster_id,
-        is_emergency: newRecord.is_emergency,
-        created_at: newRecord.created_at,
-        updated_at: newRecord.updated_at,
-      });
-      if (insertError) {
-        throw new Error(`Complaint persistence failed: ${insertError.message}`);
-      }
+     try {
+       const { error: persistError } = await createServiceClient().rpc(
+         "persist_complaint_with_emergency",
+         {
+           p_id: newRecord.id,
+           p_complainant_id: newRecord.complainant_id,
+           p_text: newRecord.text,
+           p_status: newRecord.status,
+           p_category: newRecord.category,
+           p_location_building: newRecord.location_building,
+           p_location_room: newRecord.location_room,
+           p_attachments: newRecord.attachments,
+           p_cluster_id: newRecord.cluster_id,
+           p_is_emergency: newRecord.is_emergency,
+           p_created_at: newRecord.created_at,
+           p_updated_at: newRecord.updated_at,
+         },
+       );
+       if (persistError) {
+         throw new Error(`Complaint persistence failed: ${persistError.message}`);
+       }
     } catch (err) {
       // Do not report success or silently diverge from the database when a
       // configured backend rejects the write. Similarity was computed above,
@@ -264,6 +304,152 @@ export async function createComplaint(data: CreateComplaintRequest): Promise<{
       is_emergency: isEmergency,
     },
   };
+}
+
+const VALID_STATUS_TRANSITIONS: Record<
+  NonNullable<ComplaintRecord["status"]>,
+  readonly NonNullable<ComplaintRecord["status"]>[]
+> = {
+  submitted: ["under_review", "rejected"],
+  under_review: ["in_progress", "rejected"],
+  in_progress: ["under_review", "resolved", "rejected"],
+  resolved: ["under_review"],
+  rejected: ["under_review"],
+};
+
+function assertValidStatusTransition(
+  current: ComplaintRecord["status"],
+  next: ComplaintRecord["status"],
+) {
+  if (current === next) return;
+  if (!VALID_STATUS_TRANSITIONS[current]?.includes(next)) {
+    throw new ComplaintLifecycleError(
+      `Cannot transition complaint from ${current} to ${next}.`,
+      "INVALID_TRANSITION",
+    );
+  }
+}
+
+export async function updateComplaintLifecycle(input: {
+  complaintId: string;
+  actorId: string;
+  canManage: boolean;
+  update: ComplaintLifecycleUpdate;
+}): Promise<ComplaintRecord> {
+  if (!input.canManage) {
+    throw new ComplaintLifecycleError(
+      "Only authorized complaint staff may update a complaint.",
+      "FORBIDDEN",
+    );
+  }
+
+  const { complaints } = await getComplaints("all", {
+    userId: input.actorId,
+    canViewAll: true,
+  });
+  const current = complaints.find((complaint) => complaint.id === input.complaintId);
+  if (!current) {
+    throw new ComplaintLifecycleError("Complaint not found.", "NOT_FOUND");
+  }
+
+  const nextStatus = input.update.status || current.status;
+  assertValidStatusTransition(current.status, nextStatus);
+  const responseNote = input.update.response_note || current.response_note || null;
+  if (
+    (nextStatus === "resolved" || nextStatus === "rejected") &&
+    !responseNote
+  ) {
+    throw new ComplaintLifecycleError(
+      `A response note is required when a complaint is ${nextStatus}.`,
+      "VALIDATION_FAILED",
+    );
+  }
+  const assignedTo = input.update.take_ownership
+    ? input.actorId
+    : current.assigned_to || null;
+  const now = new Date().toISOString();
+
+  if (isSupabaseConfigured()) {
+    const { error } = await createServiceClient().rpc(
+      "update_complaint_lifecycle",
+      {
+        target_complaint_id: input.complaintId,
+        next_status: nextStatus,
+        next_assigned_to: assignedTo,
+        next_response_note: responseNote,
+        actor_id: input.actorId,
+      },
+    );
+    if (error) {
+      const prefix = error.message.includes("Invalid complaint status transition")
+        ? "Cannot transition complaint"
+        : "Complaint persistence failed";
+      throw new ComplaintLifecycleError(`${prefix}: ${error.message}`, prefix.startsWith("Cannot") ? "INVALID_TRANSITION" : "PERSISTENCE_FAILED");
+    }
+
+    const refreshed = await getComplaints("all", {
+      userId: input.actorId,
+      canViewAll: true,
+    });
+    const updated = refreshed.complaints.find((complaint) => complaint.id === input.complaintId);
+    if (!updated) {
+      throw new ComplaintLifecycleError(
+        "Complaint was updated but could not be read back.",
+        "PERSISTENCE_FAILED",
+      );
+    }
+    return updated;
+  }
+
+  const record = inMemoryComplaints.find((complaint) => complaint.id === input.complaintId);
+  if (!record) {
+    throw new ComplaintLifecycleError("Complaint not found.", "NOT_FOUND");
+  }
+  const fromStatus = record.status;
+  record.status = nextStatus;
+  record.response_note = responseNote;
+  record.assigned_to = assignedTo;
+  record.last_updated_by = input.actorId;
+  record.updated_at = now;
+  if (fromStatus !== nextStatus) {
+    inMemoryComplaintStatusHistory.push({
+      complaint_id: record.id,
+      from_status: fromStatus,
+      to_status: nextStatus,
+      actor_id: input.actorId,
+      note: responseNote,
+      created_at: now,
+    });
+  }
+  return record;
+}
+
+export async function getComplaintStatusHistory(
+  complaintId: string,
+): Promise<ComplaintStatusHistoryView[]> {
+  if (isSupabaseConfigured()) {
+    const { data, error } = await createServiceClient()
+      .from("complaint_status_history")
+      .select("from_status,to_status,note,created_at")
+      .eq("complaint_id", complaintId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(`Complaint history read failed: ${error.message}`);
+    return (data || []).map((row: Record<string, unknown>) => ({
+      from_status: row.from_status as ComplaintStatusHistoryView["from_status"],
+      to_status: row.to_status as ComplaintStatusHistoryView["to_status"],
+      note: typeof row.note === "string" ? row.note : null,
+      created_at: String(row.created_at),
+    }));
+  }
+
+  return inMemoryComplaintStatusHistory
+    .filter((entry) => entry.complaint_id === complaintId)
+    .map(({ from_status, to_status, note, created_at }) => ({
+      from_status,
+      to_status,
+      note,
+      created_at,
+    }));
 }
 
 function persistToMemory(
@@ -289,4 +475,9 @@ function persistToMemory(
 export function _resetStoreForTesting(initialRecords: ComplaintRecord[] = []) {
   inMemoryComplaints.length = 0;
   inMemoryComplaints.push(...initialRecords);
+  inMemoryComplaintStatusHistory.length = 0;
+}
+
+export function _getStatusHistoryForTesting() {
+  return [...inMemoryComplaintStatusHistory];
 }

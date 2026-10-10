@@ -170,6 +170,25 @@ describe("CampusGram Complaint System Module", () => {
       expect(json.cluster.is_emergency).toBe(false);
     });
 
+    it("POST /api/complaints: derives ownership from the session, not body or identity headers", async () => {
+      const req = new NextRequest("http://localhost:3000/api/complaints", {
+        method: "POST",
+        headers: {
+          ...authenticatedHeaders,
+          "x-campus-user-id": otherProfile.id,
+        },
+        body: JSON.stringify({
+          text: "Complaint with forged ownership fields",
+          complainant_id: otherProfile.id,
+        }),
+      });
+
+      const res = await createComplaintRoute(req);
+      expect(res.status).toBe(201);
+      const json = await res.json();
+      expect(json.complaint.complainant_id).toBeUndefined();
+    });
+
     it("POST /api/complaints: rejects complaint with text shorter than 5 chars", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
@@ -186,7 +205,7 @@ describe("CampusGram Complaint System Module", () => {
       expect(json.error.code).toBe("VALIDATION_FAILED");
     });
 
-    it("POST /api/complaints: accepts optional image attachment", async () => {
+    it("POST /api/complaints: rejects external attachment references", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
         headers: authenticatedHeaders,
@@ -204,14 +223,13 @@ describe("CampusGram Complaint System Module", () => {
       });
 
       const res = await createComplaintRoute(req);
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.success).toBe(true);
-      expect(json.complaint.attachments).toHaveLength(1);
-      expect(json.complaint.attachments[0].url).toBe("https://example.com/uploads/complaints/pipe.jpg");
+      expect(json.success).toBe(false);
+      expect(json.error.code).toBe("INVALID_ATTACHMENT_REFERENCE");
     });
 
-    it("POST /api/complaints: accepts root-relative image attachment URLs produced by upload endpoint", async () => {
+    it("POST /api/complaints: rejects arbitrary root-relative attachment references", async () => {
       const req = new NextRequest("http://localhost:3000/api/complaints", {
         method: "POST",
         headers: authenticatedHeaders,
@@ -229,13 +247,10 @@ describe("CampusGram Complaint System Module", () => {
       });
 
       const res = await createComplaintRoute(req);
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.success).toBe(true);
-      expect(json.complaint.attachments).toHaveLength(1);
-      expect(json.complaint.attachments[0].url).toBe(
-        "/uploads/complaints/complaint-1775118742111-945763567.jpg",
-      );
+      expect(json.success).toBe(false);
+      expect(json.error.code).toBe("INVALID_ATTACHMENT_REFERENCE");
     });
 
     it("POST /api/complaints: rejects invalid attachment URLs that are neither absolute nor root-relative", async () => {
@@ -310,6 +325,7 @@ describe("CampusGram Complaint System Module", () => {
       expect(jsonAll.counts.normal).toBe(1);
       expect(jsonAll.counts.emergency).toBe(5);
       expect(jsonAll.complaints).toHaveLength(6);
+      expect(jsonAll.complaints.every((complaint: any) => complaint.complainant_id === undefined)).toBe(true);
 
       // Query view=normal
       const reqNormal = new NextRequest("http://localhost:3000/api/complaints?view=normal", {
@@ -505,6 +521,70 @@ describe("CampusGram Complaint System Module", () => {
         expect(items).toHaveLength(5);
         expect(items.every((c) => c.is_emergency === true)).toBe(true);
       }
+    });
+  });
+
+  describe("6. Global aggregation with owner-only row projection", () => {
+    it("keeps global cluster volume and emergency state across multiple owners", async () => {
+      const owners = ["student-owner-a", "student-owner-b", "student-owner-c", "student-owner-d"];
+      const texts = [
+        "Major water flood in hostel ground floor",
+        "Water flooding all over hostel ground floor corridors",
+        "Flooding with water in hostel ground floor rooms",
+        "Hostel ground floor water flood problem",
+        "Ground floor hostel corridor completely flooded with water",
+      ];
+
+      for (const [index, owner] of owners.entries()) {
+        await createComplaint({ text: texts[index], complainant_id: owner });
+      }
+
+      const ownerA = await getComplaints("all", {
+        userId: owners[0],
+        canViewAll: false,
+      });
+
+      expect(ownerA.complaints).toHaveLength(1);
+      expect(ownerA.complaints[0].complainant_id).toBe(owners[0]);
+      expect(ownerA.complaints[0].similar_count).toBe(4);
+      expect(ownerA.complaints[0].is_emergency).toBe(false);
+      expect(ownerA.counts).toEqual({ total: 4, normal: 4, emergency: 0 });
+
+      await createComplaint({ text: texts[4], complainant_id: "student-owner-e" });
+
+      const ownerB = await getComplaints("emergency", {
+        userId: owners[1],
+        canViewAll: false,
+      });
+
+      expect(ownerB.complaints).toHaveLength(1);
+      expect(ownerB.complaints[0].complainant_id).toBe(owners[1]);
+      expect(ownerB.complaints[0].similar_count).toBe(COMPLAINT_EMERGENCY_THRESHOLD);
+      expect(ownerB.complaints[0].is_emergency).toBe(true);
+      expect(ownerB.counts).toEqual({ total: 5, normal: 0, emergency: 5 });
+    });
+
+    it("does not expose other owners' rows or private ownership data in a student list", async () => {
+      const own = await createComplaint({
+        text: "Private water outage report for my hostel",
+        complainant_id: "student-visible",
+      });
+      const other = await createComplaint({
+        text: "Private water outage report for another hostel",
+        complainant_id: "student-hidden",
+      });
+
+      const result = await getComplaints("all", {
+        userId: "student-visible",
+        canViewAll: false,
+      });
+
+      expect(result.complaints).toHaveLength(1);
+      expect(result.complaints[0].id).toBe(own.complaint.id);
+      expect(result.complaints[0].complainant_id).toBe("student-visible");
+      expect(result.complaints.some((complaint) => complaint.id === other.complaint.id)).toBe(false);
+      expect(result.complaints.some((complaint) => complaint.complainant_id === "student-hidden")).toBe(false);
+      expect(result.complaints.map((complaint) => complaint.text)).not.toContain(other.complaint.text);
     });
   });
 });

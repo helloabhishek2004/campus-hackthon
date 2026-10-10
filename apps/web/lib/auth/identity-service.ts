@@ -4,7 +4,7 @@ import {
   RequestOtpResponse,
   VerifyOtpResponse,
 } from "@smart-campus/contracts";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { createServiceClient } from "../supabase/server";
 import { MOCK_INSTITUTIONAL_DIRECTORY } from "./mock-identities";
 import { generateAndSendOtp, verifyOtpChallenge } from "./otp";
@@ -23,6 +23,7 @@ export async function findInstitutionalRecord(
   institutionalId: string
 ): Promise<{ profile: InstitutionalLookupResponse; rawPhone?: string } | null> {
   const normId = institutionalId.trim().toUpperCase();
+  const directoryConfigured = isInstitutionalDirectoryConfigured();
 
   // 1. Try Supabase lookup if configured
   try {
@@ -58,19 +59,15 @@ export async function findInstitutionalRecord(
       }
     }
   } catch (_err) {
-    // Supabase not reachable or offline; fall back to deterministic mock directory
+    // A configured directory outage is an authentication failure. Never turn it
+    // into a successful lookup from the local demo catalog.
+    if (directoryConfigured) return null;
   }
 
   // 2. Deterministic directory fallback is explicitly test/offline-only. A
   // configured database outage must not silently turn into a mock identity.
   const mockMode = process.env.AUTH_MODE === "mock" || process.env.NODE_ENV === "test";
-  const hasServerDatabase = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY &&
-      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder") &&
-      !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("placeholder"),
-  );
-  if (!mockMode || hasServerDatabase) return null;
+  if (!mockMode || directoryConfigured) return null;
 
   const mockMatch = MOCK_INSTITUTIONAL_DIRECTORY.find(
     (u) => u.institutionalId.toUpperCase() === normId
@@ -85,6 +82,80 @@ export async function findInstitutionalRecord(
   }
 
   return null;
+}
+
+function isInstitutionalDirectoryConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  return Boolean(url && !url.includes("placeholder"));
+}
+
+export function isInstitutionalDirectoryAvailable(): boolean {
+  return isInstitutionalDirectoryConfigured();
+}
+
+type CanonicalInstitutionalLink = {
+  institutionalId: string;
+  linkedProfileId: string | null;
+  isActive: boolean;
+};
+
+/**
+ * Read the canonical directory-to-application link with the server client.
+ * The safe lookup RPC does not expose linked_profile_id, and an authenticated
+ * session must not be selected from user metadata alone.
+ */
+export async function findCanonicalInstitutionalLink(
+  institutionalId: string,
+): Promise<CanonicalInstitutionalLink | null> {
+  try {
+    const { data, error } = await createServiceClient()
+      .from("institutional_users")
+      .select("institutional_id,linked_profile_id,is_active")
+      .eq("institutional_id", institutionalId.trim().toUpperCase())
+      .maybeSingle();
+
+    if (error || !data || typeof data.institutional_id !== "string") return null;
+    return {
+      institutionalId: data.institutional_id,
+      linkedProfileId:
+        typeof data.linked_profile_id === "string" ? data.linked_profile_id : null,
+      isActive: data.is_active === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve a Supabase Auth user only through the canonical directory link. */
+export async function findInstitutionalRecordByLinkedProfile(
+  profileId: string,
+): Promise<
+  | { profile: InstitutionalLookupResponse; linkedProfileId: string }
+  | null
+> {
+  try {
+    const { data, error } = await createServiceClient()
+      .from("institutional_users")
+      .select("institutional_id,linked_profile_id,is_active")
+      .eq("linked_profile_id", profileId)
+      .maybeSingle();
+
+    if (
+      error ||
+      !data ||
+      data.linked_profile_id !== profileId ||
+      data.is_active !== true ||
+      typeof data.institutional_id !== "string"
+    ) {
+      return null;
+    }
+
+    const record = await findInstitutionalRecord(data.institutional_id);
+    if (!record?.profile.isActive) return null;
+    return { profile: record.profile, linkedProfileId: profileId };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -229,10 +300,34 @@ async function ensureApplicationProfile(profile: InstitutionalLookupResponse): P
   return authUser.id;
 }
 
-const mockSessionSecret = () =>
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "campusgram-mock-session-key";
+export const MOCK_SESSION_COOKIE_NAME = "campusgram_mock_session";
+export const MOCK_SESSION_MAX_AGE_SECONDS = 24 * 60 * 60;
+const MOCK_SESSION_TTL_MS = MOCK_SESSION_MAX_AGE_SECONDS * 1000;
+let offlineMockSessionSecret: string | undefined;
+
+function mockSessionSecret(): string {
+  const configuredSecret = process.env.AUTH_SESSION_SECRET?.trim();
+  if (configuredSecret) return configuredSecret;
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (serviceRoleKey && !serviceRoleKey.includes("placeholder")) {
+    return serviceRoleKey;
+  }
+
+  // Offline demo/test processes may use an ephemeral secret. It is deliberately
+  // process-local, so a restart invalidates every demo session.
+  if (
+    process.env.NODE_ENV === "test" ||
+    (process.env.AUTH_MODE === "mock" && !isInstitutionalDirectoryConfigured())
+  ) {
+    offlineMockSessionSecret ??= randomBytes(32).toString("base64url");
+    return offlineMockSessionSecret;
+  }
+
+  throw new Error(
+    "AUTH_SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY is required for mock session signing.",
+  );
+}
 
 /**
  * Signs the intentionally mock application session. This is not a Supabase
@@ -240,27 +335,73 @@ const mockSessionSecret = () =>
  * dummy OTP flow without trusting localStorage or request-body IDs.
  */
 export function createMockSessionToken(profile: InstitutionalLookupResponse, profileId?: string): string {
+  const issuedAt = Date.now();
   const payload = Buffer.from(JSON.stringify({
     institutionalId: profile.institutionalId,
     profileId,
-    issuedAt: Date.now(),
+    issuedAt,
+    expiresAt: issuedAt + MOCK_SESSION_TTL_MS,
   })).toString("base64url");
-  const signature = createHmac("sha256", mockSessionSecret()).update(payload).digest("base64url");
+  const signature = createHmac("sha256", mockSessionSecret())
+    .update(payload)
+    .digest("base64url");
   return `${payload}.${signature}`;
 }
 
 export function verifyMockSessionToken(token: string): { institutionalId: string; profileId?: string } | null {
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return null;
-  const expected = createHmac("sha256", mockSessionSecret()).update(payload).digest("base64url");
-  const actualBytes = Buffer.from(signature);
-  const expectedBytes = Buffer.from(expected);
-  if (actualBytes.length !== expectedBytes.length || !timingSafeEqual(actualBytes, expectedBytes)) return null;
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
+  if (
+    !payload ||
+    !signature ||
+    !/^[A-Za-z0-9_-]+$/.test(payload) ||
+    !/^[A-Za-z0-9_-]+$/.test(signature)
+  ) {
+    return null;
+  }
+
   try {
-    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (typeof parsed.institutionalId !== "string" || typeof parsed.issuedAt !== "number") return null;
-    if (Date.now() - parsed.issuedAt > 24 * 60 * 60 * 1000) return null;
-    return { institutionalId: parsed.institutionalId, profileId: typeof parsed.profileId === "string" ? parsed.profileId : undefined };
+    const expected = createHmac("sha256", mockSessionSecret()).update(payload).digest();
+    const actual = Buffer.from(signature, "base64url");
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
+
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+      institutionalId?: unknown;
+      profileId?: unknown;
+      issuedAt?: unknown;
+      expiresAt?: unknown;
+    };
+    const now = Date.now();
+    const issuedAt = parsed.issuedAt;
+    const expiresAt = parsed.expiresAt;
+    if (
+      !parsed ||
+      typeof parsed.institutionalId !== "string" ||
+      parsed.institutionalId.trim().length === 0 ||
+      typeof issuedAt !== "number" ||
+      !Number.isSafeInteger(issuedAt) ||
+      issuedAt > now ||
+      typeof expiresAt !== "number" ||
+      !Number.isSafeInteger(expiresAt) ||
+      expiresAt <= issuedAt ||
+      expiresAt - issuedAt > MOCK_SESSION_TTL_MS ||
+      expiresAt <= now
+    ) {
+      return null;
+    }
+
+    if (
+      parsed.profileId !== undefined &&
+      (typeof parsed.profileId !== "string" || parsed.profileId.trim().length === 0)
+    ) {
+      return null;
+    }
+
+    return {
+      institutionalId: parsed.institutionalId,
+      profileId: typeof parsed.profileId === "string" ? parsed.profileId : undefined,
+    };
   } catch {
     return null;
   }

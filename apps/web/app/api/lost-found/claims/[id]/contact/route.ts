@@ -22,7 +22,7 @@ export async function GET(
     return NextResponse.json({ 
         success: true, mode: "in_person", 
          contact: null,
-         instructions: "Contact details are not stored in the local demo. Arrange handover through Campus Security."
+         instructions: "Contact access is authorized, but this demo does not supply direct contact details. Campus Security coordinates the handover."
     }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });

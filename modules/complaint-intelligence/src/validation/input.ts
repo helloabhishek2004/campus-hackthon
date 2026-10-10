@@ -27,6 +27,13 @@ export function validateComplaintInput(input: unknown): ValidationResult {
     };
   }
 
+  if (result.data.complaint_id.trim().length === 0) {
+    return {
+      isValid: false,
+      errors: ["complaint_id: Complaint ID must not be empty"],
+    };
+  }
+
   return {
     isValid: true,
     data: result.data,

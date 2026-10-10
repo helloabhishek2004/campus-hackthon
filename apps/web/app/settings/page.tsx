@@ -41,24 +41,24 @@ export default function SettingsPage() {
     <AppShell>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <header className="border-b border-zinc-800 pb-5">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+        <header className="border-b border-border pb-5">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Settings & Preferences
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Manage application appearance, alerts, and institutional data preferences.
           </p>
         </header>
 
         {/* Section 1: Appearance */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/60 p-5 space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-zinc-200 dark:border-zinc-800/80">
+        <section className="rounded-xl border border-border bg-card p-5 space-y-4 text-card-foreground">
+          <div className="flex items-center gap-2 pb-3 border-b border-border/80">
             {theme === "dark" ? (
-              <Moon className="w-4 h-4 text-zinc-400" />
+              <Moon className="w-4 h-4 text-muted-foreground" />
             ) : (
-              <Sun className="w-4 h-4 text-zinc-600" />
+              <Sun className="w-4 h-4 text-muted-foreground" />
             )}
-            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-medium">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-medium">
               Appearance & Theme
             </h2>
           </div>
@@ -66,8 +66,8 @@ export default function SettingsPage() {
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div>
-                <p className="font-medium text-zinc-800 dark:text-zinc-200">Interface Appearance</p>
-                <p className="text-zinc-500">
+                <p className="font-medium text-foreground">Interface Appearance</p>
+                <p className="text-muted-foreground">
                   Switch between Apple-inspired Dark and Light monochrome modes.
                 </p>
               </div>
@@ -82,21 +82,21 @@ export default function SettingsPage() {
                 className={cn(
                   "apple-press flex items-center justify-between p-3.5 rounded-xl border text-left transition-all",
                   theme === "dark"
-                    ? "bg-zinc-950 text-white border-zinc-700 shadow-md ring-1 ring-zinc-500"
-                    : "bg-zinc-100 dark:bg-zinc-950/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                    ? "bg-secondary text-foreground border-foreground/40 shadow-sm ring-1 ring-foreground/20 font-semibold"
+                    : "bg-card text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-100">
+                  <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground">
                     <Moon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-zinc-100">Dark Mode</p>
-                    <p className="text-[10px] text-zinc-400 font-mono">Zinc monochrome</p>
+                    <p className="text-xs font-semibold text-foreground">Dark Mode</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">Zinc monochrome</p>
                   </div>
                 </div>
                 {theme === "dark" && (
-                  <Check className="w-4 h-4 text-zinc-100" />
+                  <Check className="w-4 h-4 text-foreground" />
                 )}
               </button>
 
@@ -107,21 +107,21 @@ export default function SettingsPage() {
                 className={cn(
                   "apple-press flex items-center justify-between p-3.5 rounded-xl border text-left transition-all",
                   theme === "light"
-                    ? "bg-white text-zinc-900 border-zinc-400 shadow-md ring-1 ring-zinc-400"
-                    : "bg-zinc-100 dark:bg-zinc-950/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                    ? "bg-secondary text-foreground border-foreground/40 shadow-sm ring-1 ring-foreground/20 font-semibold"
+                    : "bg-card text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-200 border border-zinc-300 flex items-center justify-center text-zinc-800">
+                  <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground">
                     <Sun className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Light Mode</p>
-                    <p className="text-[10px] text-zinc-500 font-mono">Clean monochrome</p>
+                    <p className="text-xs font-semibold text-foreground">Light Mode</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">Clean monochrome</p>
                   </div>
                 </div>
                 {theme === "light" && (
-                  <Check className="w-4 h-4 text-zinc-900" />
+                  <Check className="w-4 h-4 text-foreground" />
                 )}
               </button>
             </div>
@@ -129,10 +129,10 @@ export default function SettingsPage() {
         </section>
 
         {/* Section 2: Notifications */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
-          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
-            <Bell className="w-4 h-4 text-zinc-400" />
-            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+        <section className="rounded-xl border border-border bg-card p-5 space-y-3 text-card-foreground">
+          <div className="flex items-center gap-2 pb-3 border-b border-border/80">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-medium">
               Notifications
             </h2>
           </div>
@@ -140,22 +140,22 @@ export default function SettingsPage() {
           <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Campus Circulars & Notices</p>
-                <p className="text-zinc-500">Official circulars, exam schedules, and department notices</p>
+                <p className="font-medium text-foreground">Campus Circulars & Notices</p>
+                <p className="text-muted-foreground">Official circulars, exam schedules, and department notices</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={announcements}
                 onClick={() => setAnnouncements(!announcements)}
-                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
-                  announcements ? "bg-zinc-200" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                  announcements ? "bg-primary" : "bg-muted"
                 }`}
                 aria-label="Toggle circular notifications"
               >
                 <span
                   className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
-                    announcements ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
+                    announcements ? "translate-x-4 bg-primary-foreground" : "translate-x-0 bg-muted-foreground"
                   }`}
                 />
               </button>
@@ -163,22 +163,22 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Complaint Intelligence Status Updates</p>
-                <p className="text-zinc-500">Alerts when reported issues are analyzed or routed</p>
+                <p className="font-medium text-foreground">Complaint Intelligence Status Updates</p>
+                <p className="text-muted-foreground">Alerts when reported issues are analyzed or routed</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={complaintAlerts}
                 onClick={() => setComplaintAlerts(!complaintAlerts)}
-                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
-                  complaintAlerts ? "bg-zinc-200" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                  complaintAlerts ? "bg-primary" : "bg-muted"
                 }`}
                 aria-label="Toggle complaint alert notifications"
               >
                 <span
                   className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
-                    complaintAlerts ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
+                    complaintAlerts ? "translate-x-4 bg-primary-foreground" : "translate-x-0 bg-muted-foreground"
                   }`}
                 />
               </button>
@@ -186,22 +186,22 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Lost & Found Proximity Alerts</p>
-                <p className="text-zinc-500">Alerts when verified item matches are reported in custody</p>
+                <p className="font-medium text-foreground">Lost & Found Proximity Alerts</p>
+                <p className="text-muted-foreground">Alerts when verified item matches are reported in custody</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={lostFoundAlerts}
                 onClick={() => setLostFoundAlerts(!lostFoundAlerts)}
-                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 ${
-                  lostFoundAlerts ? "bg-zinc-200" : "bg-zinc-800"
+                className={`w-9 h-5 rounded-full transition-colors relative focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                  lostFoundAlerts ? "bg-primary" : "bg-muted"
                 }`}
                 aria-label="Toggle lost and found alerts"
               >
                 <span
                   className={`w-3.5 h-3.5 rounded-full transition-transform block mx-0.5 ${
-                    lostFoundAlerts ? "translate-x-4 bg-zinc-950" : "translate-x-0 bg-zinc-400"
+                    lostFoundAlerts ? "translate-x-4 bg-primary-foreground" : "translate-x-0 bg-muted-foreground"
                   }`}
                 />
               </button>
@@ -210,15 +210,15 @@ export default function SettingsPage() {
         </section>
 
         {/* Section 3: Privacy & Security */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3">
-          <div className="flex items-center gap-2 pb-3 border-b border-zinc-800/80">
-            <ShieldCheck className="w-4 h-4 text-zinc-400" />
-            <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+        <section className="rounded-xl border border-border bg-card p-5 space-y-3 text-card-foreground">
+          <div className="flex items-center gap-2 pb-3 border-b border-border/80">
+            <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-medium">
               Privacy Standards
             </h2>
           </div>
 
-          <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
+          <div className="text-xs text-muted-foreground space-y-2 leading-relaxed">
             <p>
               • <strong>Phone Number Masking:</strong> Contact numbers remain masked across all unauthenticated endpoints.
             </p>
@@ -229,64 +229,64 @@ export default function SettingsPage() {
         </section>
 
         {/* Section 4: Demo & Testing Controls */}
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
+        <section className="rounded-xl border border-border bg-card p-5 space-y-4 text-card-foreground">
+          <div className="flex items-center justify-between pb-3 border-b border-border/80">
             <div className="flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-zinc-400" />
-              <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+              <Sliders className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-xs font-mono uppercase tracking-wider text-muted-foreground font-medium">
                 Testing Controls
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-zinc-500 uppercase">Local Mode</span>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase">Local Mode</span>
           </div>
 
           <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="font-medium text-zinc-200">Reset Onboarding Tour</p>
-                <p className="text-zinc-500">Clears client flag so the three intro screens can be reviewed again.</p>
+                <p className="font-medium text-foreground">Reset Onboarding Tour</p>
+                <p className="text-muted-foreground">Clears client flag so the three intro screens can be reviewed again.</p>
               </div>
               <button
                 type="button"
                 onClick={handleResetOnboarding}
                 disabled={resetSuccess}
-                className="px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 rounded-md text-xs font-medium bg-secondary hover:bg-muted text-foreground border border-border flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 {resetSuccess ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
                     <span>Resetting...</span>
                   </>
                 ) : (
                   <>
-                    <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Reset</span>
                   </>
                 )}
               </button>
             </div>
 
-            <div className="pt-2 border-t border-zinc-850">
-              <span className="text-zinc-500 block mb-2 font-medium">Switch Active Demo Persona</span>
+            <div className="pt-2 border-t border-border/60">
+              <span className="text-muted-foreground block mb-2 font-medium">Switch Active Demo Persona</span>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => switchDemoUser("STU2026001")}
-                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-secondary hover:bg-muted text-foreground border border-border text-center transition-colors"
                 >
                   Student
                 </button>
                 <button
                   type="button"
                   onClick={() => switchDemoUser("FAC1001")}
-                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-secondary hover:bg-muted text-foreground border border-border text-center transition-colors"
                 >
                   Faculty
                 </button>
                 <button
                   type="button"
                   onClick={() => switchDemoUser("FAC1011")}
-                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-zinc-950 hover:bg-zinc-900 text-zinc-200 border border-zinc-800 text-center"
+                  className="py-1.5 px-2 rounded-md text-xs font-mono bg-secondary hover:bg-muted text-foreground border border-border text-center transition-colors"
                 >
                   HOD
                 </button>
@@ -294,19 +294,19 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-zinc-800/80">
+          <div className="pt-3 border-t border-border/80">
             <button
               onClick={logout}
-              className="w-full py-2 px-3 rounded-lg bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 text-zinc-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2 px-3 rounded-lg bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 text-destructive font-medium text-xs flex items-center justify-center gap-2 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5 text-zinc-500" />
+              <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out of Current Session</span>
             </button>
           </div>
         </section>
 
         {/* Section 5: About */}
-        <footer className="text-center text-[11px] text-zinc-500 font-mono pt-4">
+        <footer className="text-center text-[11px] text-muted-foreground font-mono pt-4">
           CampusGram • Version 1.0 (Release Candidate) • Smart Campus Monorepo
         </footer>
       </div>

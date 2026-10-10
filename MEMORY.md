@@ -96,3 +96,80 @@ pnpm test
 # Format codebase
 pnpm format
 ```
+
+---
+
+## 6. Current Lost & Found Implementation Memory — 2026-10-09
+
+The authoritative continuation record for the recent Lost & Found work is:
+
+```text
+docs/progress/LOST_FOUND_HANDOFF.md
+docs/progress/MODULE_3_STATUS.md
+```
+
+### Current status
+
+- Working branch: `feature/lost-found-workflow`.
+- Baseline before the workflow pass: `6eb34bf`.
+- Classification: **Integrated Hackathon System**, not production-ready.
+- Web app: `http://localhost:3000`.
+- Mock FastAPI AI service: `http://127.0.0.1:8000` with `USE_MOCK_MODELS=true`.
+- Hosted Supabase is configured as the current web persistence authority.
+- Local Supabase is optional for the current hosted flow; Docker was installed but
+  the long-running OmniRush shell may need to be restarted to receive the `docker`
+  group before `supabase start` can access `/var/run/docker.sock`.
+
+### Actual Module 3 workflow
+
+```text
+Institutional ID → mock OTP → signed HTTP-only session → server identity
+→ server capabilities → privacy-safe Lost & Found projections
+→ hosted Supabase persistence → inline Next.js processing queue
+→ AI service / deterministic fallback → weighted match candidate
+→ verification claim → authorized finder decision → claimant handover
+→ both linked item reports resolved
+```
+
+The inline queue in `apps/web/lib/queue.ts` is the normal hosted-Supabase web
+processing path. The standalone pg-boss worker is a separate deployment option,
+not a required local process for the current web flow.
+
+### AI matching memory
+
+- AI endpoint: `POST services/lost-found-ai/app/main.py:/analyze`.
+- Mock outputs are deterministic and explicitly marked with `isMock: true`.
+- Text embedding: 384 dimensions.
+- Image embedding: optional 512 dimensions.
+- Matching weights: image `0.20`, text `0.45`, category `0.15`, location `0.10`,
+  time `0.10`.
+- Bands: high `>= 0.75`, medium `>= 0.50`, low `< 0.50`.
+- Similarity is an empirical candidate signal, never ownership proof.
+
+### Workflow/security memory
+
+- UI pages no longer use hardcoded production user IDs or localStorage identity.
+- Item, match, and claim responses expose minimal server-derived capability flags,
+  not raw ownership IDs.
+- Approval requires valid, non-empty, normalized verification answers.
+- Repeated/stale/unauthorized actions return `400`, `403`, or `409` rather than fake
+  success.
+- Handover is claimant-only after approval and resolves both linked item reports.
+- Contact details are never fabricated; the demo directs parties to Campus Security
+  when no institutional contact source is available.
+- Public projections continue to omit private descriptions, identifying marks,
+  reporter/claimant/decision-maker IDs, storage paths, raw joins, and contacts.
+
+### Runtime and verification memory
+
+The Python environment is `services/lost-found-ai/.venv`; `requests` and `pillow`
+were added to the service requirements because the existing code imports them.
+The TypeScript AI client preserves the Python service's mock/live provenance flag.
+
+Latest verification included full monorepo tests (**276 passing**), Lost & Found
+module tests (**31 passing**), AI service tests (**2 passing**), worker typecheck,
+Lost & Found typecheck, prior web build/typecheck/lint, and `git diff --check`.
+Mock lookup → OTP send → OTP verify → session → My Reports API also passed.
+
+Do not store or document credentials from `.env.local`; only record that the
+environment is configured. Keep all secrets private and uncommitted.

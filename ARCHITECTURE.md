@@ -34,9 +34,11 @@ flowchart TD
         GeminiAPI["Google Gemini API"]
     end
 
-    UI -->|"Submit Grievance"| Routes
-    Routes -->|"Validate Payload"| SchemaRules
-    Routes -->|"analyzeComplaint(request)"| Analyzer
+     UI -->|"Submit Grievance"| Routes
+     Routes -->|"Validate Payload"| SchemaRules
+     Routes -->|"Deterministic text clustering"| ClusterEngine
+     AnalyzeUI["Optional standalone analysis client"] --> Routes
+     Routes -->|"analyzeComplaint(request)"| Analyzer
     Analyzer --> Validator
     Validator --> AIProvider
     AIProvider -->|"AI_PROVIDER=mock"| MockEngine
@@ -46,7 +48,7 @@ flowchart TD
     GeminiEngine --> ClusterEngine
     Analyzer -->|"Validated Response"| ResContract
     ResContract --> Routes
-    Routes -->|"Save Canonical Complaint & AI Result"| SupabaseClient
+     Routes -->|"Save Canonical Complaint"| SupabaseClient
     SupabaseClient --> SupabaseDB
     Routes -->|"JSON Response"| UI
 ```
@@ -165,7 +167,7 @@ flowchart TD
 
 4. **Persistence & Data Ownership:**
    - Module 1 owns canonical complaint state (`public.complaints`).
-   - AI outputs are stored in `public.complaint_ai_analysis` referencing `complaints.id`.
+    - The primary complaint submission path stores canonical complaint state and deterministic text-cluster fields. The standalone Module 2 analysis route returns validated analysis but is not currently invoked or persisted by complaint submission.
    - No parallel user or complaint tables are created by Module 2.
 
 ---
@@ -179,7 +181,7 @@ sequenceDiagram
     participant Client as Next.js Client
     participant AuthAPI as Auth API (/api/auth/*)
     participant IdentitySvc as Identity Service
-    participant Supabase as PostgreSQL (RLS / RPC)
+participant Supabase as PostgreSQL (RLS / RPC)
 
     User->>Client: Enters Institutional ID (e.g. STU2026001)
     Client->>AuthAPI: POST /api/auth/lookup { institutionalId }
@@ -203,6 +205,71 @@ sequenceDiagram
     IdentitySvc-->>AuthAPI: { success: true, profile, sessionToken }
     AuthAPI-->>Client: Authenticated Application Session Loaded
 ```
+
+---
+
+## 5. Current Module 3 Realized Architecture (2026-10-09)
+
+The original Module 3 diagram above describes the intended asynchronous worker
+topology. The current web implementation also supports an inline processing path,
+which is the active path when hosted Supabase is configured:
+
+```mermaid
+flowchart TD
+    Browser["Lost & Found Browser UI"]
+    Session["/api/auth/session\nHTTP-only application session"]
+    Routes["Next.js Lost & Found Route Handlers"]
+    Capabilities["Server-derived capabilities\nno ownership IDs in public UI"]
+    Repo["apps/web/lib/lost-found/repository.ts"]
+    Supabase["Hosted Supabase PostgreSQL + RLS\ncanonical persistence"]
+    Inline["apps/web/lib/queue.ts\ninline process-item queue"]
+    AI["FastAPI /analyze\nlocalhost:8000 in demo runtime"]
+    Score["Weighted empirical score\nimage .20, text .45, category .15, location .10, time .10"]
+    Match["Safe match projection\nclaim verification\nhandover lifecycle"]
+
+    Browser --> Session
+    Browser --> Routes
+    Session --> Routes
+    Routes --> Capabilities
+    Routes --> Repo
+    Repo --> Supabase
+    Routes --> Inline
+    Inline --> AI
+    AI --> Score
+    Score --> Supabase
+    Supabase --> Match
+    Match --> Browser
+```
+
+### Runtime interpretation
+
+- The inline queue is not a new architecture; it is the existing web-side
+  processing implementation and keeps hosted-Supabase items in the same canonical
+  data store.
+- `workers/lost-found-worker` remains an independent pg-boss deployment option.
+  It expects a PostgreSQL connection (local default port `54322` or configured
+  `DATABASE_URL`) and is not required for the current hosted web flow.
+- `services/lost-found-ai` runs with deterministic mock models by default in the
+  current local setup. Full YOLO/CLIP/MiniLM dependencies remain optional.
+- The browser never decides identity or authorization. It renders server-provided
+  capability booleans and the server repeats every authorization check.
+
+### Module 3 security boundary
+
+```text
+Public item/match data
+  = title + public description + non-sensitive image URL + empirical score
+
+Authorized workflow data
+  = claim evidence + decision controls + handover controls
+
+Never public
+  = reporter IDs, claimant IDs, decision-maker IDs, private descriptions,
+    identifying marks, storage paths, raw database joins, direct contact data
+```
+
+The current implementation deliberately directs users to Campus Security instead
+of fabricating contact details when no approved directory source is available.
 
 ### Identity Data Model
 

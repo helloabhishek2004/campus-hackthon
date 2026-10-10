@@ -1,5 +1,4 @@
 import {
-  ComplaintAnalysisRequest,
   ComplaintAnalysisResponse,
   ComplaintAnalysisResponseSchema,
 } from "@smart-campus/contracts";
@@ -17,10 +16,11 @@ export { searchCandidates } from "./clustering/candidate-search";
  * Analyzes grievance text, extracts entities/location, calculates severity,
  * suggests responsible departments, and checks for potential duplicate issues.
  *
- * Supports deterministic mock mode when GEMINI_API_KEY is not set or AI_PROVIDER=mock.
+ * Supports deterministic mock mode by default. An explicitly selected Gemini
+ * provider requires a configured API key and fails closed otherwise.
  */
 export async function analyzeComplaint(
-  request: ComplaintAnalysisRequest,
+  request: unknown,
   options?: IntelligenceOptions,
 ): Promise<ComplaintAnalysisResponse> {
   const startTime = Date.now();
@@ -30,7 +30,7 @@ export async function analyzeComplaint(
   if (!validation.isValid) {
     const errorResponse: ComplaintAnalysisResponse = {
       success: false,
-      complaint_id: request.complaint_id || "unknown",
+      complaint_id: getComplaintId(request),
       processing: {
         status: "failed",
         processed_at: new Date().toISOString(),
@@ -50,10 +50,27 @@ export async function analyzeComplaint(
 
   // 2. Determine Provider
   const envProvider = process.env.AI_PROVIDER;
-  const apiKey = options?.apiKey || process.env.GEMINI_API_KEY;
+  const apiKey = options?.apiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
   const provider =
     options?.provider ||
     (envProvider === "gemini" && apiKey ? "gemini" : "mock");
+
+  if (provider === "gemini" && !apiKey) {
+    return ComplaintAnalysisResponseSchema.parse({
+      success: false,
+      complaint_id: validRequest.complaint_id,
+      processing: {
+        status: "failed",
+        provider: "gemini",
+        processed_at: new Date().toISOString(),
+        duration_ms: Date.now() - startTime,
+      },
+      error: {
+        code: "PROVIDER_CONFIGURATION_ERROR",
+        message: "Gemini provider is unavailable because no API key is configured.",
+      },
+    });
+  }
 
   try {
     let analysis;
@@ -89,7 +106,7 @@ export async function analyzeComplaint(
     };
 
     return ComplaintAnalysisResponseSchema.parse(response);
-  } catch (error) {
+  } catch {
     const errorResponse: ComplaintAnalysisResponse = {
       success: false,
       complaint_id: validRequest.complaint_id,
@@ -101,11 +118,21 @@ export async function analyzeComplaint(
       },
       error: {
         code: "PROCESSING_FAILED",
-        message:
-          error instanceof Error ? error.message : "Internal analysis error",
+        message: "Complaint analysis could not be completed.",
       },
     };
 
     return ComplaintAnalysisResponseSchema.parse(errorResponse);
   }
+}
+
+function getComplaintId(input: unknown): string {
+  if (typeof input !== "object" || input === null) {
+    return "unknown";
+  }
+
+  const complaintId = (input as Record<string, unknown>).complaint_id;
+  return typeof complaintId === "string" && complaintId.trim().length > 0
+    ? complaintId
+    : "unknown";
 }

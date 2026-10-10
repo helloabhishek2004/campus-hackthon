@@ -48,6 +48,26 @@ The master branch foundation for institutional identity, biodata, and simulated 
 - `RequestOtpRequestSchema` & `RequestOtpResponseSchema`: Challenge dispatch contracts.
 - `VerifyOtpRequestSchema` & `VerifyOtpResponseSchema`: 6-digit numeric OTP verification.
 
+### Application Session Integration Update (2026-10-10)
+
+- Confirmed the OTP route and server identity resolver use the same signed
+  `campusgram_mock_session` application-session mechanism for the hackathon flow.
+- Configured Supabase does not imply a Supabase Auth JWT for dummy OTP; the
+  intended configured hackathon mode is therefore `AUTH_MODE=mock`, where the
+  resolver validates the signed application cookie and canonical linked profile.
+  Non-mock mode continues to require a real linked Supabase Auth session.
+- Session signatures use the server-only `AUTH_SESSION_SECRET` when configured,
+  with the existing service-role key as a server-only fallback. The token and
+  cookie share a 24-hour expiration policy; malformed, tampered, future-dated,
+  and expired sessions are rejected.
+- Complaint ownership and Lost & Found authorization remain server-derived from
+  the shared resolver. Client identity headers and request-body ownership fields
+  are not authorization inputs.
+- Regression coverage: `apps/web/tests/auth-hardening.test.ts` and
+  `apps/web/tests/auth.test.ts` exercise the
+  configured-mode resolver with fictional identities and mocked Supabase
+  responses. No live Supabase credentials or deployment state were inspected.
+
 ### Server Services & API Endpoints (`apps/web`)
 
 - **Phone Masking Utility (`apps/web/lib/auth/masking.ts`)**: Pure utility formatting domestic and E.164 phone strings to `+91 ******3210` or `******3210`.

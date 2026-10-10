@@ -10,7 +10,13 @@
 
 The Complaint System has been implemented and refined with full UI, contract, and database support:
 
-* **Complaint Submission:** Authenticated or simulated users can submit grievances containing complaint text (minimum 5 characters) and an optional image attachment.
+### Phase 2 status (2026-10-09)
+
+Phase 2 adds a secured staff lifecycle endpoint (`PATCH /api/complaints/[id]`), response/resolution notes, owner-only student projections with global cluster counts, owner-bound attachment references with magic-byte checks, sanitized API responses, and a consistent signed mock-session boundary. The primary complaint flow remains deterministic text-only Jaccard clustering; it does not claim Gemini/AI analysis.
+
+The new additive migration `20261009182617_complaint_lifecycle.sql` is not applied to a live database by this task. It adds status history and atomic service-role persistence functions for configured Supabase deployments.
+
+* **Complaint Submission:** Authenticated users using the signed mock application session can submit grievances containing complaint text (minimum 5 characters) and an optional image attachment. Unauthenticated requests are rejected.
 * **Optional Image Attachment:** Users can select an image, preview the thumbnail, remove the image before submission, and view the attached image in the feed after submission. Image attachment URLs support both absolute URLs and root-relative upload paths (`/uploads/complaints/...`).
 * **High-Contrast Readability:** Complaint text and metadata are styled with high-contrast text colors (`text-slate-900 dark:text-slate-100 font-medium leading-relaxed break-words whitespace-pre-wrap`) ensuring clarity on both light and dark card backgrounds, with proper multi-line rendering and horizontal word wrapping.
 * **Complaint Listing & Distinct Views:**
@@ -80,7 +86,7 @@ $$\text{cluster size} \ge 5 \longrightarrow \text{Emergency}$$
 
 The Complaint System security and access model is governed by `001_initial_schema.sql`, `004_complaint_clusters.sql`, and `005_complaint_rls_and_cascade.sql`:
 
-* **Campus-Wide Authenticated Read Access:** `005_complaint_rls_and_cascade.sql` replaces the previous self-only policy with:
+* **Database Read Policy:** `005_complaint_rls_and_cascade.sql` permits authenticated database reads, but the Next.js application still applies owner-only row projection for students and broader queue access only for authorized staff. Global cluster counts are computed separately from visible rows.
   ```sql
   CREATE POLICY "Campus complaints are viewable by authenticated users"
     ON public.complaints FOR SELECT
@@ -100,23 +106,24 @@ The Complaint System security and access model is governed by `001_initial_schem
   * **Input Validation:** Rejects null or empty string `target_cluster_id`.
   * **Strict Scope:** Exclusively updates `is_emergency = true` and `updated_at` on rows matching `cluster_id = target_cluster_id`. It cannot touch other columns, tables, or clusters.
   * **Search Path Lockdown:** Explicit `SET search_path = public, pg_temp` prevents search path hijacking.
-  * **Execute Permissions:** Revoked from `PUBLIC`, granted only to `authenticated` and `service_role`.
+   * **Execute Permissions:** Migration `011_security_advisor_cleanup.sql` revokes direct authenticated execution and grants the cascade helper only to `service_role`.
 * **Zero Direct UPDATE or DELETE Grants:** Authenticated users do NOT have direct `UPDATE` or `DELETE` grants or policies on `public.complaints`.
 
 ---
 
 ## Current Verification
 
-Latest verified test and build results:
+Latest local Phase 2 verification (2026-10-09):
 
-* **Tests:** 67 passed across all 8 workspace packages (`npx pnpm test`).
-  * `apps/web`: 30 passed (including 15 complaint unit, integration, attachment format, and cluster grouping tests).
-  * `packages/contracts`: 13 passed.
-  * `modules/complaint-intelligence`: 7 passed.
-  * `modules/lost-and-found`: 17 passed.
-* **Typecheck:** Passed with 0 errors across all 9 workspaces (`npx pnpm typecheck`).
-* **Lint:** Passed with 0 errors (`npx pnpm lint`).
-* **Production Build:** Next.js production build succeeded with all 19 static and dynamic routes compiled (`npx pnpm --filter @smart-campus/web build`).
+* **Tests:** 299 passed across the participating workspaces (`pnpm test`).
+  * `apps/web`: 222 passed, including complaint lifecycle, attachment security, global aggregation, and auth-hardening tests.
+  * `packages/contracts`: 32 passed.
+  * `modules/complaint-intelligence`: 14 passed.
+  * `modules/lost-and-found`: 31 passed.
+* **Typecheck:** Passed with 0 errors across workspaces (`pnpm typecheck`).
+* **Lint:** Passed with no errors; existing warnings remain (`pnpm lint`).
+* **Production Build:** Next.js production build succeeded with complaint API/page routes compiled (`pnpm --filter @smart-campus/web build`).
+* **Live verification:** Supabase migration application, RLS, browser E2E, two-user authorization, and deployment persistence remain unverified.
 
 ---
 

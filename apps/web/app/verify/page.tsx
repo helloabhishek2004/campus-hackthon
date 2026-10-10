@@ -85,33 +85,33 @@ function VerifyContent() {
   return (
     <div className="m-auto w-full max-w-md space-y-6 py-8 animate-apple-in">
       <div className="space-y-1.5 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-100">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Verify your identity
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Please confirm the institutional record associated with your ID.
         </p>
       </div>
 
       {/* Loading state */}
       {loading && (
-        <div className="p-10 rounded-xl border border-zinc-800 bg-zinc-900/60 flex flex-col items-center justify-center space-y-2.5">
-          <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-          <p className="text-xs text-zinc-400">Retrieving institutional directory record...</p>
+        <div className="p-10 rounded-xl border border-border bg-card flex flex-col items-center justify-center space-y-2.5 text-card-foreground">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">Retrieving institutional directory record...</p>
         </div>
       )}
 
       {/* Error state */}
       {error && !loading && (
-        <div className="p-6 rounded-xl border border-red-900/50 bg-red-950/30 text-center space-y-3">
-          <AlertCircle className="w-6 h-6 text-red-400 mx-auto" />
+        <div className="p-6 rounded-xl border border-destructive/30 bg-destructive/10 text-center space-y-3">
+          <AlertCircle className="w-6 h-6 text-destructive mx-auto" />
           <div className="space-y-0.5">
-            <h3 className="text-sm font-semibold text-red-200">Record Not Found</h3>
-            <p className="text-xs text-red-300/80">{error}</p>
+            <h3 className="text-sm font-semibold text-destructive">Record Not Found</h3>
+            <p className="text-xs text-destructive/80">{error}</p>
           </div>
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground bg-secondary hover:bg-muted border border-border transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Login</span>
@@ -134,22 +134,22 @@ function VerifyContent() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     placeholder="Enter 6-digit OTP"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-center font-mono tracking-[0.35em] text-zinc-100 outline-none focus:border-zinc-400"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-center font-mono tracking-[0.35em] text-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
                     aria-label="One-time password"
                   />
                 )}
                 {otpMessage && otpSent && (
-                  <p className="text-center text-xs text-emerald-300">{otpMessage}</p>
+                  <p className="text-center text-xs text-emerald-600 dark:text-emerald-400 font-medium">{otpMessage}</p>
                 )}
                 <button
                   type="button"
                   onClick={handleVerify}
                   disabled={verifying || (otpSent && otp.length !== 6)}
-                  className="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 disabled:opacity-50"
+                  className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
                 >
                   {verifying ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-950" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-foreground" />
                       <span>Opening Session...</span>
                     </>
                   ) : (
@@ -164,10 +164,10 @@ function VerifyContent() {
                 <div className="text-center">
                   <Link
                     href="/login"
-                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors inline-flex items-center gap-1"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                   >
                     <span>Not you?</span>
-                    <span className="underline underline-offset-4 text-zinc-400">
+                    <span className="underline underline-offset-4 text-foreground">
                       Try another ID
                     </span>
                   </Link>

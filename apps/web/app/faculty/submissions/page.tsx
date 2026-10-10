@@ -153,13 +153,13 @@ export default function FacultySubmissionsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "ACCEPTED":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
       case "RETURNED":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30";
       case "UNDER_REVIEW":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30";
       default:
-        return "bg-neutral-800 text-neutral-300 border-neutral-700";
+        return "bg-secondary text-secondary-foreground border-border";
     }
   };
 
@@ -167,21 +167,21 @@ export default function FacultySubmissionsPage() {
     <AppShell>
       <div className="space-y-6 pb-12">
         {/* Header */}
-        <header className="border-b border-neutral-800 pb-5">
+        <header className="border-b border-border pb-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-neutral-800 text-neutral-300 border border-neutral-700">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-secondary text-secondary-foreground border border-border">
                   Evaluation & Verification
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   Assigned Classes & Academic Scopes Only
                 </span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Student Submissions Review
               </h1>
-              <p className="text-xs text-neutral-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Review submitted assignments, project reports, and academic records from students enrolled in your scope.
               </p>
             </div>
@@ -189,7 +189,7 @@ export default function FacultySubmissionsPage() {
             <button
               onClick={fetchSubmissions}
               disabled={loading}
-              className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800 transition-colors self-start sm:self-auto"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors self-start sm:self-auto"
               title="Refresh submissions"
             >
               <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -199,39 +199,39 @@ export default function FacultySubmissionsPage() {
 
         {/* Metrics Row */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between text-card-foreground">
             <div>
-              <p className="text-xs font-medium text-neutral-400">Pending Review</p>
-              <h3 className="text-xl font-bold text-white mt-1">{pendingCount}</h3>
+              <p className="text-xs font-medium text-muted-foreground">Pending Review</p>
+              <h3 className="text-xl font-bold text-foreground mt-1">{pendingCount}</h3>
             </div>
-            <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between text-card-foreground">
             <div>
-              <p className="text-xs font-medium text-neutral-400">Accepted</p>
-              <h3 className="text-xl font-bold text-white mt-1">{acceptedCount}</h3>
+              <p className="text-xs font-medium text-muted-foreground">Accepted</p>
+              <h3 className="text-xl font-bold text-foreground mt-1">{acceptedCount}</h3>
             </div>
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-card border border-border flex items-center justify-between text-card-foreground">
             <div>
-              <p className="text-xs font-medium text-neutral-400">Returned for Revision</p>
-              <h3 className="text-xl font-bold text-white mt-1">{returnedCount}</h3>
+              <p className="text-xs font-medium text-muted-foreground">Returned for Revision</p>
+              <h3 className="text-xl font-bold text-foreground mt-1">{returnedCount}</h3>
             </div>
-            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
               <AlertCircle className="w-4 h-4" />
             </div>
           </div>
         </section>
 
         {/* Search & Filter Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-3">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             {[
               { label: "All Submissions", value: "ALL" },
@@ -245,8 +245,8 @@ export default function FacultySubmissionsPage() {
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors border",
                   statusFilter === p.value
-                    ? "bg-neutral-200 text-neutral-950 border-white font-semibold"
-                    : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white hover:border-neutral-700"
+                    ? "bg-card text-foreground border-border font-semibold shadow-xs"
+                    : "bg-secondary text-muted-foreground border-border hover:text-foreground hover:bg-muted"
                 )}
               >
                 {p.label}
@@ -255,20 +255,20 @@ export default function FacultySubmissionsPage() {
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by student, ID, or title..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
             />
           </div>
         </div>
 
         {/* Submissions List / Table */}
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center text-neutral-500 text-xs">
+          <div className="py-20 flex flex-col items-center justify-center text-muted-foreground text-xs">
             <Loader2 className="w-7 h-7 animate-spin mb-2" />
             Loading student submissions...
           </div>
@@ -277,38 +277,38 @@ export default function FacultySubmissionsPage() {
             {filteredSubmissions.map((sub) => (
               <div
                 key={sub.id}
-                className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-4 rounded-xl bg-card border border-border hover:border-border/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 text-card-foreground"
               >
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold text-white">
+                    <span className="text-xs font-semibold text-foreground">
                       {sub.studentName}
                     </span>
                     {sub.studentInstitutionalId && (
-                      <span className="font-mono text-[11px] text-neutral-400 bg-neutral-800 px-1.5 py-0.2 rounded border border-neutral-700">
+                      <span className="font-mono text-[11px] text-muted-foreground bg-secondary px-1.5 py-0.2 rounded border border-border">
                         {sub.studentInstitutionalId}
                       </span>
                     )}
-                    <span className="text-xs text-neutral-500">·</span>
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">
                       {sub.programCode} Section {sub.section} (Year {sub.academicYear}, Sem {sub.semester})
                     </span>
                   </div>
 
-                  <p className="text-xs font-semibold text-neutral-200">
+                  <p className="text-xs font-semibold text-foreground">
                     {sub.documentTitle}
                   </p>
 
-                  <div className="flex items-center gap-3 text-[11px] text-neutral-500 flex-wrap">
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                     <span>Submitted {formatDate(sub.submittedAt)}</span>
                     {sub.attachmentName && (
-                      <span className="flex items-center gap-1 text-neutral-400">
+                      <span className="flex items-center gap-1 text-muted-foreground">
                         <Paperclip className="w-3 h-3" />
                         {sub.attachmentName}
                       </span>
                     )}
                     {sub.remarks && (
-                      <span className="text-neutral-400 italic truncate max-w-xs">
+                      <span className="text-muted-foreground italic truncate max-w-xs">
                         &quot;{sub.remarks}&quot;
                       </span>
                     )}
@@ -327,7 +327,7 @@ export default function FacultySubmissionsPage() {
 
                   <button
                     onClick={() => handleOpenReview(sub)}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700 transition-colors flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-secondary hover:bg-muted text-foreground border border-border transition-colors flex items-center gap-1.5"
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                     Review
@@ -337,12 +337,12 @@ export default function FacultySubmissionsPage() {
             ))}
           </div>
         ) : (
-          <div className="py-16 rounded-xl border border-dashed border-neutral-800 text-center max-w-md mx-auto">
-            <CheckSquare className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-white mb-1">
+          <div className="py-16 rounded-xl border border-dashed border-border text-center max-w-md mx-auto">
+            <CheckSquare className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-foreground mb-1">
               No submissions found
             </h3>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-muted-foreground">
               {statusFilter !== "ALL"
                 ? `No submissions found matching '${statusFilter}'.`
                 : "No student submissions currently recorded for your assigned courses."}
@@ -353,19 +353,19 @@ export default function FacultySubmissionsPage() {
 
       {/* Review Modal Dialog */}
       {selectedSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col text-card-foreground">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950/40">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
               <div>
-                <h3 className="text-base font-bold text-white">Evaluate Student Submission</h3>
-                <p className="text-xs text-neutral-400">
+                <h3 className="text-base font-bold text-foreground">Evaluate Student Submission</h3>
+                <p className="text-xs text-muted-foreground">
                   {selectedSubmission.studentName} ({selectedSubmission.studentInstitutionalId})
                 </p>
               </div>
               <button
                 onClick={handleCloseReview}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -374,51 +374,51 @@ export default function FacultySubmissionsPage() {
             {/* Body */}
             <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
               {reviewError && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{reviewError}</span>
                 </div>
               )}
 
               {/* Assignment & Submission Info */}
-              <div className="p-4 rounded-xl bg-neutral-950/60 border border-neutral-800 text-xs space-y-2">
+              <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-neutral-400">Document:</span>
-                  <span className="font-semibold text-white">{selectedSubmission.documentTitle}</span>
+                  <span className="text-muted-foreground">Document:</span>
+                  <span className="font-semibold text-foreground">{selectedSubmission.documentTitle}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-neutral-400">Class Scope:</span>
-                  <span className="text-neutral-200">
+                  <span className="text-muted-foreground">Class Scope:</span>
+                  <span className="text-foreground">
                     {selectedSubmission.programCode} Section {selectedSubmission.section} (Sem {selectedSubmission.semester})
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-neutral-400">Submitted:</span>
-                  <span className="text-neutral-300">{formatDate(selectedSubmission.submittedAt)}</span>
+                  <span className="text-muted-foreground">Submitted:</span>
+                  <span className="text-foreground">{formatDate(selectedSubmission.submittedAt)}</span>
                 </div>
               </div>
 
               {/* Attached File */}
               {selectedSubmission.attachmentName && (
-                <div className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-neutral-200">
-                    <Paperclip className="w-4 h-4 text-neutral-400" />
+                <div className="p-3 rounded-lg bg-muted/30 border border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-foreground">
+                    <Paperclip className="w-4 h-4 text-muted-foreground" />
                     <span>{selectedSubmission.attachmentName}</span>
                   </div>
-                  <span className="text-xs text-neutral-500">Verified institutional upload</span>
+                  <span className="text-xs text-muted-foreground">Verified institutional upload</span>
                 </div>
               )}
 
               {/* Review Evaluation Status */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-neutral-300">
-                  Evaluation Verdict <span className="text-red-400">*</span>
+                <label className="text-xs font-medium text-foreground">
+                  Evaluation Verdict <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: "Accept", value: "ACCEPTED" as const, color: "text-emerald-400 border-emerald-500/30" },
-                    { label: "Return", value: "RETURNED" as const, color: "text-amber-400 border-amber-500/30" },
-                    { label: "Under Review", value: "UNDER_REVIEW" as const, color: "text-blue-400 border-blue-500/30" },
+                    { label: "Accept", value: "ACCEPTED" as const, color: "text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+                    { label: "Return", value: "RETURNED" as const, color: "text-amber-600 dark:text-amber-400 border-amber-500/30" },
+                    { label: "Under Review", value: "UNDER_REVIEW" as const, color: "text-blue-600 dark:text-blue-400 border-blue-500/30" },
                   ].map((opt) => (
                     <button
                       key={opt.value}
@@ -427,8 +427,8 @@ export default function FacultySubmissionsPage() {
                       className={cn(
                         "py-2 px-3 rounded-lg text-xs font-semibold border transition-all text-center",
                         reviewStatus === opt.value
-                          ? `bg-neutral-800 font-bold ${opt.color} shadow-sm`
-                          : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:bg-neutral-800/60"
+                          ? `bg-secondary font-bold ${opt.color} shadow-xs`
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
                       )}
                     >
                       {opt.label}
@@ -439,7 +439,7 @@ export default function FacultySubmissionsPage() {
 
               {/* Remarks Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-neutral-300">
+                <label className="text-xs font-medium text-foreground">
                   Feedback & Remarks (Optional)
                 </label>
                 <textarea
@@ -447,17 +447,17 @@ export default function FacultySubmissionsPage() {
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="Provide remarks or instructions for the student..."
-                  className="w-full px-3 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition-colors resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-input text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors resize-none"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-neutral-800 bg-neutral-950/40">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-muted/30">
               <button
                 type="button"
                 onClick={handleCloseReview}
-                className="px-4 py-2 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition-colors"
+                className="px-4 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Cancel
               </button>
@@ -465,7 +465,7 @@ export default function FacultySubmissionsPage() {
                 type="button"
                 onClick={handleSubmitReview}
                 disabled={submittingReview}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
               >
                 {submittingReview ? (
                   <>

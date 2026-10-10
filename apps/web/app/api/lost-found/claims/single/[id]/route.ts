@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClaim } from "@/lib/lost-found/repository";
-import { canAccessClaim, isIdentity, publicItem, requireLostFoundIdentity } from "../../../_auth";
+import { getClaim } from "../../../../../../lib/lost-found/repository";
+import { canViewClaim, claimViewerCapabilities, isIdentity, publicClaim, requireLostFoundIdentity } from "../../../_auth";
 
 export async function GET(
   req: NextRequest,
@@ -14,16 +14,14 @@ export async function GET(
     if (!claim) return NextResponse.json({ success: false, error: { message: "Claim not found" } }, { status: 404 });
     
     const item = loaded?.item as any;
-    if (!item || (claim.claimant_id !== identity.userId && item.reporter_id !== identity.userId && identity.profile?.role !== "admin")) {
+    if (!canViewClaim(identity, claim, item)) {
       return NextResponse.json({ success: false, error: { message: "Forbidden" } }, { status: 403 });
     }
 
     return NextResponse.json({ 
         success: true, 
-        claim: {
-            ...claim,
-            item: publicItem(item, item.lost_found_item_images || [])
-        }
+        claim: publicClaim(claim, item),
+        capabilities: claimViewerCapabilities(identity, claim, item),
     }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ success: false, error: { message: "Internal error" } }, { status: 500 });
